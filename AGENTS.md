@@ -1,7 +1,7 @@
 # AGENTS: OP-XY Reverse Engineering
 
 ## Mission
-- Partner with Kevin to decode the `.xy` project container so we can read, edit, and eventually write OP-XY projects off-device.
+- Partner to decode the `.xy` project container so we can read, edit, and eventually write OP-XY projects off-device.
 - Keep a living log that captures device knowledge, experimental assets, hypotheses, and reverse-engineering progress.
 
 ## Reference Materials
