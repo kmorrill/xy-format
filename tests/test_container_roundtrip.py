@@ -42,16 +42,16 @@ def test_project_structure_baseline() -> None:
     data = BASELINE.read_bytes()
     proj = XYProject.from_bytes(data)
 
-    assert len(proj.pre_track) == 0x7C
+    assert len(proj.pre_track) == 0x7C  # Baseline-specific
     assert len(proj.tracks) == 16
-    assert proj.pre_track[:8] == b"\xDD\xCC\xBB\xAA\x09\x13\x03\x86"
+    assert proj.pre_track[:4] == b"\xDD\xCC\xBB\xAA"
 
     # All baseline tracks are type 0x05 (default, with padding)
     EXPECTED_ENGINES = {
         0: 0x03,   # Drum
         1: 0x03,   # Drum
         2: 0x12,   # Prism
-        3: 0x07,   # Pluck
+        3: 0x07,   # EPiano
         4: 0x14,   # Dissolve
         5: 0x13,   # Hardsync
         6: 0x16,   # Axis

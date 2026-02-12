@@ -95,12 +95,37 @@ class CCEvent:
 
 
 @dataclass
+class AftertouchEvent:
+    """A channel aftertouch (pressure) message to send during a test."""
+    channel: int    # MIDI channel 0-15 (displayed as 1-16)
+    step: int       # 1-based grid step
+    value: int      # pressure 0-127
+
+    def __str__(self) -> str:
+        return f"ch{self.channel+1}:step{self.step}:AT={self.value}"
+
+
+@dataclass
+class PitchBendEvent:
+    """A pitch bend message to send during a test."""
+    channel: int    # MIDI channel 0-15 (displayed as 1-16)
+    step: int       # 1-based grid step
+    value: int      # 0-16383 (8192 = center, 0 = full down, 16383 = full up)
+
+    def __str__(self) -> str:
+        signed = self.value - 8192
+        return f"ch{self.channel+1}:step{self.step}:PB={self.value}({signed:+d})"
+
+
+@dataclass
 class TestPlan:
     """A complete test to run on the OP-XY."""
     name: str
     description: str
     events: List[NoteEvent]
     cc_events: List[CCEvent] = field(default_factory=list)
+    aftertouch_events: List[AftertouchEvent] = field(default_factory=list)
+    pitchbend_events: List[PitchBendEvent] = field(default_factory=list)
     bars: int = 1               # bars of content
     pre_roll_bars: int = 0      # empty bars before notes
     post_roll_bars: int = 0     # empty bars after notes (for release tails)
@@ -244,14 +269,21 @@ def make_pitchbend_sweep() -> TestPlan:
     Requires: MIDI channel 3 → Track 3.
     Note: pitch bend messages are sent separately from notes.
     """
-    events = [
-        NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
-    ]
+    pb_events = []
+    for s in range(16):
+        # Ramp from 8192 (center) to 16383 (max) linearly
+        bend = 8192 + int((s / 15) * 8191)
+        bend = min(bend, 16383)
+        pb_events.append(PitchBendEvent(channel=2, step=s + 1, value=bend))
+    # Reset at end (step 17 would be first step of bar 2, sent during post-roll)
     return TestPlan(
         name="pitchbend_sweep",
         description="Sustained C4 on Track 3 with pitch bend ramp from center to max "
                     "over 16 steps. Captures automation serialization.",
-        events=events,
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        pitchbend_events=pb_events,
         bars=1,
     )
 
@@ -532,6 +564,276 @@ def make_cc_volume_pan() -> TestPlan:
     )
 
 
+# ---------------------------------------------------------------------------
+# Performance controller experiments (modwheel, aftertouch, pitchbend)
+# ---------------------------------------------------------------------------
+# These test the "special" MIDI performance inputs that have dedicated
+# mod routing in the OP-XY firmware (unlike arbitrary CCs which just set
+# parameter values and are NOT recorded as automation — confirmed by
+# unnamed 95-100).
+
+def make_modwheel_sweep() -> TestPlan:
+    """Sustained note + modwheel ramp 0→127 over 16 steps.
+
+    Purpose: determine if modwheel (CC1) is recorded as keyframe automation
+    like pitchbend, or ignored like other CCs (CC7/10/12/20-23/32/33).
+    The OP-XY has dedicated mod routing for modwheel (unnamed 83/84).
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    cc_events = []
+    for s in range(16):
+        val = int((s / 15) * 127)
+        val = min(val, 127)
+        cc_events.append(CCEvent(channel=2, step=s + 1, cc=1, value=val))
+    return TestPlan(
+        name="modwheel_sweep",
+        description="Sustained C4 on Track 3 with modwheel (CC1) ramp 0→127 "
+                    "over 16 steps. Tests if modwheel records as automation.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        cc_events=cc_events,
+        bars=1,
+    )
+
+
+def make_modwheel_steps() -> TestPlan:
+    """Note + modwheel at 4 discrete known values.
+
+    Purpose: if modwheel IS recorded, decode the step-quantized encoding.
+    Same structure as cc_cutoff_steps but using CC1 (modwheel).
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="modwheel_steps",
+        description="C4 on step 1 (T3) + modwheel (CC1) at steps 1/5/9/13 "
+                    "with values 0/42/85/127. Reveals modwheel automation encoding.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        cc_events=[
+            CCEvent(channel=2, step=1, cc=1, value=0),
+            CCEvent(channel=2, step=5, cc=1, value=42),
+            CCEvent(channel=2, step=9, cc=1, value=85),
+            CCEvent(channel=2, step=13, cc=1, value=127),
+        ],
+        bars=1,
+    )
+
+
+def make_aftertouch_sweep() -> TestPlan:
+    """Sustained note + channel aftertouch ramp 0→127 over 16 steps.
+
+    Purpose: determine if channel pressure is recorded as keyframe automation.
+    The OP-XY has dedicated mod routing for aftertouch (unnamed 83/84).
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    at_events = []
+    for s in range(16):
+        val = int((s / 15) * 127)
+        val = min(val, 127)
+        at_events.append(AftertouchEvent(channel=2, step=s + 1, value=val))
+    return TestPlan(
+        name="aftertouch_sweep",
+        description="Sustained C4 on Track 3 with channel aftertouch ramp 0→127 "
+                    "over 16 steps. Tests if aftertouch records as automation.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        aftertouch_events=at_events,
+        bars=1,
+    )
+
+
+def make_aftertouch_steps() -> TestPlan:
+    """Note + channel aftertouch at 4 discrete known values.
+
+    Purpose: if aftertouch IS recorded, decode the step-quantized encoding.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="aftertouch_steps",
+        description="C4 on step 1 (T3) + channel aftertouch at steps 1/5/9/13 "
+                    "with values 0/42/85/127. Reveals aftertouch automation encoding.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        aftertouch_events=[
+            AftertouchEvent(channel=2, step=1, value=0),
+            AftertouchEvent(channel=2, step=5, value=42),
+            AftertouchEvent(channel=2, step=9, value=85),
+            AftertouchEvent(channel=2, step=13, value=127),
+        ],
+        bars=1,
+    )
+
+
+def make_pitchbend_steps() -> TestPlan:
+    """Note + pitchbend at 4 discrete known values.
+
+    Purpose: complement the pitchbend_sweep with discrete step values
+    for easier decoding. Values chosen at 0%, 33%, 67%, 100% of range.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="pitchbend_steps",
+        description="C4 on step 1 (T3) + pitch bend at steps 1/5/9/13 "
+                    "with values center/+33%/+67%/max. Reveals discrete PB encoding.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        pitchbend_events=[
+            PitchBendEvent(channel=2, step=1, value=8192),     # center
+            PitchBendEvent(channel=2, step=5, value=10922),    # +33%
+            PitchBendEvent(channel=2, step=9, value=13653),    # +67%
+            PitchBendEvent(channel=2, step=13, value=16383),   # max
+        ],
+        bars=1,
+    )
+
+
+def make_perf_all_sweep() -> TestPlan:
+    """Kitchen sink: sustained note + modwheel + aftertouch + pitchbend ramps.
+
+    Purpose: see how the firmware handles all three performance controllers
+    simultaneously. If all three record automation, we can compare their
+    encoding side by side in one file.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    cc_events = []
+    at_events = []
+    pb_events = []
+    for s in range(16):
+        frac = s / 15
+        # Modwheel: 0→127
+        cc_events.append(CCEvent(channel=2, step=s + 1, cc=1, value=min(int(frac * 127), 127)))
+        # Aftertouch: 0→127
+        at_events.append(AftertouchEvent(channel=2, step=s + 1, value=min(int(frac * 127), 127)))
+        # Pitchbend: center→max
+        pb_events.append(PitchBendEvent(channel=2, step=s + 1, value=min(8192 + int(frac * 8191), 16383)))
+    return TestPlan(
+        name="perf_all_sweep",
+        description="Sustained C4 on Track 3 with simultaneous modwheel + aftertouch + "
+                    "pitchbend ramps over 16 steps. Kitchen sink performance test.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        cc_events=cc_events,
+        aftertouch_events=at_events,
+        pitchbend_events=pb_events,
+        bars=1,
+    )
+
+
+def make_velocity_levels() -> TestPlan:
+    """Same note at 8 different velocities across 2 bars.
+
+    Purpose: capture fine-grained velocity encoding. Unlike other performance
+    controllers, velocity is per-note (already in the note event), but
+    the OP-XY might also store velocity curves or sensitivity data.
+
+    Requires: MIDI channel 3 → Track 3. Set 2 bars on device.
+    """
+    velocities = [1, 20, 40, 60, 80, 100, 120, 127]
+    events = []
+    for i, vel in enumerate(velocities):
+        events.append(NoteEvent(channel=2, step=i * 2 + 1, note=60, velocity=vel, duration_steps=1.0))
+    return TestPlan(
+        name="velocity_levels",
+        description="C4 at 8 velocity levels (1/20/40/60/80/100/120/127) across 2 bars "
+                    "on Track 3. Fine-grained velocity encoding test.",
+        events=events,
+        bars=2,
+    )
+
+
+def make_disc01_sequential() -> TestPlan:
+    """4 sequential notes at steps 1, 5, 9, 13 on Track 3.
+
+    Purpose: confirm disc=01 encoding appears for step 9 (tick 3840, divisible
+    by 256).  Steps 5 (tick 1920) and 13 (tick 5760) are NOT divisible by 256,
+    so they should use disc=00.  Step 9 should use disc=01 with raw=15.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="disc01_sequential",
+        description="4 sequential C4 notes at steps 1/5/9/13 on Track 3 (ch 3). "
+                    "Tests disc=01 tick encoding at step 9 (tick 3840 = 15*256).",
+        events=[
+            NoteEvent(channel=2, step=1,  note=60, velocity=100, duration_steps=1.0),
+            NoteEvent(channel=2, step=5,  note=62, velocity=100, duration_steps=1.0),
+            NoteEvent(channel=2, step=9,  note=64, velocity=100, duration_steps=1.0),
+            NoteEvent(channel=2, step=13, note=65, velocity=100, duration_steps=1.0),
+        ],
+        bars=1,
+    )
+
+
+def make_chord_variants() -> TestPlan:
+    """Chord + sequential + chord on Track 3 across 2 bars.
+
+    Purpose: compare grid-style chord encoding (disc=00 with same tick) vs
+    MIDI chord encoding (disc=04).  Also tests 2-note chord vs 3-note chord.
+
+    Layout:
+      Step 1:  C major triad (C4+E4+G4) — simultaneous → expect disc=02/04/04
+      Step 5:  single D4
+      Step 9:  two-note chord (E4+G4) — simultaneous → expect disc=01(tick)/04
+      Step 13: single A4
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="chord_variants",
+        description="Chord variants on Track 3: triad at step 1, single at step 5, "
+                    "dyad at step 9, single at step 13. Tests chord disc=04 encoding.",
+        events=[
+            # Step 1: C major triad
+            NoteEvent(channel=2, step=1,  note=60, velocity=100, duration_steps=2.0),
+            NoteEvent(channel=2, step=1,  note=64, velocity=100, duration_steps=2.0),
+            NoteEvent(channel=2, step=1,  note=67, velocity=100, duration_steps=2.0),
+            # Step 5: single
+            NoteEvent(channel=2, step=5,  note=62, velocity=90,  duration_steps=1.0),
+            # Step 9: two-note chord
+            NoteEvent(channel=2, step=9,  note=64, velocity=80,  duration_steps=2.0),
+            NoteEvent(channel=2, step=9,  note=67, velocity=80,  duration_steps=2.0),
+            # Step 13: single
+            NoteEvent(channel=2, step=13, note=69, velocity=70,  duration_steps=1.0),
+        ],
+        bars=1,
+    )
+
+
+def make_near_chord() -> TestPlan:
+    """3 notes at step 1 with the third slightly offset to step 2 on Track 3.
+
+    Purpose: test whether a note slightly after a chord gets disc=00+pad=01
+    (as seen in unnamed 3 live triad) or disc=00+pad=00 (normal sequential).
+    The 5-tick offset in unnamed 3 was from live playing; here we use 1 step
+    (480 ticks) to see if the pad byte relates to proximity.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="near_chord",
+        description="Near-chord test: C4+G4 chord at step 1, then E4 at step 2 "
+                    "(480 ticks later). Tests if pad byte changes for close notes.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=2.0),
+            NoteEvent(channel=2, step=1, note=67, velocity=100, duration_steps=2.0),
+            NoteEvent(channel=2, step=2, note=64, velocity=100, duration_steps=1.0),
+        ],
+        bars=1,
+    )
+
+
 EXPERIMENTS: Dict[str, TestPlan] = {}
 _single_plans = make_single_note_per_track()
 for _p in _single_plans:
@@ -550,6 +852,18 @@ EXPERIMENTS["cc_multi_lane"] = make_cc_multi_lane()
 EXPERIMENTS["cc_only_no_notes"] = make_cc_only_no_notes()
 EXPERIMENTS["cc_amp_envelope"] = make_cc_amp_envelope()
 EXPERIMENTS["cc_volume_pan"] = make_cc_volume_pan()
+# Performance controller experiments
+EXPERIMENTS["modwheel_sweep"] = make_modwheel_sweep()
+EXPERIMENTS["modwheel_steps"] = make_modwheel_steps()
+EXPERIMENTS["aftertouch_sweep"] = make_aftertouch_sweep()
+EXPERIMENTS["aftertouch_steps"] = make_aftertouch_steps()
+EXPERIMENTS["pitchbend_steps"] = make_pitchbend_steps()
+EXPERIMENTS["perf_all_sweep"] = make_perf_all_sweep()
+EXPERIMENTS["velocity_levels"] = make_velocity_levels()
+# Chord/disc encoding experiments
+EXPERIMENTS["disc01_sequential"] = make_disc01_sequential()
+EXPERIMENTS["chord_variants"] = make_chord_variants()
+EXPERIMENTS["near_chord"] = make_near_chord()
 
 
 # ---------------------------------------------------------------------------
@@ -608,21 +922,20 @@ class MidiHarness:
                              control=cc_ev.cc, value=cc_ev.value)
             )
 
-        # Special: pitch bend ramp for the pitchbend_sweep experiment
-        if plan.name == "pitchbend_sweep":
-            steps_total = plan.bars * STEPS_PER_BAR
-            for s in range(steps_total):
-                pulse = pre_roll_pulses + s * CLOCKS_PER_16TH
-                # Ramp from 8192 (center) to 16383 (max) linearly
-                bend = 8192 + int((s / max(steps_total - 1, 1)) * 8191)
-                bend = min(bend, 16383)
-                schedule.setdefault(pulse, []).append(
-                    mido.Message("pitchwheel", channel=2, pitch=bend - 8192)
-                )
-            # Reset pitch bend at the end
-            end_pulse = pre_roll_pulses + steps_total * CLOCKS_PER_16TH
-            schedule.setdefault(end_pulse, []).append(
-                mido.Message("pitchwheel", channel=2, pitch=0)
+        # Aftertouch (channel pressure) events
+        for at_ev in plan.aftertouch_events:
+            pulse = pre_roll_pulses + (at_ev.step - 1) * CLOCKS_PER_16TH
+            schedule.setdefault(pulse, []).append(
+                mido.Message("aftertouch", channel=at_ev.channel,
+                             value=at_ev.value)
+            )
+
+        # Pitch bend events
+        for pb_ev in plan.pitchbend_events:
+            pulse = pre_roll_pulses + (pb_ev.step - 1) * CLOCKS_PER_16TH
+            schedule.setdefault(pulse, []).append(
+                mido.Message("pitchwheel", channel=pb_ev.channel,
+                             pitch=pb_ev.value - 8192)
             )
 
         return schedule
@@ -650,16 +963,24 @@ class MidiHarness:
             print(f"  CCs:")
             for cc_ev in plan.cc_events:
                 print(f"    {cc_ev}")
+        if plan.aftertouch_events:
+            print(f"  Aftertouch:")
+            for at_ev in plan.aftertouch_events:
+                print(f"    {at_ev}")
+        if plan.pitchbend_events:
+            print(f"  Pitch Bend:")
+            for pb_ev in plan.pitchbend_events:
+                print(f"    {pb_ev}")
         print(f"{'='*60}")
 
-        # Wait for user
-        print(f"\nArm record mode on OP-XY, then press Enter...")
-        input()
-
         # Countdown
-        for i in range(countdown, 0, -1):
-            print(f"  {i}...")
-            time.sleep(1)
+        if countdown > 0:
+            print(f"\nArm record mode on OP-XY — starting in {countdown}s...")
+            for i in range(countdown, 0, -1):
+                print(f"  {i}...")
+                time.sleep(1)
+        else:
+            print(f"\nStarting immediately...")
 
         # Send Start
         print(">>> MIDI Start")
@@ -682,6 +1003,10 @@ class MidiHarness:
                     elif msg.type == "control_change" and msg.control != 123:
                         cc_name = CC_NAMES.get(msg.control, f"CC{msg.control}")
                         print(f"  [pulse {pulse:4d}, step {step:2d}] ch{msg.channel+1} {cc_name}={msg.value}")
+                    elif msg.type == "aftertouch":
+                        print(f"  [pulse {pulse:4d}, step {step:2d}] ch{msg.channel+1} AT={msg.value}")
+                    elif msg.type == "pitchwheel":
+                        print(f"  [pulse {pulse:4d}, step {step:2d}] ch{msg.channel+1} PB={msg.pitch+8192}({msg.pitch:+d})")
 
             # Send clock
             self.port.send(mido.Message("clock"))
@@ -746,6 +1071,44 @@ def parse_cc_spec(spec: str) -> CCEvent:
     )
 
 
+def parse_aftertouch_spec(spec: str) -> AftertouchEvent:
+    """Parse 'channel:step:value' string.
+
+    Examples:
+      '3:1:64'     channel 3, step 1, pressure 64
+      '3:9:127'    channel 3, step 9, pressure 127
+    """
+    parts = spec.strip().split(":")
+    if len(parts) != 3:
+        raise ValueError(f"expected channel:step:value, got {spec!r}")
+    ch, step, value = parts
+    return AftertouchEvent(
+        channel=int(ch) - 1,
+        step=int(step),
+        value=int(value),
+    )
+
+
+def parse_pitchbend_spec(spec: str) -> PitchBendEvent:
+    """Parse 'channel:step:value' string.
+
+    Value is 0-16383 (8192 = center).
+
+    Examples:
+      '3:1:8192'     channel 3, step 1, center
+      '3:9:16383'    channel 3, step 9, full up
+    """
+    parts = spec.strip().split(":")
+    if len(parts) != 3:
+        raise ValueError(f"expected channel:step:value, got {spec!r}")
+    ch, step, value = parts
+    return PitchBendEvent(
+        channel=int(ch) - 1,
+        step=int(step),
+        value=int(value),
+    )
+
+
 def list_ports() -> None:
     """Print available MIDI output ports."""
     ports = mido.get_output_names()
@@ -781,9 +1144,15 @@ Examples:
   %(prog)s --port "OP-XY" --notes "3:1:60:100:1 3:5:62:80:2"
   %(prog)s --port "OP-XY" --ccs "3:1:32:127 3:5:33:64"
   %(prog)s --port "OP-XY" --notes "3:1:60:100:1" --ccs "3:1:32:127"
+  %(prog)s --port "OP-XY" --notes "3:1:60:100:16" --aftertouch "3:1:0 3:5:42 3:9:85 3:13:127"
+  %(prog)s --port "OP-XY" --notes "3:1:60:100:16" --pitchbend "3:1:8192 3:9:16383"
   %(prog)s --port "OP-XY" --experiment velocity_sweep --bpm 100
 
-CC spec format: channel:step:cc_number:value (channel is 1-based)
+Spec formats (channel is 1-based):
+  note:       channel:step:note:velocity:duration_steps
+  CC:         channel:step:cc_number:value
+  aftertouch: channel:step:value  (channel pressure 0-127)
+  pitchbend:  channel:step:value  (0-16383, 8192=center)
 """,
     )
     parser.add_argument("--list-ports", action="store_true",
@@ -798,6 +1167,10 @@ CC spec format: channel:step:cc_number:value (channel is 1-based)
                         help="Custom notes: 'ch:step:note:vel:dur' space-separated")
     parser.add_argument("--ccs", type=str, default=None,
                         help="Custom CCs: 'ch:step:cc:value' space-separated")
+    parser.add_argument("--aftertouch", type=str, default=None,
+                        help="Custom aftertouch: 'ch:step:value' space-separated")
+    parser.add_argument("--pitchbend", type=str, default=None,
+                        help="Custom pitchbend: 'ch:step:value' space-separated (0-16383)")
     parser.add_argument("--bpm", type=float, default=120.0,
                         help="Tempo in BPM (default: 120, should match project)")
     parser.add_argument("--bars", type=int, default=None,
@@ -831,23 +1204,31 @@ CC spec format: channel:step:cc_number:value (channel is 1-based)
             parser.error(f"unknown experiment {args.experiment!r}. "
                          f"Use --list-experiments to see options.")
         plan = EXPERIMENTS[args.experiment]
-    elif args.notes or args.ccs:
+    elif args.notes or args.ccs or args.aftertouch or args.pitchbend:
         events = [parse_note_spec(s) for s in args.notes.split()] if args.notes else []
         cc_events = [parse_cc_spec(s) for s in args.ccs.split()] if args.ccs else []
+        at_events = [parse_aftertouch_spec(s) for s in args.aftertouch.split()] if args.aftertouch else []
+        pb_events = [parse_pitchbend_spec(s) for s in args.pitchbend.split()] if args.pitchbend else []
         parts = []
         if events:
             parts.append(f"{len(events)} custom notes")
         if cc_events:
             parts.append(f"{len(cc_events)} custom CCs")
+        if at_events:
+            parts.append(f"{len(at_events)} custom aftertouch")
+        if pb_events:
+            parts.append(f"{len(pb_events)} custom pitchbend")
         plan = TestPlan(
             name="custom",
             description=", ".join(parts),
             events=events,
             cc_events=cc_events,
+            aftertouch_events=at_events,
+            pitchbend_events=pb_events,
             bars=args.bars or 1,
         )
     else:
-        parser.error("specify --experiment, --notes, or --ccs")
+        parser.error("specify --experiment, --notes, --ccs, --aftertouch, or --pitchbend")
 
     # Apply overrides
     if args.bars is not None:

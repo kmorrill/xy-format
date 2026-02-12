@@ -116,7 +116,7 @@ Sources: [teenage.engineering/products/op-xy](https://teenage.engineering/produc
 ### Implications for Format Work
 
 - **120-note cap**: Our 48-note unnamed 101 event is 40% of max. A 120-note event would be ~1700 bytes (rough estimate). This is the ceiling for stress-testing the event parser.
-- **9 patterns per track**: The handle table at 0x58-0x7B has 9 entries — this matches exactly. Each handle entry maps to one pattern slot.
+- **9 patterns per track**: The handle table at 0x58-0x7B has 12 entries of 3 bytes each (36 bytes). The relationship between handle entries and the 9-pattern limit is not yet clear.
 - **8-voice polyphony**: Chord events with flag 0x04 should support up to 8 simultaneous notes per track. We've tested 3; 8 is the hard limit.
 - **24 total voices**: With 8 tracks playing 3-note chords = 24 voices, the system is at capacity. Beyond this, voice stealing occurs.
 
@@ -146,13 +146,71 @@ Sources: [teenage.engineering/products/op-xy](https://teenage.engineering/produc
 - **Container vs payload**: keep a thin `.xy` container reader (header, size, checksums) separate from payload parsers for tracks/patterns/scenes.
 - **Size/version guards**: define per-section size constants and hard-validate them before decoding to catch shifts like the metronome-mute anomaly.
 - **Preserve unknowns**: treat undecoded bytes as explicit blobs so round-trips remain byte-stable while semantics are discovered.
-- **Per-subsystem modules**: split parsing by header, track blocks, pattern roster, scenes, songs, global mix/tempo, mirroring device UI domains.
+- **Per-subsystem modules**: split parsing by header, track blocks, pattern directory, scenes, songs, global mix/tempo, mirroring device UI domains.
 - **Round-trip tests**: decode → encode → compare bytes, reporting first mismatch offsets to guide updates.
 
 ## Immediate Next Actions
 - Diff `unnamed 1.xy` against tempo variants (`unnamed 4` & `unnamed 5`) to pin down BPM encoding.
 - Inspect step-component files (`unnamed 8` & `unnamed 9`) to see how component stacking alters nearby bytes.
 - Document discovered offsets and value encodings back in this file as we learn them.
+
+## Multi-Pattern Generation Readiness (2026-02-12)
+- `xy.project_builder.build_multi_pattern_project()` now supports descriptor strategies:
+  - `strict` (default): only device-verified descriptor sets (`T1` and `T1+T3`).
+  - `heuristic_v1` (experimental): allows broader track sets anchored on `T1`; derived from `unnamed 102–105` descriptor bytes.
+- Added `tools/write_multi_track_two_pattern.py` to generate two-pattern stress projects across multiple tracks with deterministic notes per track/pattern.
+- Recommended workflow for current confidence:
+  - Use `--strategy strict --tracks 1,3` for known-good device behavior.
+  - Use `--strategy heuristic_v1 --tracks 1,2,3,4` (or similar) to probe whether descriptor understanding generalizes beyond captured sets.
+
+### `unnamed 105b.xy` (new multi-pattern datapoint)
+- `unnamed 105b.xy` adds a single note trig on **Track 3, Pattern 1** on top of the existing `unnamed 105` setup.
+- This capture is the first confirmed case of a **non-T1 leader block** carrying note data in a multi-track multi-pattern project.
+- High-impact structural deltas versus `unnamed 105.xy`:
+  - File size: `11792 -> 11867` (`+75` bytes).
+  - Pre-track length: `131 -> 129` (`-2` bytes).
+  - Descriptor at `0x58`: switches from 7-byte T1+T3 form (`01 00 00 1B 01 00 00`) to 5-byte T1-style form (`00 1D 01 00 00`).
+  - Block 4 (Track 3 leader) flips from `type=0x05` to `type=0x07` and grows `418 -> 431` bytes.
+  - Block 5 preamble byte[1] is `0x64` (`008610f0 -> 006410f0`), indicating the post-activation chain behavior extends through the second T3 block.
+  - Blocks 11-16 gain extra inline words in a repeated mid-body lane:
+    - Typical replacement pattern:
+      - old: `00 00 19 40 00 00 01 60 ...`
+      - new: `00 00 11 40 00 00 01 40 00 00 01 40 00 00 01 60 ...`
+    - Net growth: `+8` bytes each for blocks 11-15 and `+24` for block 16 (three occurrences).
+- Practical takeaway: generating valid files when non-T1 leader patterns contain notes needs a distinct serialization branch beyond the current `unnamed 105` model.
+
+### Post-`105b` generated validation (2026-02-12)
+- Device load **PASS** for non-byte-identical generated files using the `105b` serialization branch:
+  - `output/mp2_v5_105b_novel_single.xy` (11869 B)
+  - `output/mp2_v5_105b_novel_dense.xy` (11909 B)
+- Both files differ from `unnamed 105b.xy` and `output/repro_105b.xy` (different SHA-1), confirming this is not a replay-only success.
+- What this confirms:
+  - The `105b` branch is structurally correct for novel content, not just exact-byte reproduction.
+  - Note payloads can vary in step, pitch, velocity, and per-pattern density without triggering the `num_patterns > 0` crash, as long as the structural rules match `105b`.
+  - The working two-track multi-pattern descriptor in this mode remains the 5-byte form at `0x58`: `00 1D 01 00 00`.
+  - The blocks 11-16 aux mid-body rewrite used in `105b` is part of the required valid structure for this branch.
+- Current known-good writer profile for multi-pattern on device:
+  - Tracks: `{1, 3}`
+  - Pattern count: `2` on both tracks
+  - Track 1: leader blank, clone active
+  - Track 3: leader may be active, clone may be active
+  - Descriptor strategy: `strict` with `105b` compatibility branch engaged
+
+### Multi-Track / Multi-Pattern Breakthrough (v7 diagnostics, 2026-02-12)
+- Device load **PASS** for all diagnostic variants:
+  - `output/mp2_v7_diag_h5_both_sparse.xy`
+  - `output/mp2_v7_diag_h7_both_sparse.xy`
+  - `output/mp2_v7_diag_h5_both_dense.xy`
+  - `output/mp2_v7_diag_h7_both_dense.xy`
+  - `output/mp2_v7_diag_t1both_dense_t3clone.xy`
+- Key finding: the previous crash case was not "both leaders active" or "dense T1 drum notes".  
+  It was a **Track 3 leader note insertion offset** bug (event shifted by one byte when non-T1 leaders used trimmed pre-activation body).
+- Writer fix (now in `xy/project_builder.py`):
+  - For any **leader with notes**, start from full body before activation.
+  - After insertion, trim one tail byte for non-T1 leaders (same final-length behavior as the validated 105b path).
+- Resulting confidence:
+  - We can now generate multi-pattern content across multiple tracks (`T1` + `T3`) with both tracks carrying distinct A/B note data.
+  - Both pre-track descriptor forms observed in testing (`5-byte` and `7-byte`) load with the corrected leader-body serialization.
 
 ## Brute-Forced Offsets (Tempo / Groove / Metronome)
 - `0x08`–`0x09` (`u16`): Tempo in tenths of BPM. Examples: `0x04B0` → 120.0 BPM, `0x0190` → 40.0 BPM, `0x04BC` → 121.2 BPM.
@@ -282,40 +340,34 @@ The `0x25` tag marks the start of a note-event block.
 - **Value encoding**: neutral settings serialize as `value = 0x0100`. Pulling a band to 0 dB pushes the value to `0x0500` while the id stays fixed — see low (`unnamed 14.xy`, `0x28`), mid (`unnamed 15.xy`, `0x2c`), and high (`unnamed 16.xy`, `0x34`) adjustments. The delta in steps of `0x0100` points to a simple `raw = knob * 0x0100 + bias` scheme; more mid-scale samples will confirm the exact mapping.
 - **Locality**: all three EQ entries occupy the contiguous span `0x24–0x37`, immediately after the global header. Each tweak only touches its 4-byte lane (low `0x28–0x2b`, mid `0x2c–0x2f`, high `0x34–0x37`), leaving the rest of the file byte-identical.
 
-## Pattern Directory (WIP)
-- **Global count**: header word at `0x0056` tracks the highest populated pattern slot. Baseline `0x0000`; `unnamed 6` (one extra blank pattern) bumps it to `0x0001`; `unnamed 7` (two additional blanks on top) pushes it to `0x0002`. Practical count = `stored + 1`, so serializers must increment this before emitting new pattern payloads.
-- **Per-track handles**: 4-byte lanes from `0x0058` to `0x007F` (little-end pairs) map each track to the pattern roster. Default state is `0x00FF/0xFF00` (unused). Once Track 1 gains an extra pattern the lane flips to `0x001D/0x0001` (`unnamed 6+`), pointing at roster slot `0x001D`.
-- **Roster entries**: slot indices multiply by `0x10` to find 16-byte descriptors (slot `0x001D` ⇒ `0x01D0`). Those descriptors show recurring halfwords `0x0400`, `0x3FFF`, `0xFF04`, etc. Later captures insert additional 32-bit words ahead of the legacy data (e.g., `0x00FFFFF8`, `0x0000003F`), which likely serve as `prev/next` links in a circular list (Elektron-style sentinel of `0x3FFF` / `-1`).
-- **Track block handle**: the 32-bit word sitting immediately before each `00 00 01 03 ff 00 fc 00` signature re-roots the block back into the roster. Baseline Track 1 uses `0xF01001D6`; after new patterns it mutates — e.g., `unnamed 6` shows `0x1002B500` — so any relocation that shifts the roster must rewrite these handles.
-- **Pattern payloads**: pattern data lives between track blocks. An empty slot contributes the sentinel `0x8A` plus a pointer (`0x0000F010`) before the next block; real content swaps in a `0x25 <event-count> 00 00` header followed by 10-byte note events (`start`, `voice`, `note`, `velocity`, `gate`). See `unnamed 2` (`0x7A6`) and `unnamed 3` for concrete examples.
-- **Multiple blanks**: additional empty patterns create more `0x8A` sentinels just upstream of later blocks (`unnamed 7` shows them at `0x07AD`, `0x0ED8`, `0x1603`). Their ordering matches the linked-list hypothesis: new nodes append immediately before the next track bank without shuffling earlier payloads.
-- **Working model**: header → roster slot → per-track linked ring → payload blob. The exact bit layout inside the 16-byte roster entries still needs confirmation, but the sentinel values (`0x3FFF`, `0x00FFFFF8`) behave like guard nodes that make the firmware expect a non-empty ring — explaining why stale header counts trip the `num_patterns > 0` assertion.
-- **Note trig nodes**: `unnamed 50` (Track 3 step 6) inserts a single 16-byte record just ahead of the next track block. The four dwords decode to `0xCB012100`, `0x00000008`, `0x00000149`, `0x00213000`. Removing the trig (`unnamed 51`) shrinks the file by 16 bytes and restores the pre-track pointer words to their sentinel pair `0x10018600 / 0x010000F0`, proving the node is physically unlinked rather than just muted. The third dword (`0x149 = 5*64 + 9`) matches the expected step index plus micro-timing; the remaining fields likely hold the ring links and an event-type/parameter pointer (`0x21` shows up in both high bytes). We still need more specimens to map each field.
-- **Step payload block**: the live trig also flips the per-step data strip at `0x24C0`. With the note present it reads `0x017F, 0x0000, 0x0AF8, 0xFFFF, 0x003F, 0x0000, 0xFF00, 0x00FF` (16-bit words), which encodes voice/velocity (`0x017F`), a signed timing offset (`0xFFFFF80A` in 32-bit view), and the custom gate (`0x003F`). Deleting the trig restores the baseline sentinel pattern (`0x00FF/0xFF00` repeating), so the firmware eagerly clears payload state rather than leaving residue in the rotation table.
-- **Quantized trig delta** (`unnamed 52.xy` → `unnamed 53.xy`): Track 1 pattern 1 still uses the older `0x25 01` header with a single 10-byte event (coarse start `0x0000F0C0`, note `0x3C`, velocity `0x64`, gate `0x6400`). Switching it off reverts the payload to the empty sentinel `0x8A 01 10 F0…`, so quantized trigs follow the same insert/remove mechanics even when they travel through the step-encoder UI instead of live record.
-- **Step state table** (`0x12C0` stride): every trig toggle rewrites the 32-byte mask that alternates `0xFF/0x00` per step. Inserting a trig flips the associated 2-byte lane from the baseline `0x00FF` into `0xFF00` and it stays there even after the trig is removed (see `unnamed 53.xy`). Live-record deletions also yield `0x0000` in the same lane, so treat the tuple (`0x00FF`, `0xFF00`, `0x0000`) as three distinct states (pristine, active, touched-empty).
-- **Quantised `0x25` fine ticks** (`unnamed 81.xy`): the little-end `fine` word stores the grid-aligned tick count straight up. A single trig on step 9 (C4, default velocity) serialises as `fine = 0x0F00` (3840 ticks) with the usual `STEP_TICKS = 480`, so `step_index = fine / 480 = 8`. The coarse dword only repeats `0x000000F0` in this case; when `fine` is zero we fall back to the pointer-based decode above. Working rule: if `fine % 480 == 0`, use `fine // 480` as the 0-based step index.
-- **0x25 variants** (`tools/inspect_xy.py`): the inspector now labels each event `form=…` as it parses. `inline-single` means a single grid trig with clean `fine` ticks (count = 1, fine divisible by 480). `hybrid-tail` covers mixed inline + tail records (triads, chords). `pointer-tail` flags cases with no reliable inline data (tail only). Tail bytes are emitted verbatim so we can see the pointer words (`… 0xF010` etc.) that jump into the per-step slabs; pointer decoding still needs to be formalised.
-- **Tail word rescue pass**: when a `0x25` event still lacks voices after parsing inline records plus structured tail entries, we now scan all `tail_words` for `u16` values with `1 < velocity <= 0x7F`. This surfaces hidden chord voices such as the F4 in `unnamed_80` while ignoring pointer scaffolding (`velocity ≤ 1` or `> 0x7F`). Inline single-note captures with `fine % STEP_TICKS == 0` force their tail entries to pointer-only so legacy lattice words (`0x1001`, `0xF010`, …) no longer render as phantom `C#-1` notes.
-- **Pointer-21 tail cleanup**: every `0x21` tail token is currently reported as pointer metadata with note/velocity nulled. This prevents the earlier A8/D7/G#7 clutter on files like `unnamed_39` and `unnamed_87`. Real pitch/step/gate data still lives in the per-step slabs that these pointers reference; decoding those blocks remains a TODO.
-- **Encoding split (empirical, mechanism TBD)**: corpus analysis of 91 default-project files shows Track 1 always uses `0x25` and Tracks 2+ use `0x21` or `0x2D` (see "Event Type Selection" section). The selection mechanism is not yet proven — three hypotheses remain (track index, body structure, collision avoidance). **NOTE**: an earlier claim that "all activated tracks share engine 0x03" was based on a bug reading `body[3]` (always `0x03`, part of the track block signature) instead of the actual engine_id at `body[0x0D]` (type-05) or `body[0x0B]` (type-07). The default project actually uses different engines per track. **Device-verified authoring rule**: use `0x25` on Track 1 only, `0x21` on all other tracks. Step-entry examples: Drum (`unnamed 2.xy:0x07A6`), Prism chord entry (`unnamed 3.xy`). Live-record examples on Track 3: `unnamed 50.xy:0x1051`, `unnamed 79.xy:0x104D`, `unnamed 87.xy:0x1051`.
-- **Quantised `0x25` event layout** (`unnamed 2.xy:0x07A6`): the Track 1 capture shows the 16-byte record explicitly (ticks-per-step ≈ 0xF0 = 240):
-  - bytes `0–1`: `0x25 0x01` (note event + single entry)
-  - bytes `2–3`: fine tick (`0x12C0`, 20× the coarse start)
-  - bytes `4–7`: coarse tick (`0x000000F0`, 48 ticks per step → step index = value ÷ 48)
-  - bytes `8–9`: voice id (`0x0001` for mono)
-  - bytes `10–11`: MIDI note (`0x3C`)
-  - bytes `12–13`: velocity (`0x0064`)
-  - bytes `14–15`: gate percentage (`0x0064` → 100 % of a single step when grid-entered via the sequencer)
-  The micro-timing sits in the fine tick (divide by 20 to get the coarse slot, modulo 20 is the swing offset).
-- **Tick resolution sanity check** (`unnamed 2/3/52/50/56/65/78.xy`): `0x21` live captures put `start_ticks` on multiples of `0x1E0` (480) per 16th—e.g. `unnamed 65` Track 3 step 9 stores `0x00000F00` (3840 ticks) and `unnamed 50` Track 3 step 6 stores `0x000008CB` with a −149 tick micro offset. `0x25` quantised payloads are not consistent: the triad in `unnamed 3` yields per-note little-end values like `0x0016FD02`, `unnamed 2` shows `0x0000F002`, and `unnamed 52` packs the same lane as `00 00 00 F0` (big-end `0x00F0`, little-end `0xF0000000`). Some headers still end in the `0x...600` stride, but the raw tick dword clearly doubles as a pointer. Takeaway: only the `0x21` 480-tick rule is backed by repeat captures; all `0x25` tick math stays hypothesis until we record quantised notes on later steps and decode the pointer linkage.
-- **0x25 pointer tail layout** (`unnamed 3.xy`, `unnamed 80.xy`): treating the 10-byte lanes as 5×`u16_be` values makes the structure legible. The fifth word still packs `note<<8 | velocity` (e.g. `0x3C4B`, `0x4329`), while the middle word (`0x1600`) is a constant pointer into the step/component table at `track_base+0x1600`. The post-record “tail” is a sequence of little-end words pairing extra voices with track-local offsets: `[note/vel, 0x0000, pointer_lo, pointer_hi, …]`. Example (step 13 chord in `unnamed 80`): `0x2543` (G4 @ 0x25), `0x2A41` (F4 @ 0x2A), followed by offsets `0x00F0` and `0x0164` which resolve to `track_base+0x10F0` (per-step payload slab) and `track_base+0x164` (pointer directory). The earlier triad tail ends with `[0x4067, 0x0000, 0x0164, 0xF010]`, proving the same scheme was already present on step 1.
-- **Triad pointer trail** (`unnamed 3.xy`): a C–E–G chord dropped on Track 1 step 1 confirms the 0x25 header’s first dword is not a tick count but a pointer. Masking off the low byte yields offsets `0x16FD`, `0x16EC`, and `0x0500`, each of which hosts 32-bit parameter slabs for the corresponding voice. The big-end coarse word carries a 0x600 stride marker – `coarse & 0xFFF` stepping through `0x000`, `0x600`, `0xC00`, … – so we tentatively recover the grid index via `(mod // 0x600) - 1` (clamped at zero). These per-voice tables still keep the velocity/gate automation payload; explicit step flags inside the slab remain TBD, but the user capture verified all three trigs live on step 1.
-- **0x21 start ticks** (`unnamed 50/56/57/65.xy`): the live/quantised synth captures show `start_ticks` increasing in 480-tick increments per grid step. Rounding `start_ticks ÷ 480` gives the nearest step (1-based once we add 1), while the low 6 bits of `packed` supply a ±micro offset in 1/64-step units. `packed`’s upper bits change with gate length (e.g., 0x149 → default gate, 0x3C0/0x780 → extended holds), so step decoding should prefer `start_ticks` over `packed`.
-- **Step state table** (`0x12C0` stride): every trig toggle rewrites the 32-byte mask that alternates `0xFF/0x00` per step. Inserting a trig flips the associated 2-byte lane from `0x00FF`/`0xFF00` into `0xFF00` and it stays there even after the trig is removed (see `unnamed 53.xy`). That suggests the table tracks “touched” state in addition to on/off, so serializers should treat `0x00FF` vs `0xFF00` as a three-state flag (unused, legacy default, custom). Baseline empty → `0x00FF`; first toggle → `0xFF00`; some captures also show `0x0000` in the same lane when we clear a live-record trig, so expect at least three distinct encodings.
-- **Per-step note records** (`unnamed 3`, `unnamed 80`): the pointer offsets recovered from the 0x25 tail land in a 16-byte structure at `track_base+0x16D0`. Little-end words decode as `[head, voice_id, 0x0100, note, 0x0100, step_token, 0x0000, gate_ticks]`. Example: `unnamed 80` step 5 (D4) produces `[0x00DF, 0x002C, 0x0100, 0x003E, 0x0100, 0x0018, 0x0000, 0x1490]`. The sixth word increments in multiples of six (step index × 6 so far), and the tail word matches the default gate tick count (`0x1490` ≈ 0.65 steps). Additional voice-specific metadata (random seeds, envelopes) follows immediately afterwards at `b+0x16E0`. We still need captures on other steps to confirm the exact scaling (whether the 6× factor holds across the grid and longer pattern lengths).
-- **Pointer table flip**: touching a track promotes the first four pointer slots in the track block (`block+0x0C`..`0x1B`) from “pointer, flags=0” to “pointer=0, flags=offset”. Track 3 (`unnamed 23`) and Track 1 (`unnamed 52`) both adopt this layout and never revert, so writers must emit the promoted form whenever they create pattern content.
-- **Per-step payload** (`0x24C0`): with the quantised trig active the eight 16-bit words read `0x007F, 0x0000, 0x0AF0, 0x0000, 0x0064, 0x0000, 0xFF00, 0x00FF`. We interpret these as `[voice+velocity, reserved, coarse tick, micro offset, gate, reserved, flag, guard]`. Clearing the trig resets the block to the sentinel fill, so unlinking nodes always zeroes the payload.
+## Pattern Directory (Validated)
+
+The pre-track region between the header and the first track block contains a pattern directory and handle table. This section summarizes the validated structure; see "Multi-Pattern Storage Model" for the full block rotation mechanism.
+
+### Pre-Track Layout (0x56 to end)
+
+| Offset | Size | Field | Notes |
+|--------|------|-------|-------|
+| 0x56-0x57 | 2 | `pattern_max_slot` (u16 LE) | 0-based: 0=1 pattern, 1=2, 2=3. Validated across unnamed 1/6/7/102/103/104/105 |
+| 0x58+ | 5+ | Pattern descriptor(s) | Only present when patterns > 1. See below |
+| variable | 36 | Handle table (12 x 3 bytes) | Shifts rightward when descriptors are inserted |
+
+**Pattern descriptors** (inserted at 0x58 when going from 1 to 2+ patterns):
+- Single-track multi-pattern: `00 1D 01 00 00` (5 bytes)
+- Two-track multi-pattern (unnamed 105): `01 00 00 1B 01 00 00` (7 bytes = 5 + 2 per additional track)
+
+**Handle table**: 12 entries of 3 bytes each (`FF 00 00` = unused). In the baseline, the table occupies 0x58-0x7B (36 bytes). When pattern descriptors are inserted, the entire handle table shifts rightward by the descriptor size (e.g., 0x5D-0x80 for a 5-byte descriptor).
+
+**Pre-track total size**: baseline = 0x7C (124 bytes); 2+ patterns single track = 0x81 (129 bytes); 2 tracks with patterns = 0x83 (131 bytes).
+
+### Note Event Storage
+
+Note events are appended directly to the track block body (NOT stored in a separate roster):
+- Empty pattern: body ends at the track block sentinel area
+- Pattern with notes: event blob (0x25 or 0x21 header + note records) is appended at the tail of the body
+- The track block's type byte flips 0x05 to 0x07 when notes are present (2-byte padding removed)
+
+See "Sequencer Pattern Bits" below for full event encoding and "Multi-Pattern Storage Model" for how multiple patterns are stored via block rotation.
 
 ### Sequencer Pattern Bits (Notes / Length / Scale)
 - **Note-event variants (`0x25` decoder taxonomy)**:
@@ -341,13 +393,119 @@ The `0x25` tag marks the start of a note-event block.
 - **Live record chunk** (`unnamed 50.xy`): Track 3 swaps the empty sentinel `0x86` for a `0x21` header followed by 14-byte records. First word `0x08CB` matches the raw tick capture from record mode (≈ step index with micro-timing), third word exposes the live velocity (`0x49` → 73), fourth word lands on `0x0100` which lines up with the halved gate the UI shows. This chunk also flips the step bitmap around `0x2130`, so the record payload probably packs both tick timing and a pointer into the step-mask table. Need another capture with quantized live input to lock the scaling.
 - **Live trig step decode** (`unnamed 50/56/57/65/78/79`): the 0x21/0x01 node carries two timing words—bytes 2–5 are absolute start ticks (480 ticks per 16th), bytes 6–9 (after shifting off the low byte) are gate length in ticks. Step index is recovered by rounding `start_ticks / 480`. Example set: `unnamed 50` → start 2251 ⇒ step 6 with −149 tick micro-early, gate `0x000149` = 329 ticks; `unnamed 56/57/65/78` → start 3840 ⇒ step 9, gates 960/1920/240/240 ticks; `unnamed 79` → start 5877 ⇒ step 13 with +117 tick micro-late, gate `0x00018B` = 395 ticks. The control word never encodes the step directly—earlier alignment happened by coincidence.
 
-- Component masks sit at `block+0x0B4`. The first word’s high byte is the component ID (`0x01` pulse, `0x02` hold, `0x04` multiply, `0x08` velocity, `0x10` ramp/random/conditional, `0x20` extended conditionals) and the low byte is the step token (`0x63/0x64` = step 9). `block+0x0B6` stays `0x0000`; the high byte of `block+0x0B8` carries the UI span (multiply ÷4 ⇒ `0x04`, multiply ÷2 ⇒ `0x02`, ramp up 4 steps ⇒ `0x08`, conditional every 9th ⇒ `0x09`) while the low byte stores the secondary value.
-- Parameter slots start at `block+0x0D0`. Pulse/velocity reuse the `block+0x0D0`/`0x0D4` pair (`0x7900` ↔ `0x00FF`, etc.) plus the tail at `block+0x0F0`. Hold writes its high byte to `block+0x0D0` (`0x7600` for the minimum capture). Multiply/ramp/random/portamento/jump/tonality/parameter/conditional all land in `block+0x0D0` with high bytes stepping from `0x7500` (multiply ÷4) down to `0x6A00` (conditional every ninth). They share a tail at `block+0x0F0` = `[0x0800, 0x7FFF, 0x0000, 0xE800, 0x5503, 0x0155, 0x0015, 0x0400]`.
-- Velocity random keeps the pulse registers but swaps in its own tail (`0xE800/0x5503/0x0155/0x0015/0x0400/0x1FFF/0x0000/0xAC00`).
-- Trigger every 4th toggles `block+0x0D0–0x0D6` as a condition mask and stores the divisor in `block+0x0D8` (`0x6A00`).
-- Track 3’s note+Multiply capture (`unnamed 78.xy`) confirms the ratio encoding (high byte of `block+0x0B8` and `block+0x0D0` = 0x02 for ÷2). The synth block inserts extra pointers (`block+0x0D2=0x147A`, `block+0x0D6=0x04AE`), shifts the note payload to `block+0x0F8`, and emits a `0x21 01 00 0F …` chunk (big-endian fields: step=15, pointer=0xF0, payload offset=0x130, vel=0x0064, mask=0x0110) to link the component and note records. The component keeps the BITMASK guard values, so nothing corrupts when a note and component share a step.
-- The nine `u16` slots at `block+0x0B4–block+0x0C4` still OR together linearly; the “all components” capture (`unnamed 63.xy`) equals the union of the single-component masks.
-- Step bitmap at `0x2400` flips the step‑9 lane to `0x0000` for every component we touched, matching the “touched” state observed with note trigs.
+### Step Component Encoding (Corpus-Verified Decode)
+
+**Slot Table Structure** (body07 offsets 0xA2-0xC8):
+- 13 consecutive 3-byte slots. Empty sentinel = `FF 00 00`.
+- All 13 slots verified as `FF 00 00` on pristine baseline Track 1 (unnamed 1).
+- Confirmed on Track 1 (19 specimens) and Track 3 (unnamed 78, Prism synth).
+- Note: Track 7/8 baselines use `00 FF 00` instead of `FF 00 00` (different engine default).
+
+**Header Format** (3 bytes, occupies one slot):
+```
+Byte 0: [(0xE - step_0_indexed) << 4] | [nibble]
+Byte 1: component bitmask (B1)
+Byte 2: second bitmask or supplementary byte (B2)
+```
+Header slot position: step_0=0 at slot 5 (offset 0xB1, 2 specimens), step_0=8 at slot 6 (offset 0xB4, 17 specimens). Formula for other steps unknown — only these 2 step positions observed in the corpus.
+
+**Nibble Encoding** (partially decoded):
+- nibble=3 (step 9, 11 specimens): B1 = bank-1 bitmask, B2 = bank-2 bitmask. Used for ALL single bank-1 components at step 9, and for the ALL multi-component entry (unnamed 63: `63 FF 3F`).
+- nibble=4 (step 9, 7 specimens): B1 = bank-2 bitmask, B2 = 0x00 (or 0x04 for Trigger). Used for ALL single bank-2 components at step 9.
+- nibble=4 (step 1, 2 specimens): B1 = bank-1 bitmask (0x01 = Pulse), B2 = 0x00. This CONTRADICTS the "nibble=4 means bank-2" interpretation — unnamed 8 and unnamed 9 both use nibble=4 for Pulse, which is a bank-1 component.
+- **Conclusion**: nibble meaning is step-dependent. At step 9, nibble=3/4 reliably distinguishes bank-1/bank-2. At step 1, nibble=4 is used for bank-1 components too. Insufficient data (only 2 step positions) to derive the general rule.
+
+**Bank-1 Bitmask** (8 bits — all 8 individually verified plus ALL union):
+| Bit  | Component   | Verified by              |
+|------|-------------|--------------------------|
+| 0x01 | Pulse       | unnamed 59, 60, 8, 9     |
+| 0x02 | Hold        | unnamed 61               |
+| 0x04 | Multiply    | unnamed 66, 78 (Track 3) |
+| 0x08 | Velocity    | unnamed 67               |
+| 0x10 | RampUp      | unnamed 68               |
+| 0x20 | RampDown    | unnamed 69               |
+| 0x40 | Random      | unnamed 70               |
+| 0x80 | Portamento  | unnamed 71               |
+ALL union: unnamed 63 has B1=0xFF (all 8 bits set). Cross-check: 0x01|0x02|0x04|0x08|0x10|0x20|0x40|0x80 = 0xFF.
+
+**Bank-2 Bitmask** (6 bits — 5 uniquely verified, bit 0x20 ambiguous):
+| Bit  | Component          | Verified by              |
+|------|--------------------|--------------------------|
+| 0x01 | Bend               | unnamed 72               |
+| 0x02 | Tonality           | unnamed 73               |
+| 0x04 | Jump               | unnamed 74               |
+| 0x08 | Parameter          | unnamed 75               |
+| 0x10 | Conditional        | unnamed 76               |
+| 0x20 | **AMBIGUOUS**      | unnamed 77 AND unnamed 62|
+- **Bit 0x20 conflict**: Both Conditional-9th (unnamed 77, B1=0x20 B2=0x00) and Trigger-4th (unnamed 62, B1=0x20 B2=0x04) use bit 0x20. They are distinguished by B2: Trigger has B2=0x04, Conditional-9th has B2=0x00. It is unclear whether bit 0x20 represents "Trigger" or "Conditional (variant 2)" or a shared slot that uses B2 to disambiguate.
+- ALL union: unnamed 63 has B2=0x3F (bits 0x01-0x20 all set), consistent with 6 bank-2 components.
+
+**Standard Param Record** (5 bytes: `00 [TYPE_ID] [PARAM] 00 00`):
+Each verified by exactly one corpus specimen (two for Conditional):
+| Type ID | Component    | PARAM value  | Specimen    |
+|---------|-------------|-------------|-------------|
+| 0x00    | Hold        | 0x01 (min)  | unnamed 61  |
+| 0x01    | Multiply    | 0x04 (div4) | unnamed 66  |
+| 0x01    | Multiply    | 0x02 (div2) | unnamed 78  |
+| 0x03    | RampUp      | 0x08        | unnamed 68  |
+| 0x04    | RampDown    | 0x02        | unnamed 69  |
+| 0x05    | Random      | 0x03        | unnamed 70  |
+| 0x06    | Portamento  | 0x07 (70%)  | unnamed 71  |
+| 0x06    | Bend        | 0x01        | unnamed 72  |
+| 0x07    | Tonality    | 0x04 (+5th) | unnamed 73  |
+| 0x08    | Jump        | 0x04 (s13)  | unnamed 74  |
+| 0x09    | Parameter   | 0x04        | unnamed 75  |
+| 0x0A    | Conditional | 0x02 (2nd)  | unnamed 76  |
+| 0x0B    | Conditional | 0x09 (9th)  | unnamed 77  |
+Note: Portamento and Bend share type_id 0x06 — distinguished by which bitmask bit is set. Gap at type_id 0x02 (no specimen).
+
+**Pulse Param** (non-standard, 3 bytes per slot): `[REPEAT] 00 00` for repeat mode (unnamed 59: `01 00 00`), or `00 FF 00` repeating for random mode (unnamed 60). Both step 1 and step 9 specimens show identical param structure.
+
+**Velocity Param**: Random mode only specimen (unnamed 67): same `00 FF 00` slot-fill pattern as Pulse random.
+
+**Allocation Marker** (pattern `[XX] 40 00 00`, followed by `01 40 00 00` repeating):
+- Baseline position: body07 0xC9 (unnamed 1, alloc=0xDF).
+- After component insertion, marker shifts rightward by insertion size.
+- **Allocation byte formula** (verified 16/19 corpus specimens):
+  `alloc = 0xF7 - step_0 * 0x10 - component_global_index`
+  Global indices follow bitmask order: Pulse=0, Hold=1, Multiply=2, Velocity=3, RampUp=4, RampDown=5, Random=6, Portamento=7, Bend=8, Tonality=9, Jump=10, Parameter=11, Conditional=12, bit0x20=13.
+- Formula exceptions: Pulse/Velocity random-mode specimens have +2/+5 delta (non-standard param encoding).
+- The formula confirms Cond-9th (unnamed 77) is at global index 13 (same as Trigger), consistent with the bit 0x20 ambiguity.
+- Step 1: formula verified for Pulse repeat (0xF7). Step 1 random-mode has delta=+2.
+- Track 3: no allocation marker found in search range 0xC0-0xFF (unnamed 78). May be at a different offset on non-drum tracks.
+
+**Multi-Component Entries** (Trigger and ALL):
+- Both produce 17 bytes of param data after the 3-byte header (unnamed 62, unnamed 63).
+- Both share allocation byte 0x6A and identical data length.
+- Trigger header: `64 20 04` — B2=0x04 meaning unknown (possibly Jump co-activation bit, or trigger-every-N encoding).
+- ALL header: `63 FF 3F` — bank1=all 8 + bank2=all 6 = 14 components.
+- Per-byte mapping of the 17-byte param block not fully decoded. 14x1-byte interpretation (one default param per component) is plausible but unverified.
+
+**Step Component Authoring** (DEVICE-VERIFIED WORKING):
+- Component-only activation works standalone — no note events required.
+- The initial test batch crashed due to two bugs (Crash #9): wrong allocation byte (shifted baseline 0xDF instead of formula-computed value) and wrong preamble (0x64 on next track). After fixing both, component-only files load correctly.
+- Authoring recipe: (1) activate body (type 0x05→0x07), (2) insert component data at slot offset, (3) update allocation byte. Can also be combined with note authoring in any order.
+- Component insertion is pure byte insertion at the slot position. Body grows by insertion size (6 bytes for Pulse/Velocity, 8 bytes for standard components).
+- Component activation does NOT set preamble 0x64 on the next track (verified: all 19 corpus specimens keep original preambles). Setting 0x64 incorrectly causes `num_patterns > 0` crash.
+- The allocation byte is critical — a wrong value also causes `num_patterns > 0` crash.
+- Implementation: `xy/step_components.py` (types, encoding, alloc formula) + `project_builder.add_step_components()`.
+- **Device-verified components** (6 of 13, all on Track 1 step 9):
+  | Component  | Param | File                | Status |
+  |------------|-------|---------------------|--------|
+  | Hold       | 0x01  | comp_B1_hold.xy     | WORKING |
+  | Multiply   | 0x04  | comp_B2_multiply.xy | WORKING |
+  | Bend       | 0x01  | comp_B3_bend.xy     | WORKING |
+  | Pulse      | 0x01  | comp_B4_pulse.xy    | WORKING |
+  | RampUp     | 0x08  | comp_B5_rampup.xy   | WORKING |
+  | Portamento | 0x07  | comp_B6_porto.xy    | WORKING |
+  | Hold (solo)| 0x01  | comp_C_hold_only.xy | WORKING (no notes) |
+- Byte-perfect corpus matches: Hold=unnamed 61, Bend=unnamed 72, Pulse=unnamed 59. All 3 match every byte of the full file.
+- Untested: RampDown, Random, Velocity, Tonality, Jump, Parameter, Conditional (encoding follows same pattern, expected to work).
+
+**Other observations**:
+- Step bitmap at body07 offset ~0x2400 flips step lane to `0x0000` for every component activation, matching the "touched" state observed with note trigs.
+- Track 3 Multiply capture (unnamed 78) confirms the same slot table structure on non-drum tracks. Header `63 04 00` with param `00 01 02 00 00` (type=Multiply, param=0x02=divide-by-2).
+
 
 ## Firmware Package Notes (2025-02-14)
 - `src/firmware/opxy_firmware_1_1_0.tfw` opens with two 0x40-byte headers keyed by `0xBABECAFE`/`0xBEEFCAFE`. Interpreting the fields as little-endian shows a global length word (`0x002BAD00`), firmware version `0x00010001` (v1.1), and a shared payload offset of `0x00014008`.
@@ -367,7 +525,7 @@ The `0x25` tag marks the start of a note-event block.
 - Device crash when loading writer-produced files: `/src/sequencer/serialize/serialize_latest.cpp:30 num_patterns > 0`
 - Fires at line 30 — very early in deserialization, before any pattern content is parsed.
 - `num_patterns` is NOT simply the value at `0x56` (that field is `0x0000` in all working single-pattern files too).
-- The firmware likely derives `num_patterns` from downstream track/roster data — if offsets are wrong, it reads garbage and fails the assertion.
+- The firmware likely derives `num_patterns` from the preamble byte[1] and pattern_max_slot — if offsets are wrong, it reads garbage and fails the assertion.
 
 ### Variable-Length Track Block Encoding (100% Verified)
 - **Type byte** at `block+0x09`: controls whether 2 padding bytes follow.
@@ -390,38 +548,46 @@ The `0x25` tag marks the start of a note-event block.
   - `unnamed_34` family: staircase shift (engine change affects 8 bytes per track — engine ID byte change propagates).
   - `unnamed_40`: non-uniform shift (HP filter parameter changes multiple tracks).
   - `unnamed_64`: progressive +8 bytes per track.
-  - `unnamed_6/7`: major restructuring (new patterns added to roster).
+  - `unnamed_6/7`: major restructuring (new patterns added via block rotation).
 
 ### No Checksum Found
 - Tempo-only changes (unnamed 4/5) affect ONLY the tempo bytes at `0x08-0x09`. No other bytes change.
 - No hidden CRC, hash, or integrity check detected anywhere in the file format.
 
 ### Handle Table Correction
-- The handle table at `0x58` contains only **9 entries** (through `0x7B`), NOT 16 as coded in `find_track_handles()`.
-- Bytes `0x7C-0x7F` are the first track's preamble word (LE u32 with `0xF0` high byte), not handle entry #10.
-- `xy/structs.py`'s `find_track_handles()` reads 16 handles (range(16)), which means handles 10-16 read into track preamble/data — this is a bug.
-
+- The handle table at `0x58` contains **12 entries** of 3 bytes each (through `0x7B`, 36 bytes total), NOT 9 entries of 4 bytes and NOT 16 as coded in `find_track_handles()`.
+- Each entry is `FF 00 00` in the baseline (unused). The 3-byte grouping aligns perfectly; 4-byte grouping does not.
+- Bytes `0x7C-0x7F` are the first track's preamble word (LE u32 with `0xF0` high byte), not part of the handle table.
+- `xy/structs.py`'s `find_track_handles()` reads 16 handles (range(16)), which means handles 13-16 read into track preamble/data -- this is a bug.
+- When pattern descriptors are inserted at `0x58`, the entire handle table shifts rightward (see Pattern Directory section above).
 ## Outstanding Issues
 - **Pointer-tail note decode gap**: pointer-driven note payloads (hybrid 0x25 events and pointer-21 meta blocks) still stop at pointer metadata in the inspector. The per-voice node slabs at `track+0x16xx` mingle live note entries with static lookup tables, so we need deterministic rules to recover `step`, `beat`, and `gate` before changing the report. See `docs/issues/pointer_tail_decoding.md` for the current findings and plan.
 - **Pointer-21 display**: to avoid misleading output we now suppress the bogus high-octave tail notes that came from parsing ASCII pointer words. The report shows "note data unresolved" for these events until we can decode the referenced slabs; the missing decode remains tracked alongside the pointer-tail issue.
 - **Writer produces unloadable files**: SOLVED — see "Variable-Length Encoding Discovery" above. The writer changes the type byte without removing padding, causing 2-byte misalignment in all downstream data.
-- **`find_track_handles()` reads past handle table**: reads 16 entries but only 9 exist (0x58–0x7B). Entries 10-16 overlap with track preamble data.
+- **`find_track_handles()` reads past handle table**: reads 16 entries but only 12 exist (0x58-0x7B, 3 bytes each). Entries 13-16 overlap with track preamble data.
 - **Triple-write bug in writer**: `xy/writer.py` lines 173-176 write `PREPAYLOAD_WORDS` three times to the same offset `block_offset + 0x0024`. Only one write is needed.
 
 ## Open Questions
-- Are scenes stored sequentially even when unused, or does the file include a scene count bitmap?
-- Do pattern slots reserve fixed-size blocks per track, or are they length-prefixed blobs?
-- How are sample paths encoded—plain text, hash, or indices into a directory table?
+
+### Answered
 - ~~Is there a checksum or version field guarding the project file?~~ **ANSWERED**: No checksum detected. Tempo-only edits change only the tempo bytes.
-- Pattern roster entries: which bitfields carry `prev/next`, payload offsets, and active counts? Are `0x3FFF`/`0x00FFFFF8` literal sentinels or ones-complement IDs?
-- Track-block handle word: how are slot index and payload pointer packed into the preamble dword (e.g., `0xF01001D6` vs `0x1002B500`)?
-- Empty pattern sentinel `0x8A`: does it require a matching roster flag, and how is the `0xF010` pointer interpreted when appending non-empty payloads?
+- ~~Do pattern slots reserve fixed-size blocks per track, or are they length-prefixed blobs?~~ **ANSWERED**: Neither. Patterns use block rotation -- clone blocks are inserted inline, always 16 block slots total. See "Multi-Pattern Storage Model".
+- ~~Pattern roster entries: which bitfields carry `prev/next`, payload offsets, and active counts?~~ **ANSWERED**: No roster/linked ring. The old model was wrong. Patterns are stored as cloned track blocks with preamble encoding. The `0x3FFF`/`0x00FFFFF8` values are part of the handle table entries, not linked-list sentinels.
+- ~~Track-block handle word: how are slot index and payload pointer packed into the preamble dword?~~ **ANSWERED**: Preamble = `[byte0] [byte1] [bar_steps] [0xF0]`. byte0 encodes role (0xB5=leader, 0x00=clone, 0x64=post-activation sentinel). byte1 = pattern count (leaders) or next-track baseline byte0 / 0x64 (clones).
+- ~~Empty pattern sentinel `0x8A`: does it require a matching roster flag?~~ **ANSWERED**: 0x8A is the baseline preamble byte0 for T2 (Drum phase). Not a sentinel -- it just appears at clone byte[1] when the preceding block is not activated, because it's T2's original byte0.
+- ~~How does the firmware compute `num_patterns` from the file data?~~ **ANSWERED**: `pattern_max_slot` at offset 0x56 (u16 LE, 0-based). Value 0 = 1 pattern, 1 = 2 patterns, etc. The firmware reads this plus the preamble byte[1] (pattern count per track).
+- ~~What is the exact relationship between the handle table entries and track block locations?~~ **ANSWERED**: Handle table is 12 entries of 3 bytes each (`FF 00 00` = unused). Position shifts when pattern descriptors are inserted. Entries are NOT pointers to track blocks -- track blocks are located by signature scanning.
+
+### Still Open
+- Are scenes stored sequentially even when unused, or does the file include a scene count bitmap?
+- How are sample paths encoded -- plain text, hash, or indices into a directory table?
 - Trig node layout: what do each of the four dwords (`0xCB012100`, `0x00000008`, `0x00000149`, `0x00213000`) represent (prev/next IDs, track ID, component flags), and how do we compute them when authoring new events?
-- Step state table: which byte order (`0x00FF` vs `0xFF00`) corresponds to “active trig”, “edited empty”, and “pristine”, and how do we derive the correct ordering when writing patterns from scratch?
-- How does the mask header’s low byte (`(block+0x0B4) & 0x00FF`) map to the actual step index (e.g., `0x63/0x64` for step 9)?
-- Derive the exact mapping from UI values to the stored words (`block+0x0B8`, `block+0x0D4`, `block+0x0D0`, `block+0x0D8`, `block+0x0F0`) for each component, including the shared tail tables at `block+0x0F0`.
-- **NEW**: What is the exact relationship between the handle table entries (0x58–0x7B) and track block locations? Are they absolute offsets, relative offsets, or encoded pointers?
-- **NEW**: How does the firmware compute `num_patterns` from the file data? It's not the value at `0x56` (which is `0x0000` in all working single-pattern files).
+- Step state table: which byte order (`0x00FF` vs `0xFF00`) corresponds to "active trig", "edited empty", and "pristine", and how do we derive the correct ordering when writing patterns from scratch?
+- ~~How does the mask header's low byte map to the actual step index (e.g., `0x63/0x64` for step 9)?~~ **ANSWERED**: Header byte = `[(0xE - step_0_indexed) << 4] | bank_nibble`. Nibble 3 = bank-1 entry, nibble 4 = bank-2 entry. See "Step Component Encoding" section.
+- ~~Derive the exact mapping from UI values to the stored words for each component.~~ **MOSTLY ANSWERED**: Standard param format is `00 TYPE_ID PARAM 00 00`. Full type_id table decoded (12 components). Pulse/Velocity use non-standard 3-byte format. Multi-component (Trigger/ALL) uses 17-byte compact table -- per-byte mapping still TBD.
+- What determines the slot position for each step number? Only 2 data points (step_0=0 at slot 5, step_0=8 at slot 6).
+- Why does step_0=0 use nibble=4 for bank-1 components (step 1 Pulse)?
+- Can step components be authored without triggering the ~1300-byte slab reorganization that accompanies component activation?
 
 ## Next Steps
 1. **DONE: Byte-perfect round-trip parser** — `xy/container.py` (XYProject) verified across 88 corpus files.
@@ -430,7 +596,7 @@ The `0x25` tag marks the start of a note-event block.
 4. **Build a proper note writer API**: encode the pure-append recipe into `xy/container.py` or a new `xy/writer.py` module for programmatic note authoring.
 5. **Decode pointer-21 events**: the inspector still shows "note data unresolved" for these. The per-voice node slabs need deterministic rules.
 6. Diff track-scale and pattern-length edits on another track to confirm stride patterns.
-7. Decode step component stacking and parameter scaling.
+7. **MOSTLY DONE: Decode step component encoding** -- slot table, header format, bitmasks, type_ids, and standard param records all decoded. Remaining: multi-component compact table, slot position formula, Trigger/ALL param structure.
 
 ### Previous Next Steps (retained, lower priority)
 - Capture a quantized live-record trig so we can compare the `0x21` chunk’s start word against grid-aligned timing and finalize the tick scaling.
@@ -656,31 +822,45 @@ The MIDI harness experiment (unnamed 93) sent identical C4 notes via MIDI to all
 | T7 | 0x16 | Axis | 0x20 | Confirmed (matched corpus) |
 | T8 | 0x1E | Multisampler | 0x20 | Confirmed (matched corpus) |
 
-**Five distinct event types discovered**: 0x1E, 0x1F, 0x20, 0x21, 0x25.
+**Nine distinct event types discovered**: 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x25, 0x2D.
 
 **Per-note encoding is identical across ALL event types** — only the type byte differs.
 
-### Selection Rules (Empirical — updated 2025-02-11)
+### Selection Rules (CORRECTED — 2026-02-12)
 
-The event type depends on **track slot position**, not engine ID:
+**The event type is determined by the PRESET, not the engine or track slot.** Different presets within the same engine produce different event types. This was proven via controlled experiments:
 
-1. **Track 1 is hardcoded for 0x25**: changing engine_id byte to Prism (0x12) does NOT make 0x21 work (test_B). 0x2D also crashes (test_C). Only 0x25 is accepted.
-2. **Tracks 2+ accept 0x21 universally**: verified on T2 (Drum), T3 (Prism), T5 (Dissolve).
-3. **0x25 is T1-only**: 0x25 on T3 crashes (test_A).
-4. **0x2D multi-note crashes**: 0x2D with count>1 crashes on T1 (test_C) and T2 (test_D). Device-written 0x2D files (unnamed 85, 86, 91) all had count=1 — 0x2D may only be valid for single-note events.
+- **unnamed 116**: Same Drum kit (boop) loaded on T4/T7/T8 — all produce 0x25 (not slot-dependent)
+- **unnamed 117**: Prism engine on all 8 tracks with different presets — produced 4 different event types (0x1C, 0x1D, 0x1E, 0x1F)
+- **unnamed 113**: Different Drum kits on T4/T7/T8 — produced different types (mushroom=0x21, playwood=0x21, chamine=0x22)
 
-Engine-to-event-type mapping observed in MIDI harness (what the device WRITES — not all tested for authoring):
+Known preset-to-event-type mapping:
 
-| Engine ID | Engine Name | Event Type (device-written) |
-|-----------|-------------|------------|
-| 0x03 | Drum | 0x21 (T2), 0x25 (T1), 0x2D (T5 after engine change to Drum) |
-| 0x12 | Prism | 0x21 |
-| 0x14 | Dissolve | 0x21 |
-| 0x07 | EPiano | 0x1F |
-| 0x13 | Hardsync | 0x1E |
-| 0x16 | Axis | 0x20 |
-| 0x1F | Wavetable | 0x2D (T3, unnamed 94) |
-| 0x1E | Multisampler | 0x20 |
+| Preset | Engine | Event Type | Source |
+|--------|--------|------------|--------|
+| boop | Drum | 0x25 | unnamed 116 (T4/T7/T8) |
+| kerf | Drum | 0x25 | unnamed 113 (T1 default) |
+| in phase | Drum | 0x21 | unnamed 93 (T2 default) |
+| mushroom | Drum | 0x21 | unnamed 113 (T4) |
+| playwood | Drum | 0x21 | unnamed 113 (T7) |
+| chamine | Drum | 0x22 | unnamed 113 (T8) |
+| bass-ana | Prism | 0x1D | unnamed 117 (T1) |
+| moog-funk | Prism | 0x1C | unnamed 117 (T2) |
+| moog-bass | Prism | 0x1C | unnamed 117 (T3) |
+| moog-pad | Prism | 0x1E | unnamed 117 (T4) |
+| moog-dark | Prism | 0x1C | unnamed 117 (T5) |
+| pad-vib | Prism | 0x1F | unnamed 117 (T6) |
+| pk-arp | Prism | 0x1E | unnamed 117 (T7) |
+| pk-axe | Prism | 0x1E | unnamed 117 (T8) |
+| shoulder | Prism | 0x21 | unnamed 93 (T3 default) |
+| beach bum | EPiano | 0x1F | unnamed 93 (T4 default) |
+| gaussian | Dissolve | 0x21 | unnamed 93 (T5 default) |
+| dielectric | Hardsync | 0x1E | unnamed 93 (T6 default) |
+| draemy | Axis | 0x20 | unnamed 93 (T7 default) |
+| bandpasser | Multisampler | 0x20 | unnamed 93 (T8 default) |
+| (engine swap, no preset load) | any | 0x2D | unnamed 91, 94 |
+
+**Key constraint**: Track 1 only accepts 0x25 regardless of preset — 0x21 crashes even with Prism engine on T1.
 
 **Untested engines**: Sampler (0x02), Organ (0x06), MIDI (0x1D), Simple (0x20).
 
@@ -697,11 +877,12 @@ Engine-to-event-type mapping observed in MIDI harness (what the device WRITES �
 
 ### Previous Hypotheses (Resolved)
 
-Three competing hypotheses were proposed before testing:
-1. ~~Track index~~ — CORRECT for authoring: Track 1 is hardcoded for 0x25 (test_B: 0x21 crashes even with Prism engine on T1). T2+ accept 0x21 universally regardless of engine.
-2. ~~Body structure~~ — DISPROVED: T2 and T1 both have Drum engine with 24 sample paths, but use different event types (0x21 vs 0x25).
-3. ~~Collision avoidance~~ — DISPROVED.
-4. ~~Engine determines type~~ — DISPROVED for authoring: the MIDI harness showed the device WRITES different types per engine, but for authoring the firmware only cares about track slot position. Changing engine_id byte alone does not change accepted event types (test_B).
+Multiple theories were proposed and tested over time:
+1. ~~Track index determines type~~ — DISPROVED: unnamed 116 shows same type (0x25) on T4/T7/T8 with same preset.
+2. ~~Engine determines type~~ — DISPROVED: unnamed 117 shows 4 different types within Prism engine across different presets.
+3. ~~Body structure~~ — DISPROVED: T2 and T1 both have Drum engine with 24 sample paths, but use different event types.
+4. **PRESET determines type** — CONFIRMED (unnamed 113, 116, 117). Each preset carries a baked-in event type byte.
+5. **Track 1 slot constraint**: Track 1 only accepts 0x25 regardless of preset (test_B: 0x21 crashes even with Prism on T1). This is a slot-level constraint layered on top of the preset rule.
 
 ### Device-Verified Test Results
 - 0x25 on Track 1: WORKS (unnamed 2, 3, 52, 80, 81; velocity_ramp_0x25.xy)
@@ -722,29 +903,37 @@ Three competing hypotheses were proposed before testing:
 - 0x2D on Track 2 (Drum): CRASHES (test_D)
 
 ### Corpus Evidence Summary
-- Track 1: 0x25 (5 files: unnamed 2, 3, 52, 80, 81)
-- Track 2: 0x21 (unnamed 93)
-- Track 3: 0x21 (10 files) or 0x2D (3 files: unnamed 85, 86, 94-Wavetable)
-- Track 4: 0x1F (unnamed 93), 0x2D (unnamed 91 — after engine change to Drum)
-- Track 5: 0x21 (unnamed 93), 0x2D (unnamed 94 — after engine change to Drum)
-- Track 6: 0x1E (unnamed 93)
-- Track 7: 0x20 (unnamed 64, 65, 93)
-- Track 8: 0x20 (unnamed 64, 65, 93)
+Default-preset files (factory presets on original slots):
+- Track 1: 0x25 (boop kit — unnamed 2, 3, 52, 80, 81)
+- Track 2: 0x21 (in phase kit — unnamed 93)
+- Track 3: 0x21 (shoulder preset — 10 files) or 0x2D (engine swap — unnamed 85, 86, 94)
+- Track 4: 0x1F (beach bum preset — unnamed 93), 0x2D (engine swap — unnamed 91)
+- Track 5: 0x21 (gaussian preset — unnamed 93), 0x2D (engine swap — unnamed 94)
+- Track 6: 0x1E (dielectric preset — unnamed 93)
+- Track 7: 0x20 (draemy preset — unnamed 64, 65, 93)
+- Track 8: 0x20 (bandpasser preset — unnamed 64, 65, 93)
+
+Preset-variation experiments:
+- unnamed 113: Drum mushroom=0x21 (T4), playwood=0x21 (T7), chamine=0x22 (T8)
+- unnamed 116: Drum boop=0x25 on T4/T7/T8 (same preset → same type regardless of slot)
+- unnamed 117: Prism bass-ana=0x1D, moog-funk/bass/dark=0x1C, moog-pad=0x1E, pad-vib=0x1F, pk-arp/axe=0x1E
 
 **Corrected engine_id bug**: An earlier analysis claimed "all activated tracks share engine 0x03" — this was wrong. The `container.py` `engine_id` property was reading `body[3]`, which is always 0x03 (part of the track block signature `00 00 01 03 ff 00 fc 00`). The correct engine ID locations are: type-05 → `body[0x0D]`, type-07 → `body[0x0B]`.
 
 ### Remaining Tests
-1. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Simple (0x20) → complete the engine-to-event-type lookup table (observational only — what the device writes)
-2. ~~Try native event types (0x1E, 0x1F, 0x20) for authoring~~ → **DONE**: all three confirmed working (0x1E on T6, 0x1F on T4, 0x20 on T7)
-3. Try 0x2D with single-note (count=1) events → device-written 0x2D files all had count=1; multi-note 0x2D crashes
+1. Test more presets per engine to expand the preset→event-type mapping table
+2. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Simple (0x20) → discover their preset event types
+3. ~~Try native event types (0x1E, 0x1F, 0x20) for authoring~~ → **DONE**: all three confirmed working (0x1E on T6, 0x1F on T4, 0x20 on T7)
 4. Test 0x20 on Track 8 (Multisampler) — expected to work (same type as T7)
 5. Test 0x21 on T6, T7, T8 — verify universal fallback also works on these tracks, or whether native types are required (like T1 and T4)
+6. Determine if Track 1 constraint is truly "only 0x25" or "only the preset's native type" — try loading a non-boop Drum kit on T1
 
 ### Note on 0x2D
 The byte `0x2D` appears in two different contexts — don't confuse them:
 1. **Structural 0x2D**: in Track 1 drum body at pos 376 (grid preset data region), NOT an event
-2. **Event 0x2D**: real note events on some tracks (unnamed 85, 86, 91). Per-note encoding is identical to all other types.
-3. **Relationship to 0x21**: unnamed 91 shows Track 4 using 0x2D after engine change to Drum — but unnamed 93 shows Track 4 (EPiano, original engine) using 0x1F. The device WRITES different types per engine, but for authoring, 0x21 is the safe universal choice for T2+ (0x2D multi-note crashes per tests C & D).
+2. **Event 0x2D**: the engine-swap fallback event type — used when the firmware swaps an engine WITHOUT fully rewriting the body from a preset template (unnamed 85, 86, 91, 94). Per-note encoding is identical to all other types.
+3. **NOT used when a preset is explicitly loaded**: unnamed 116 shows Drum "boop" kit on T4/T7/T8 producing 0x25, not 0x2D — the preset's native type wins when a preset is properly loaded.
+4. **Multi-note 0x2D crashes**: 0x2D with count>1 crashes on T1 (test_C) and T2 (test_D). Device-written 0x2D files all had count=1.
 
 ### 0x2D Event Format (DECODED — unnamed 91)
 ```
@@ -926,7 +1115,7 @@ Grid-entered chords (unnamed 80) and MIDI-recorded chords (unnamed 94) use **dif
 | Feature | Grid-entered (unnamed 80) | MIDI-recorded (unnamed 94) |
 |---------|--------------------------|---------------------------|
 | Flag byte | 0x00 for all notes | 0x04 for continuation notes |
-| Tick field | Full tick_u32 repeated per chord note | Omitted for continuation notes |
+| Tick field | Compact tick (flag 0x00/0x01) repeated per note | Omitted for continuation notes |
 | Note ordering | Low-to-high (C4→F4→G4→A4) | High-to-low (G4→E4→C4) |
 | Separator before continuation | 3 bytes (00 00 00) | 2 bytes (00 00) |
 | Event type | 0x25 | 0x2D |
@@ -1142,6 +1331,59 @@ Every tick in both the T1 (48-note) and T3 (16-note) events resolves to an exact
 
 Our `build_event()` uses 4-byte u32 LE ticks and u32 LE explicit gates, which is **different from the native encoding** but is accepted by firmware. Device-verified files (`arrange_full.xy`, etc.) use our verbose format and load/play correctly. Matching the native compact encoding is a future optimization, not a correctness issue.
 
+### Engineering Rationale (C++ Analysis)
+
+The flag values `0x00`, `0x01`, `0x02`, `0x04` are powers of two — a classic C++ bit-flag enum:
+
+```c++
+enum NoteFlag : uint8_t {
+    TICK_FULL   = 0x00,  // 2-byte u16 LE tick follows
+    TICK_HI     = 0x01,  // 1-byte tick_hi only (lo == 0)
+    TICK_ZERO   = 0x02,  // tick is 0, no data
+    CHORD       = 0x04,  // inherit previous tick, no data
+};
+```
+
+The deserialization is a textbook `if/else` chain:
+
+```c++
+uint16_t tick;
+if (flag & TICK_ZERO)     tick = 0;
+else if (flag & CHORD)    tick = prev_tick;
+else if (flag & TICK_HI)  tick = (uint16_t)buf.read_u8() << 8;
+else                      tick = buf.read_u16_le();
+```
+
+**Why u16 is sufficient**: max tick = 63 × 480 = 30,240 (4-bar pattern, 64 steps), well within u16 range.
+
+**Why bother with the 0x01 escape**: The savings are small (~1 byte per note at 8-step boundaries, max ~8 bytes per 4-bar pattern). The likely motivation is the `fixed_vector` buffer — we've seen `fixed_vector.h:77` crashes twice (Crash #2, #7), indicating patterns are loaded into fixed-capacity RAM buffers for real-time playback. On an embedded ARM chip, SRAM is scarce. The serialized event format may BE the runtime format (no conversion on load), so every byte directly reduces headroom. The compact encoding ensures 120-note patterns fit within the buffer.
+
+**Why our verbose format works**: The firmware parser is tolerant (Postel's law — accept liberally), but the serializer always writes the tightest encoding. Our extra 1-2 bytes per note from u32 ticks eat into headroom but don't overflow for the note counts tested (up to 129 notes across 5 tracks).
+
+**Why 0x00 needs the escape**: `0x00` serves double duty as both the inter-note separator byte and the "full tick follows" flag. When a tick's low byte is naturally `0x00` (every 256 ticks = every 8th step), the separator and tick_lo would be ambiguous. The `0x01` escape resolves this: it signals "tick_lo is zero, only tick_hi follows."
+
+### unnamed 3 — Compact Live-Recorded Tick Anomaly
+
+unnamed 3 is a live-recorded C-E-G triad on Track 1, step 1. The event (`25 03`) appends 38 bytes to the body. Notes 0 and 1 parse cleanly under the standard encoding. **Note 2 (E4, vel=103) is 1 byte shorter than expected** (14 bytes instead of 15 for a standard flag=0x00 note with explicit gate).
+
+Byte-level analysis of note 2:
+- Gate: `dc 16 00 00 00` = u32_LE(5852 ticks), explicit gate ✓
+- Note+vel: `40 67` = E4 (64), vel 103 ✓
+- Tick area: 4 bytes where standard flag=0x00 would need 5 (flag + u16 tick)
+- Bytes at tick position: `05 00 00 01` — the `01` could be a flag=0x01 escape, but then tick = 5 << 8 = 1280 ticks (2.67 steps), which is too large for a note that should be near step 1 in a live chord
+
+**Best hypothesis**: For very small ticks from live performance (tick < 256), the encoding may use a compact form we haven't fully decoded. Only 1 instance in the entire corpus. The `near_chord` MIDI harness experiment (notes at step 1 + step 2, close but not simultaneous) is designed to produce more examples of small-tick encoding to resolve this.
+
+### Pending MIDI Harness Experiments (Tick/Chord Encoding)
+
+Three experiments staged in `tools/midi_harness.py`, ready for device testing:
+
+1. **`disc01_sequential`**: 4 sequential notes at steps 1/5/9/13 on T3 (ch3, Prism). Step 9 (tick 3840 = 15×256) should produce flag=0x01 encoding. Confirms the escape byte behavior with known ground truth.
+
+2. **`chord_variants`**: Mixed chords and singles on T3 — triad (C4+E4+G4) at step 1, single (A4) at step 5, dyad (C4+E4) at step 9, single (G4) at step 13. Tests flag=0x04 chord continuation, flag=0x01 at step 9, and transitions between chord/sequential encoding within one event.
+
+3. **`near_chord`**: C4+G4 chord at step 1, E4 solo at step 2 on T3. Tests the boundary between chord encoding (flag=0x04) and sequential encoding when notes are temporally close but not simultaneous. Should produce a small-tick sequential note (~480 ticks) that clarifies the unnamed 3 anomaly.
+
 ## Multi-Pattern Storage Model (DECODED — unnamed 102-105)
 
 ### Core Mechanism: Block Rotation
@@ -1172,8 +1414,8 @@ The 4-byte preamble `[byte0] [byte1] [byte2] [0xF0]` encodes pattern metadata:
 - `byte[2]`: bar count (`0x10`=1 bar, `0x40`=4 bars)
 
 **Clone blocks** (additional pattern slots):
-- `byte[0]`: always `0x00` — this is the distinguishing mark of a clone block
-- `byte[1]`: the baseline `byte[0]` of the next track in the original layout
+- `byte[0]`: always `0x00` -- distinguishing mark of a clone block
+- `byte[1]`: `0x64` if preceding block is activated (type 0x07); otherwise the baseline `byte[0]` of the next track in the original layout. Validated 9/9 across all multi-pattern corpus files.
 - `byte[2]`: `0x10` (1 bar default)
 
 **Adjacent-track sentinel**: the block immediately after a clone group gets `byte[0]=0x64` (same rule as note activation, T5 exempt).
@@ -1181,9 +1423,12 @@ The 4-byte preamble `[byte0] [byte1] [byte2] [0xF0]` encodes pattern metadata:
 | File | Block 0 (leader) | Block 1 (clone/T2) | Pattern count |
 |------|-------------------|---------------------|---------------|
 | baseline | `D6 01 10 F0` | `8A 01 10 F0` (T2) | 1 |
-| unnamed 102 | `B5 02 10 F0` | `00 8A 10 F0` (clone) | 2 |
-| unnamed 103 | `B5 02 10 F0` | `00 64 10 F0` (clone) | 2 |
-| unnamed 104 | `B5 03 10 F0` | `00 64 10 F0` (clone) | 3 |
+| unnamed 6 | `B5 02 10 F0` | `00 8A 10 F0` (clone) | 2 (blank patterns, T1 not activated) |
+| unnamed 7 | `B5 03 10 F0` | `00 8A 10 F0` (clone) | 3 (blank patterns, T1 not activated) |
+| unnamed 102 | `B5 02 10 F0` | `00 8A 10 F0` (clone) | 2 (T1 not activated, notes only in pat2) |
+| unnamed 103 | `B5 02 10 F0` | `00 64 10 F0` (clone) | 2 (T1 activated with notes, clone gets 0x64) |
+| unnamed 104 | `B5 03 10 F0` | `00 64 10 F0` (clone) | 3 (T1 activated, pat2 blank, pat3 has notes) |
+| unnamed 105 | `B5 02 10 F0` | `00 64 10 F0` (clone) | 2 (T1+T3 each have 2 patterns) |
 
 ### Pre-Track Pattern Directory
 
@@ -1333,85 +1578,232 @@ To write a multi-bar pattern to a track:
 
 All of this is handled by `append_notes_to_tracks()` in `project_builder.py`.
 
-## Multi-Pattern Storage (unnamed 6, 7 — Deep Binary Diff)
+## Multi-Pattern Storage (unnamed 6, 7) -- MERGED
+
+**This section has been merged into "Multi-Pattern Storage Model (DECODED)" above.** All findings from unnamed 6/7 binary diffs (block rotation, overflow mechanism, pre-track changes, preamble behavior) are now documented in the consolidated section along with unnamed 102-105 data. The preamble table includes unnamed 6/7 rows.
+
+## Performance Controller Automation Format (DECODED — unnamed 106-109)
+
+### Background
+
+MIDI CC automation (CC7, CC10, CC12, CC20-23, CC32, CC33) is NOT recorded by the OP-XY (unnamed 95-100 confirmed: only note events stored). However, three "special" performance controllers ARE recorded as rich keyframe automation data:
+
+- **Pitchbend** (confirmed in unnamed 39, decoded in unnamed 108)
+- **Channel Aftertouch** (decoded in unnamed 107)
+- **Modwheel (CC1)** (decoded in unnamed 106, 109)
 
 ### Method
-Binary diff of unnamed 1 (1 pattern, baseline), unnamed 6 (2 patterns), unnamed 7 (3 patterns). All three files have only blank patterns added to Track 1 on the device — no notes recorded.
 
-### Storage Model: Track Block Rotation
+Used `tools/midi_harness.py` experiments to send precisely-timed performance controller ramps (0->127 over 16 steps) on Track 3 (ch3, Prism) with a sustained C4 note (16-step gate):
 
-The OP-XY stores multiple patterns by **inserting new track blocks at the T1 position** and rotating all existing blocks down:
+| File | Experiment | Controllers | Post-roll |
+|------|-----------|-------------|-----------|
+| unnamed 106 | `modwheel_sweep` | CC1 only | 0 |
+| unnamed 107 | `aftertouch_sweep` | Channel AT only | 0 |
+| unnamed 108 | `pitchbend_sweep` | PB only | 0 |
+| unnamed 109 | `perf_all_sweep` | PB + AT + CC1 simultaneously | 0 |
 
-```
-unnamed 1 (1 pattern):   T1  T2  T3  T4  T5  ... T14 T15 T16
-unnamed 6 (2 patterns):  T1' T1  T2  T3  T4  ... T13 T14 [T15+T16]
-unnamed 7 (3 patterns):  T1' T1' T1  T2  T3  ... T12 T13 [T14+T15+T16]
-```
+### Extraction Method
 
-- Each new blank pattern inserts a clone of T1 (minus 1 trailing `0x00` byte: 1831 vs 1832 bytes)
-- All existing blocks shift down by 1 position
-- Blocks that fall off the end (T15, T14, ...) are concatenated into T16 as overflow
+All automation data is appended to the T3 track body after the preset name string. Extraction anchored on the `bass\0/shoulder\0\0` preset string -- everything after it is the note event + automation blob.
 
-**CONFIRMED byte-perfect**: unnamed6 T3 body == unnamed1 T2 body, unnamed7 T5 body == unnamed1 T3 body, etc. — every rotated body is an exact match.
+Type-05 vs type-07 padding must be normalized: baseline T3 is type-05 (2-byte padding at body[10:12]); activated T3 is type-07 (no padding). Structural comparison strips the padding to align offsets.
 
-### T16 Overflow Mechanism
+### Note Event with Automation (Flag 0x03)
 
-T16 absorbs evicted blocks with their preambles preserved:
+When a note carries automation data, the flag byte changes from `0x02` to `0x03`, and the gate encoding changes to a compact single-byte form:
 
 ```
-unnamed6 T16 = [unnamed1_T15.body] + [unnamed1_T16.preamble] + [unnamed1_T16.body]
-               346 bytes              4 bytes (9b 01 10 f0)    403 bytes = 753 total
-
-unnamed7 T16 = [unnamed1_T14.body] + [unnamed1_T15.preamble] + [unnamed1_T15.body]
-             + [unnamed1_T16.preamble] + [unnamed1_T16.body]
-               333 + 4 + 346 + 4 + 403 = 1090 total
+[event_type:1B] [count:1B] [00 00] [03] [gate_hi:1B] [00 00 00] [note:1B] [vel:1B] [00 00]
 ```
 
-**CONFIRMED byte-perfect** for both unnamed6 and unnamed7. The evicted blocks retain internal track signatures, so T16's body contains multiple `00 00 01 03 ff 00 fc 00` signatures (2 in unnamed6, 3 in unnamed7).
+- Flag `0x03` signals "first note + automation sections follow"
+- Gate = `gate_hi << 8` ticks (e.g., `0x1E` = 7680 ticks = 16 steps)
+- The 3-byte `00 00 00` after gate_hi replaces the normal gate encoding
+- After the note+velocity+trailing bytes, automation sections follow immediately
 
-### Pre-Track Region Changes
+Compared to flag `0x02` (notes only):
+```
+Flag 0x02: [00 00] [02] [gate: F0 00 00 01 or u32_LE 00] [note] [vel] [00 00]
+Flag 0x03: [00 00] [03] [gate_hi] [00 00 00] [note] [vel] [00 00] [auto sections...]
+```
 
-| Offset | Field | unnamed 1 | unnamed 6 | unnamed 7 |
-|--------|-------|-----------|-----------|-----------|
-| 0x56-0x57 | pattern_max_slot (u16 LE) | 0x0000 (1 pat) | 0x0001 (2 pat) | 0x0002 (3 pat) |
-| 0x58-0x5C | pattern descriptor | not present | `00 1d 01 00 00` | `00 1d 01 00 00` |
+### Automation Section Header
 
-- Pre-track region grows by 5 bytes (0x7C → 0x81) when going from 1 to 2+ patterns
-- The 5-byte descriptor `00 1d 01 00 00` is inserted once and stays unchanged for 3 patterns
-- `pattern_max_slot` = total_patterns - 1 (0-indexed count of extra patterns)
+**First section** (7 bytes):
+```
+[type:1B] [count:1B] [init_val:u16LE] [sep:1B] [final_val:u16LE]
+```
 
-### Preamble Behavior
+**Subsequent sections** (6 bytes, type byte omitted):
+```
+[count:1B] [init_val:u16LE] [sep:1B] [final_val:u16LE]
+```
 
-| Track | unnamed 1 | unnamed 6 | unnamed 7 | Notes |
-|-------|-----------|-----------|-----------|-------|
-| T1 | `d6 01 10 f0` | `b5 02 10 f0` | `b5 03 10 f0` | byte0 → 0xb5, byte1 = pattern count |
-| T2 | `8a 01 10 f0` | `00 8a 10 f0` | `00 8a 10 f0` | byte0=0x00 marker, byte1=orig T2 byte0 |
-| T3 | `86 01 10 f0` | `8a 01 10 f0` | `00 8a 10 f0` | rotated from T2 (unnamed6), marker (unnamed7) |
-| T4+ | (original) | (shifted by 1) | (shifted by 2) | preambles rotate with bodies |
-| T16 | `9b 01 10 f0` | `9b 01 10 f0` | `9b 01 10 f0` | unchanged (absorbs overflow) |
+| Field | Size | Meaning |
+|-------|------|---------|
+| type | 1B | Controller type (first section only) |
+| count | 1B | Total keyframe count including init (keyframes = count - 1) |
+| init_val | u16 LE | Value at note start (tick 0) |
+| sep | 1B | Separator (always 0x00) |
+| final_val | u16 LE | Value at note end |
 
-**Preamble rules for multi-pattern**:
-1. **T1**: byte0 changes to 0xb5, byte1 = total pattern count (1, 2, 3, ...)
-2. **Displaced blocks at T2 position** get a modified preamble: `[0x00] [original_T2_byte0] [0x10] [0xF0]`
-3. **T3-T15**: preambles rotate down with their bodies, no modification
-4. **T16**: preamble unchanged
+### Automation Type Bytes
 
-### Type and Engine IDs
+| Type Byte | Controller |
+|-----------|------------|
+| `0x00` | Pitchbend |
+| `0x01` | Modwheel (CC1) |
+| `0x02` | Channel Aftertouch |
 
-All rotated blocks retain their original type bytes and engine IDs. The new blank pattern block at T1 has:
-- type_byte = 0x05 (same as original T1)
-- engine_id = 0x03 (Drum, same as original T1)
-- body size = 1831 (original T1 was 1832 — 1 byte shorter, trailing `0x00` removed)
+### Multi-Section Ordering
 
-### Implications for Multi-Pattern Authoring
+When multiple controllers are recorded simultaneously, sections appear in this order:
+```
+PB (0x00) -> AT (0x02) -> MW (0x01)
+```
 
-To add pattern 2 to an existing project:
-1. Increment `pre_track[0x56:0x58]` (u16 LE pattern_max_slot)
-2. If first time adding patterns: insert 5 bytes `00 1d 01 00 00` at offset 0x58
-3. Create a new T1-like block (clone T1 body minus trailing byte)
-4. Insert at T1 position, shifting all blocks down
-5. Set T1 preamble: `[0xb5] [pattern_count] [bar_steps] [0xF0]`
-6. Set displaced-T1 preamble at T2: `[0x00] [original_T2_byte0] [0x10] [0xF0]`
-7. T16 body = evicted T15 body + T16 preamble + original T16 body
+Only the first section has the type byte. Subsequent sections omit it (6-byte header vs 7-byte).
 
-**NOT YET DEVICE-TESTED for authoring** — this analysis is from reading corpus files only.
+### Keyframe Format
+
+After each section header, `count - 1` keyframes follow. Each keyframe is nominally 4 bytes:
+
+```
+[tick:u16LE] [value:u16LE]
+```
+
+**Variable-length escape**: When previous keyframe's `val_hi == 0x00` AND current `tick_lo == 0x00`, an extra `0x00` byte is inserted before the tick field. This is the same zero-byte ambiguity seen in note tick encoding -- `0x00` is the separator byte, so a `0x00 0x00` sequence (val_hi + tick_lo) would be misinterpreted as a section boundary.
+
+Detection rule for parsing:
+```python
+if prev_val_hi == 0x00 and data[pos] == 0x00 and data[pos+1] == 0x00:
+    pos += 1  # skip escape byte
+```
+
+This escape only triggers for AT/MW automation (where values < 256, so val_hi is always 0x00) at tick boundaries where tick_lo == 0x00 (e.g., tick=3840=0x0F00, tick=7680=0x1E00).
+
+### Value Encoding
+
+| Controller | MIDI Range | Stored Range | Formula | Verified |
+|-----------|-----------|-------------|---------|----------|
+| Pitchbend | 8192-16383 (center-max) | 0-8191 | `stored = midi_pb - 8192` | Exact match |
+| Aftertouch | 0-127 | 0-254 | `stored = midi_val * 2` | Within +/-1 |
+| Modwheel | 0-127 | 0-254 | `stored = midi_val * 2` | Within +/-1 |
+
+PB center (8192) maps to stored value 0. PB max (16383) maps to 8191.
+AT/MW values are doubled -- MIDI 127 becomes stored 254.
+
+### Decoded Results
+
+#### unnamed 106 (MW only) -- 21 bytes automation
+```
+Section 1: type=0x01(MW), count=1, init=0x0000(0), final=0x00FE(254)
+Keyframes: 0 (count=1 means only init+final, no intermediate keyframes)
+```
+
+**MW behavioral quirk**: Standalone MW records only count=1 (init + final value, no keyframes). The ramp was 0->127 over 16 steps, but the device only stored the final value (254 = 127*2). All intermediate values are lost.
+
+#### unnamed 107 (AT only) -- 82 bytes automation
+```
+Section 1: type=0x02(AT), count=16, init=0x0000(0), final=0x00FE(254)
+15 keyframes:
+  KF1:  tick=480,  val=16   (sent AT=8,   expected=16)   MATCH
+  KF2:  tick=960,  val=34   (sent AT=17,  expected=34)   MATCH
+  KF3:  tick=1440, val=50   (sent AT=25,  expected=50)   MATCH
+  KF4:  tick=1920, val=68   (sent AT=34,  expected=68)   MATCH
+  KF5:  tick=2400, val=84   (sent AT=42,  expected=84)   MATCH
+  KF6:  tick=2880, val=102  (sent AT=51,  expected=102)  MATCH
+  KF7:  tick=3840, val=118  (sent AT=59,  expected=118)  MATCH *escape byte here*
+  KF8:  tick=4320, val=134  (sent AT=67,  expected=134)  MATCH
+  KF9:  tick=4800, val=152  (sent AT=76,  expected=152)  MATCH
+  KF10: tick=5280, val=168  (sent AT=84,  expected=168)  MATCH
+  KF11: tick=5760, val=186  (sent AT=93,  expected=186)  MATCH
+  KF12: tick=6240, val=202  (sent AT=101, expected=202)  MATCH
+  KF13: tick=6720, val=220  (sent AT=110, expected=220)  MATCH
+  KF14: tick=7200, val=236  (sent AT=118, expected=236)  MATCH
+  KF15: tick=7680, val=254  (sent AT=127, expected=254)  MATCH
+```
+
+All 15 keyframes match sent values exactly (MIDI val * 2).
+
+#### unnamed 108 (PB only) -- 82 bytes automation
+```
+Section 1: type=0x00(PB), count=16, init=0x0000(0), final=0x1FFF(8191)
+15 keyframes: all match sent PB values within +/-1 (rounding)
+  KF1:  tick=480,  val=546   (sent PB=8738,  stored=8738-8192=546)
+  KF2:  tick=960,  val=1092
+  ...
+  KF15: tick=7680, val=8190  (sent PB=16382, stored=16382-8192=8190)
+```
+
+#### unnamed 109 (PB+AT+MW combo) -- 215 bytes automation
+```
+Section 1: type=0x00(PB), count=16, init=0, final=8191
+  15 PB keyframes (all correct)
+Section 2: (no type byte) count=16, init=0, final=254
+  15 AT keyframes (all correct)
+Section 3: (no type byte) count=16, init=0, final=254
+  15 MW keyframes (all correct -- FULL keyframes this time!)
+```
+
+**Key finding**: MW in combo records full 16-count keyframes, unlike standalone MW which only records count=1.
+
+### Standalone vs Combo MW Behavior
+
+| Context | MW count | Keyframes | Data Size |
+|---------|----------|-----------|-----------|
+| MW only (unnamed 106) | 1 | 0 (init+final only) | 7 bytes |
+| MW + PB + AT (unnamed 109) | 16 | 15 (full ramp) | ~64 bytes |
+
+Hypothesis: The device may optimize MW-only recordings to store just the final value, but when other controllers are recorded simultaneously, it uses the same keyframe infrastructure for all three.
+
+### Automation Data Size Reference
+
+| Configuration | Note Event | Automation | Total Appended |
+|---------------|-----------|------------|----------------|
+| 1 note, no auto (flag 0x02) | 12 bytes | 0 | 12 bytes |
+| 1 note + MW only (flag 0x03) | 12 bytes | 7 bytes | 19 bytes |
+| 1 note + AT or PB (16 KF) | 12 bytes | 67 bytes | 79 bytes |
+| 1 note + PB+AT+MW (all 16 KF) | 12 bytes | 199 bytes | 211 bytes |
+
+### Implications for Authoring
+
+To write automation data:
+1. Use flag byte `0x03` instead of `0x02` on the note
+2. Encode gate as single hi byte: `gate_hi = gate_ticks >> 8`
+3. Append automation sections after the note trailing bytes
+4. First section: 7-byte header with type byte
+5. Subsequent sections: 6-byte header (no type byte)
+6. Keyframes: `count - 1` entries of `[tick_u16LE] [val_u16LE]`
+7. Handle escape byte when val_hi=0x00 and tick_lo=0x00
+
+**NOT YET DEVICE-TESTED for authoring** -- format decoded from device-written captures only.
+
+## C++ Mental Model & Hypotheses (2026-02-12)
+
+The `.xy` format is a flat binary serialization of an in-memory C++ object tree. The firmware uses `fixed_vector<T, N>` for note buffers (explaining the 120-note cap and `fixed_vector.h:77` crashes), a type 0x05/0x07 state machine acting as `Optional<EngineState>` (0x05 = pristine with `08 00` sentinel, 0x07 = activated with explicit parameters and optional events), and signature-based block search (`00 00 01 [type] FF 00 FC 00`) for forward-compatible parsing across variable pre-track sizes and multi-pattern block rotations. The compact variable-length tick encoding (flag bits 0/1/2/4) minimizes serialized size for RAM-constrained real-time playback — the serialized format may be the runtime format with zero-copy loading.
+
+### 10 Testable Hypotheses
+
+- **H1**: Event types (0x1E/0x1F/0x20/0x21/0x25/0x2D) are `fixed_vector` capacity selectors — wrong type allocates wrong buffer size
+- **H2**: Preamble byte[0] encodes a body-size-class for slab/pool memory allocation (7 distinct values map to allocation buckets)
+- **H3**: The note==velocity crash is a delimiter/sentinel collision — `[N, N]` bytes parsed as end-of-record marker
+- **H4**: `FF 00 FC 00` signature suffix is a constant magic number (not a version field)
+- **H5**: 0x2D is the "non-default engine on slot" event type — firmware checks `current_engine != factory_default[slot]`
+- **H6**: EPiano 47-byte tail = 1 marker byte + 22 × s16 LE parameter deltas + 2 zero padding
+- **H7**: Pre-track region grows by byte insertion at fixed offsets per feature (not TLV)
+- **H8**: T5 preamble exemption is a hardcoded `if (idx == 4) skip` patch in the serializer
+- **H9**: Step components stored in a flat array indexed by step number within engine param block
+- **H10**: `08 00` padding is a u16 state flags field (bit 3 = "use engine defaults")
+
+### Key Data Corrections
+
+- Preamble byte[0] has only **7 distinct values** across 16 tracks (not 16 unique) — kills "roster index" theory
+- Handle table uses **3-byte entries** (not 4-byte): `[value_lo] [value_hi] [flags]`, 12 entries
+- Pre-track growth is **feature-driven** (MIDI config, multi-pattern, activation), not firmware-version
+- EPiano tail is **22 signed 16-bit values** (range -15 to +92), not floats or unsigned
+
+### Detailed Document
+
+Full writeup with test protocols, C++ rationale, and prioritized experiment plan: **[`docs/cpp_hypotheses.md`](docs/cpp_hypotheses.md)**

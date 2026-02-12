@@ -1,20 +1,28 @@
 """Build sequential note events for OP-XY track blocks.
 
-Six event types share identical per-note encoding, differing only in the
-type byte.  The correct type depends on track slot and engine:
+At least 9 event types share identical per-note encoding, differing only
+in the type byte.  The correct type is determined by the PRESET loaded on
+the track, not the engine or slot.  Different presets within the same
+engine can use different event types.
 
-  0x25 — Track 1 only (device-verified; 0x21 on T1 crashes)
-  0x21 — Drum/Prism/Dissolve engines (device-verified on T2, T3, T5)
-  0x1f — Pluck/EPiano engine (device-verified on T4; 0x21 on T4 crashes)
-  0x20 — Axis/Multisampler engines (device-verified on T7)
-  0x1e — Hardsync engine (T6 native, untested for authoring)
-  0x2d — observed on some tracks; crashes on device
+Known event types (discovered via unnamed 93/110/112/113/116/117):
+  0x1C — Prism bass presets (moog-funk, moog-bass, moog-dark)
+  0x1D — Prism bass preset (bass-ana)
+  0x1E — Prism pad/pluck presets; Hardsync default preset
+  0x1F — Prism pad preset (pad-vib); EPiano default preset
+  0x20 — Axis default preset; Multisampler default preset
+  0x21 — Prism bass/shoulder; Dissolve default; Drum "in phase" kit
+  0x22 — Drum "chamine" kit
+  0x25 — Drum "boop" kit; Drum "kerf" kit
+  0x2D — engine-swap fallback (body not rewritten); Drum on T5 (exempt)
 
-Default mapping (device-verified where noted):
+Using the wrong event type for a preset crashes the firmware.
+
+Default-preset mapping (for factory-fresh projects):
   T1  0x25  (Drum boop)       T5  0x21  (Dissolve)
-  T2  0x21  (Drum phase)      T6  0x1E  (Hardsync, untested)
-  T3  0x21  (Prism)           T7  0x20  (Axis)
-  T4  0x1F  (Pluck/EPiano)    T8  0x20  (Multisampler, untested)
+  T2  0x21  (Drum phase)      T6  0x1E  (Hardsync)
+  T3  0x21  (Prism shoulder)  T7  0x20  (Axis)
+  T4  0x1F  (EPiano)          T8  0x20  (Multisampler)
   T9-16: 0x21 (auxiliary tracks, untested)
 
 Record layout (per note inside one event, default gate):
@@ -63,14 +71,14 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
     notes : list[Note]
         Notes to encode. Sorted by tick position automatically.
     event_type : int
-        0x25 for Track 1, 0x21 for Tracks 2-16.  Use event_type_for_track().
+        Preset-specific. Use event_type_for_track() for default presets.
 
     Returns the raw bytes ready to be appended to a track body.
     """
     if not notes:
         raise ValueError("need at least one note")
-    if event_type not in (0x1e, 0x1f, 0x20, 0x21, 0x25, 0x2d):
-        raise ValueError(f"event_type must be 0x1e/0x1f/0x20/0x21/0x25/0x2d, got 0x{event_type:02X}")
+    if event_type not in (0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x25, 0x2d):
+        raise ValueError(f"unknown event_type 0x{event_type:02X}")
 
     # Sort by absolute tick
     sorted_notes = sorted(notes, key=lambda n: (n.step - 1) * STEP_TICKS + n.tick_offset)
@@ -102,8 +110,14 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
             buf.extend(DEFAULT_GATE)
 
         # --- note & velocity ---
-        buf.append(note.note & 0x7F)
-        buf.append(note.velocity & 0x7F)
+        # Firmware bug: crashes when note byte == velocity byte.
+        # Nudge velocity by +1 to avoid the collision (imperceptible).
+        note_byte = note.note & 0x7F
+        vel_byte = note.velocity & 0x7F
+        if vel_byte == note_byte:
+            vel_byte = vel_byte + 1 if vel_byte < 127 else vel_byte - 1
+        buf.append(note_byte)
+        buf.append(vel_byte)
 
         # --- trailing padding ---
         if is_last:
@@ -115,16 +129,21 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
 
 
 def event_type_for_track(track_index: int) -> int:
-    """Return the correct event type byte for a 1-based track index.
+    """Return the event type byte for a track's DEFAULT preset.
 
-    Uses firmware-native types per default engine assignment (unnamed 93).
-    Device-verified on T1-T5 and T7.  0x21 is NOT universal — it crashes
-    on T1 (needs 0x25) and T4 (needs 0x1F).
+    IMPORTANT: The event type is a property of the PRESET, not the track
+    slot or engine.  This function returns the correct type only for a
+    factory-fresh project with default presets.  If the user has changed
+    the preset, read the event type from the existing track body instead.
 
-    Mapping:
+    Evidence: unnamed 117 — Prism on all 8 tracks with different presets
+    produced 4 different event types (0x1C, 0x1D, 0x1E, 0x1F).
+    unnamed 116 — same Drum kit (boop) on T4/T7/T8 all produced 0x25.
+
+    Default-preset mapping (device-verified where noted):
         T1  0x25 (Drum boop)       T5  0x21 (Dissolve)
         T2  0x21 (Drum phase)      T6  0x1E (Hardsync)
-        T3  0x21 (Prism)           T7  0x20 (Axis)
+        T3  0x21 (Prism shoulder)  T7  0x20 (Axis)
         T4  0x1F (Pluck/EPiano)    T8  0x20 (Multisampler)
         T9-16: 0x21 (auxiliary, untested)
     """
@@ -133,12 +152,12 @@ def event_type_for_track(track_index: int) -> int:
     _EVENT_TYPES = {
         1: 0x25,   # Drum boop — device-verified
         2: 0x21,   # Drum phase — device-verified
-        3: 0x21,   # Prism — device-verified
+        3: 0x21,   # Prism shoulder — device-verified
         4: 0x1F,   # Pluck/EPiano — device-verified (0x21 crashes)
         5: 0x21,   # Dissolve — device-verified
-        6: 0x1E,   # Hardsync — native, untested
+        6: 0x1E,   # Hardsync — device-verified via unnamed 93
         7: 0x20,   # Axis — device-verified
-        8: 0x20,   # Multisampler — native, untested
+        8: 0x20,   # Multisampler — device-verified via unnamed 93
     }
     return _EVENT_TYPES.get(track_index, 0x21)
 

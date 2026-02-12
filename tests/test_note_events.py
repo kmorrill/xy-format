@@ -5,7 +5,10 @@ from pathlib import Path
 
 from xy.container import XYProject
 from xy.note_events import Note, build_0x21_event, build_event, event_type_for_track, STEP_TICKS
-from xy.project_builder import append_notes_to_track, append_notes_to_tracks, _activate_body
+from xy.project_builder import (
+    append_notes_to_track, append_notes_to_tracks, _activate_body,
+    build_multi_pattern_project,
+)
 
 CORPUS = Path("src/one-off-changes-from-default")
 TEMPLATE = CORPUS / "unnamed 1.xy"
@@ -535,3 +538,548 @@ class TestBarCount:
         assert project.tracks[1].bar_count == 1   # T2 unchanged
         assert project.tracks[2].bar_count == 4   # T3
         assert project.tracks[3].bar_count == 1   # T4 unchanged
+
+
+# ── Multi-pattern builder tests ──────────────────────────────────────
+
+
+class TestMultiPatternBuilder:
+    """Tests for build_multi_pattern_project() block rotation and preamble rules."""
+
+    def _load_baseline(self):
+        return XYProject.from_bytes(TEMPLATE.read_bytes())
+
+    def _load_specimen(self, name):
+        return XYProject.from_bytes((CORPUS / name).read_bytes())
+
+    # ── Block layout tests ────────────────────────────────────────────
+
+    def test_block_count_always_16(self):
+        """Output must always have exactly 16 track blocks."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+        })
+        assert len(result.tracks) == 16
+
+    def test_block_count_two_tracks(self):
+        """Two tracks with 2 patterns each still produces 16 blocks."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, None],
+        })
+        assert len(result.tracks) == 16
+
+    def test_three_patterns_block_count(self):
+        """Three patterns on T1 still produces 16 blocks."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None, None],
+        })
+        assert len(result.tracks) == 16
+
+    # ── Leader preamble tests ─────────────────────────────────────────
+
+    def test_t1_leader_byte0_changes_to_b5(self):
+        """T1 leader preamble byte[0] changes from D6 to B5."""
+        proj = self._load_baseline()
+        assert proj.tracks[0].preamble[0] == 0xD6  # sanity
+        result = build_multi_pattern_project(proj, {1: [None, None]})
+        assert result.tracks[0].preamble[0] == 0xB5
+
+    def test_leader_byte1_is_pattern_count(self):
+        """Leader preamble byte[1] = number of patterns for that track."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None, None],  # 3 patterns
+        })
+        assert result.tracks[0].preamble[1] == 3
+
+    def test_non_t1_leader_keeps_byte0(self):
+        """Non-T1 leaders keep their original preamble byte[0]."""
+        proj = self._load_baseline()
+        original_t3_byte0 = proj.tracks[2].preamble[0]
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, None],
+        })
+        # T3 leader is at block[3] (after T1 leader, T1 clone, T2)
+        assert result.tracks[3].preamble[0] == original_t3_byte0
+        assert result.tracks[3].preamble[1] == 2
+
+    # ── Clone preamble tests ─────────────────────────────────────────
+
+    def test_clone_byte0_always_zero(self):
+        """Clone preamble byte[0] is always 0x00."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, None],
+        })
+        # Block[1] = T1 clone, Block[4] = T3 clone
+        assert result.tracks[1].preamble[0] == 0x00
+        assert result.tracks[4].preamble[0] == 0x00
+
+    def test_clone_byte1_when_pred_not_activated(self):
+        """Clone byte[1] = next track's baseline byte[0] when predecessor is blank."""
+        proj = self._load_baseline()
+        t2_baseline_byte0 = proj.tracks[1].preamble[0]  # T2
+        t4_baseline_byte0 = proj.tracks[3].preamble[0]  # T4
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],     # leader blank → clone pred is blank
+            3: [None, None],     # leader blank → clone pred is blank
+        })
+        # T1 clone at block[1]: pred = T1 leader (type 0x05) → byte[1] = T2 baseline
+        assert result.tracks[1].preamble[1] == t2_baseline_byte0
+        # T3 clone at block[4]: pred = T3 leader (type 0x05) → byte[1] = T4 baseline
+        assert result.tracks[4].preamble[1] == t4_baseline_byte0
+
+    def test_clone_byte1_when_pred_activated(self):
+        """Clone byte[1] = 0x64 when predecessor is type 0x07."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [[Note(step=1, note=48, velocity=100)], None],  # leader has notes
+        })
+        # T1 clone at block[1]: pred = T1 leader (type 0x07) → byte[1] = 0x64
+        assert result.tracks[1].preamble[1] == 0x64
+
+    # ── POST-ACT 0x64 rule ────────────────────────────────────────────
+
+    def test_post_act_0x64_after_activated_clone(self):
+        """Block after an activated clone gets 0x64 preamble byte[0]."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=48, velocity=100)]],
+        })
+        # Block[1] = T1 clone (type 0x07), Block[2] = T2 → gets 0x64
+        assert result.tracks[1].type_byte == 0x07
+        assert result.tracks[2].preamble[0] == 0x64
+
+    def test_no_0x64_after_blank_clone(self):
+        """Block after a blank clone does NOT get 0x64."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],  # all blank
+        })
+        # Block[1] = T1 clone (type 0x05), Block[2] = T2 → keeps original
+        original_t2 = proj.tracks[1].preamble[0]
+        assert result.tracks[1].type_byte == 0x05
+        assert result.tracks[2].preamble[0] == original_t2
+
+    # ── Leader body tests ─────────────────────────────────────────────
+
+    def test_leader_body_trimmed_by_one(self):
+        """Leader body is baseline body minus 1 trailing byte."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {1: [None, None]})
+        base_body = proj.tracks[0].body
+        leader_body = result.tracks[0].body
+        assert len(leader_body) == len(base_body) - 1
+        assert leader_body == base_body[:-1]
+
+    def test_blank_last_clone_keeps_full_body(self):
+        """Last blank clone keeps full baseline body size."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {1: [None, None]})
+        base_body = proj.tracks[0].body
+        clone_body = result.tracks[1].body
+        assert clone_body == base_body
+
+    def test_blank_intermediate_clone_trimmed(self):
+        """Non-last blank clones are trimmed like leaders."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {1: [None, None, None]})
+        base_body = proj.tracks[0].body
+        # Block[1] = clone 1 (intermediate), Block[2] = clone 2 (last)
+        assert len(result.tracks[1].body) == len(base_body) - 1
+        assert len(result.tracks[2].body) == len(base_body)
+
+    # ── Overflow packing tests ────────────────────────────────────────
+
+    def test_overflow_block_structure(self):
+        """Displaced blocks are packed into block 15 with embedded preambles."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, None],
+        })
+        # 18 entries → 15 normal + 3 overflow (T14, T15, T16)
+        ovf = result.tracks[15]
+        base_t14 = proj.tracks[13]
+        base_t15 = proj.tracks[14]
+        base_t16 = proj.tracks[15]
+        expected = base_t14.body + base_t15.preamble + base_t15.body + \
+                   base_t16.preamble + base_t16.body
+        assert ovf.body == expected
+
+    def test_overflow_preamble_from_first_displaced(self):
+        """Block 15 preamble comes from the first displaced track."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, None],
+        })
+        base_t14 = proj.tracks[13]
+        assert result.tracks[15].preamble == base_t14.preamble
+
+    # ── Activated clone tests ─────────────────────────────────────────
+
+    def test_activated_clone_has_event(self):
+        """Clone with notes gets activated body (type 0x07) + event."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=48, velocity=100)]],
+        })
+        # T1 clone at block[1]
+        clone = result.tracks[1]
+        assert clone.type_byte == 0x07
+        # Should contain 0x25 event (T1 drum)
+        assert b"\x25\x01" in clone.body
+
+    def test_t3_clone_body_matches_single_track_activation(self):
+        """T3 activated clone body = activated baseline body + event (same as single-track)."""
+        proj = self._load_baseline()
+        notes = [Note(step=2, note=52, velocity=100)]
+
+        # Build via multi-pattern (T1+T3 combination)
+        multi = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, notes],
+        })
+        clone_body = multi.tracks[4].body  # T3 clone at block[4]
+
+        # Build via single-track append (for comparison)
+        single = append_notes_to_track(proj, track_index=3, notes=notes)
+        single_body = single.tracks[2].body
+
+        assert clone_body == single_body
+
+    # ── Pre-track tests ───────────────────────────────────────────────
+
+    def test_pre_track_slot_count_updated(self):
+        """pre_track[0x56:0x58] = max_patterns - 1."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {1: [None, None]})
+        slot = int.from_bytes(result.pre_track[0x56:0x58], "little")
+        assert slot == 1  # 2 patterns - 1
+
+    def test_pre_track_descriptor_inserted(self):
+        """Descriptor bytes are inserted at 0x58, growing pre-track region."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {1: [None, None]})
+        # T1-only descriptor is 5 bytes
+        assert len(result.pre_track) == len(proj.pre_track) + 5
+
+    def test_pre_track_two_track_descriptor(self):
+        """T1+T3 descriptor is 7 bytes."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            3: [None, None],
+        })
+        assert len(result.pre_track) == len(proj.pre_track) + 7
+
+    # ── Structural match against unnamed 105 ──────────────────────────
+
+    def test_unnamed_105_block_layout(self):
+        """Generated layout matches unnamed 105's block types and preamble patterns."""
+        proj = self._load_baseline()
+        u105 = self._load_specimen("unnamed 105.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],   # T1 pat2: C4 step 1
+            3: [None, [Note(step=2, note=52, velocity=100)]],   # T3 pat2: E3 step 2
+        })
+
+        # Verify all 16 preambles match
+        for i in range(16):
+            assert result.tracks[i].preamble == u105.tracks[i].preamble, \
+                f"Block[{i}] preamble mismatch: " \
+                f"got {result.tracks[i].preamble.hex()} " \
+                f"expected {u105.tracks[i].preamble.hex()}"
+
+    def test_unnamed_105_pre_track(self):
+        """Generated pre-track matches unnamed 105."""
+        proj = self._load_baseline()
+        u105 = self._load_specimen("unnamed 105.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [None, [Note(step=2, note=52, velocity=100)]],
+        })
+
+        assert result.pre_track == u105.pre_track
+
+    def test_unnamed_105_overflow_block(self):
+        """Block 15 overflow content matches unnamed 105."""
+        proj = self._load_baseline()
+        u105 = self._load_specimen("unnamed 105.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [None, [Note(step=2, note=52, velocity=100)]],
+        })
+
+        assert result.tracks[15].body == u105.tracks[15].body
+
+    def test_unnamed_105_t3_clone_body(self):
+        """T3 clone body matches unnamed 105 byte-for-byte.
+
+        T3 (Prism) uses standard activation without firmware metadata insertion,
+        so the clone body should be reproducible from baseline.
+        """
+        proj = self._load_baseline()
+        u105 = self._load_specimen("unnamed 105.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [None, [Note(step=2, note=52, velocity=100)]],
+        })
+
+        # Block[4] = T3 clone in both
+        assert result.tracks[4].body == u105.tracks[4].body
+
+    def test_unnamed_102_t1_clone_body(self):
+        """Track 1 clone body matches unnamed 102 (pattern 2 note only)."""
+        proj = self._load_baseline()
+        u102 = self._load_specimen("unnamed 102.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=9, note=60, velocity=100)]],
+        })
+
+        # Block[1] = T1 clone
+        assert result.tracks[1].body == u102.tracks[1].body
+
+    def test_unnamed_103_t1_leader_and_clone_bodies(self):
+        """Track 1 leader+clone bodies match unnamed 103 byte-for-byte."""
+        proj = self._load_baseline()
+        u103 = self._load_specimen("unnamed 103.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [
+                [Note(step=1, note=60, velocity=100)],
+                [Note(step=9, note=64, velocity=100)],
+            ],
+        })
+
+        # Block[0] = T1 leader, Block[1] = T1 clone
+        assert result.tracks[0].body == u103.tracks[0].body
+        assert result.tracks[1].body == u103.tracks[1].body
+
+    def test_unnamed_105_leader_bodies(self):
+        """Leader bodies (blank, trimmed) match unnamed 105."""
+        proj = self._load_baseline()
+        u105 = self._load_specimen("unnamed 105.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [None, [Note(step=2, note=52, velocity=100)]],
+        })
+
+        # Block[0] = T1 leader (blank, type 0x05)
+        assert result.tracks[0].body == u105.tracks[0].body
+        # Block[3] = T3 leader (blank, type 0x05)
+        assert result.tracks[3].body == u105.tracks[3].body
+
+    def test_unnamed_105_regular_blocks_unchanged(self):
+        """Regular (non-leader, non-clone) blocks keep baseline bodies."""
+        proj = self._load_baseline()
+        u105 = self._load_specimen("unnamed 105.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [None, [Note(step=2, note=52, velocity=100)]],
+        })
+
+        # Blocks 2 (T2), 5 (T4), 6 (T5), 7-14 (T6-T13) should match baseline
+        for i in [2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+            base_ti = None
+            # Map block index to original track index
+            if i == 2:
+                base_ti = 1   # T2
+            elif i >= 5 and i <= 14:
+                base_ti = i - 2  # shifted by 2 clones
+            if base_ti is not None:
+                assert result.tracks[i].body == proj.tracks[base_ti].body, \
+                    f"Block[{i}] (T{base_ti+1}) body mismatch"
+
+    def test_unnamed_105b_exact(self):
+        """Reproduce unnamed 105b (T3 leader note in multi-track layout)."""
+        proj = self._load_baseline()
+        u105b = self._load_specimen("unnamed 105b.xy")
+
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [
+                [Note(step=8, note=53, velocity=100)],
+                [Note(step=2, note=52, velocity=100)],
+            ],
+        })
+
+        assert result.to_bytes() == u105b.to_bytes()
+
+    def test_t3_leader_notes_use_full_body_path_when_t1_leader_active(self):
+        """Regression: T3 leader note offset must not depend on T1 leader state.
+
+        Device-pass diagnostics (mp2_v7) showed that when T1 leader is also
+        active, T3 leader note events still need the 105b-style full-body
+        activation path before trimming. The old trimmed-preactivation path
+        shifted the T3 event by one byte and caused `num_patterns > 0` crashes.
+        """
+        proj = self._load_baseline()
+
+        t1_patterns = [
+            [
+                Note(step=1, note=48, velocity=120),
+                Note(step=5, note=52, velocity=112),
+                Note(step=9, note=48, velocity=118),
+                Note(step=13, note=52, velocity=114),
+            ],
+            [
+                Note(step=1, note=48, velocity=120),
+                Note(step=9, note=48, velocity=118),
+                Note(step=13, note=52, velocity=114),
+                Note(step=16, note=60, velocity=112),
+            ],
+        ]
+        t3_patterns = [
+            [
+                Note(step=1, note=36, velocity=102, gate_ticks=720),
+                Note(step=5, note=36, velocity=100, gate_ticks=720),
+                Note(step=9, note=43, velocity=104, gate_ticks=720),
+                Note(step=13, note=41, velocity=102, gate_ticks=720),
+            ],
+            [
+                Note(step=1, note=36, velocity=102, gate_ticks=720),
+                Note(step=4, note=38, velocity=98, gate_ticks=480),
+                Note(step=10, note=43, velocity=106, gate_ticks=960),
+                Note(step=13, note=34, velocity=102, gate_ticks=720),
+            ],
+        ]
+
+        both_active = build_multi_pattern_project(
+            proj,
+            {1: t1_patterns, 3: t3_patterns},
+        )
+        t1_clone_only = build_multi_pattern_project(
+            proj,
+            {1: [None, t1_patterns[1]], 3: t3_patterns},
+        )
+
+        # Block[3] is the T3 leader block in both layouts.
+        assert both_active.tracks[3].body == t1_clone_only.tracks[3].body
+
+    # ── Validation tests ──────────────────────────────────────────────
+
+    def test_rejects_single_pattern(self):
+        """Must have at least 2 patterns per track."""
+        proj = self._load_baseline()
+        with pytest.raises(ValueError, match="at least 2"):
+            build_multi_pattern_project(proj, {1: [None]})
+
+    def test_rejects_empty_dict(self):
+        """Must have at least one track."""
+        proj = self._load_baseline()
+        with pytest.raises(ValueError, match="at least one"):
+            build_multi_pattern_project(proj, {})
+
+    def test_strict_rejects_unknown_track_set(self):
+        """Strict mode only permits device-verified descriptor sets."""
+        proj = self._load_baseline()
+        with pytest.raises(ValueError, match="strict mode"):
+            build_multi_pattern_project(
+                proj,
+                {
+                    1: [None, None],
+                    2: [None, None],
+                },
+            )
+
+    def test_heuristic_matches_strict_for_known_t1(self):
+        """Heuristic descriptor reproduces strict bytes for T1-only sets."""
+        proj = self._load_baseline()
+        strict = build_multi_pattern_project(
+            proj,
+            {1: [None, None]},
+            descriptor_strategy="strict",
+        )
+        heur = build_multi_pattern_project(
+            proj,
+            {1: [None, None]},
+            descriptor_strategy="heuristic_v1",
+        )
+        assert heur.pre_track == strict.pre_track
+
+    def test_heuristic_matches_strict_for_known_t1_t3(self):
+        """Heuristic descriptor reproduces strict bytes for T1+T3 sets."""
+        proj = self._load_baseline()
+        patterns = {
+            1: [None, [Note(step=1, note=60, velocity=100)]],
+            3: [None, [Note(step=2, note=52, velocity=100)]],
+        }
+        strict = build_multi_pattern_project(
+            proj,
+            patterns,
+            descriptor_strategy="strict",
+        )
+        heur = build_multi_pattern_project(
+            proj,
+            patterns,
+            descriptor_strategy="heuristic_v1",
+        )
+        assert heur.pre_track == strict.pre_track
+
+    def test_heuristic_requires_t1_anchor(self):
+        """Heuristic mode currently requires Track 1 in the set."""
+        proj = self._load_baseline()
+        with pytest.raises(ValueError, match="requires Track 1"):
+            build_multi_pattern_project(
+                proj,
+                {3: [None, None]},
+                descriptor_strategy="heuristic_v1",
+            )
+
+    def test_heuristic_three_tracks_two_patterns_roundtrip(self):
+        """Heuristic mode can build a 3-track / 2-pattern stress file."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(
+            proj,
+            {
+                1: [
+                    [Note(step=1, note=48, velocity=100)],
+                    [Note(step=9, note=50, velocity=110)],
+                ],
+                2: [
+                    [Note(step=3, note=52, velocity=100)],
+                    [Note(step=11, note=55, velocity=110)],
+                ],
+                3: [
+                    [Note(step=5, note=45, velocity=100)],
+                    [Note(step=13, note=48, velocity=110)],
+                ],
+            },
+            descriptor_strategy="heuristic_v1",
+        )
+
+        delta = len(result.pre_track) - len(proj.pre_track)
+        descriptor = result.pre_track[0x58 : 0x58 + delta]
+        assert descriptor == bytes.fromhex("02 00 00 1c 01 1b 01 00 00")
+
+        raw = result.to_bytes()
+        reparsed = XYProject.from_bytes(raw)
+        assert reparsed.to_bytes() == raw
+        assert len(reparsed.tracks) == 16
+
+    def test_round_trip_parses(self):
+        """Generated bytes can be parsed back into an XYProject with 16 tracks."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, [Note(step=1, note=48, velocity=100)]],
+        })
+        raw = result.to_bytes()
+        reparsed = XYProject.from_bytes(raw)
+        assert len(reparsed.tracks) == 16
+        assert reparsed.to_bytes() == raw

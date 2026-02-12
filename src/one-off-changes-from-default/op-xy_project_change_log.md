@@ -119,6 +119,19 @@ This document lists all changes made to OP-XY project files relative to their de
 - **unnamed_103** — Multi-pattern test: Track 1 has 2 patterns with notes in both. Pattern 1: C note on step 1. Pattern 2: E note on step 9. Different pitches and steps for easy binary identification.
 - **unnamed_104** — Multi-pattern sparsity test: Track 1 has 3 patterns. Pattern 1: note on step 1. Pattern 2: blank. Pattern 3: note on step 9. Tests whether empty pattern slots occupy space or are skipped.
 - **unnamed_105** — Multi-track multi-pattern test: Pattern 2 added to both Track 1 and Track 3. T1 pattern 2: note trig on step 1. T3 pattern 2: note trig on step 2. Tests per-track pattern independence and how rotation works with multiple tracks having extra patterns.
+- **unnamed_105b** — Follow-up to `unnamed_105`: added a single note trig on **Track 3, Pattern 1** (while keeping the existing Track 3 Pattern 2 trig). This is the first capture where a non-T1 leader pattern in a multi-track multi-pattern project contains note data.
 - **unnamed_106** — MIDI harness capture (`modwheel_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + modwheel (CC1) ramp from 0→127 over 16 steps. Tests whether modwheel is recorded as keyframe automation (like pitchbend in unnamed 39) or ignored (like arbitrary CCs in unnamed 95-100). Post-roll=0, 1 bar, 120 BPM.
 - **unnamed_107** — MIDI harness capture (`aftertouch_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + channel aftertouch (pressure) ramp from 0→127 over 16 steps. Tests whether aftertouch is recorded as keyframe automation. Post-roll=0, 1 bar, 120 BPM.
 - **unnamed_108** — MIDI harness capture (`pitchbend_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + pitch bend ramp from center (8192) to max (16383) over 16 steps. Complement to unnamed 39 (hand-played wobble) with known linear ramp values. Post-roll=0, 1 bar, 120 BPM.
+- **unnamed_109** — MIDI harness capture (`perf_all_sweep`): Track 3 (ch 3, Prism), sustained C4 note (16-step gate) + simultaneous modwheel (CC1) 0→127 + channel aftertouch 0→127 + pitch bend center→max ramps over 16 steps. Kitchen sink test: all three performance controllers at once. Post-roll=0, 1 bar, 120 BPM.
+
+## Generated Writer Validation Files (`output/`)
+- **mp2_v5_105b_novel_single.xy** — Script-authored multi-pattern stress file using the `105b` compatibility branch. Layout: T1 P1 blank, T1 P2 note at step 5; T3 P1 note at step 12; T3 P2 note at step 2. Device load result: **PASS**.
+- **mp2_v5_105b_novel_dense.xy** — Script-authored denser variant in the same structural layout, with two notes in T1 P2 and two notes in each T3 pattern. Device load result: **PASS**.
+- Both files are intentionally non-byte-identical to `unnamed_105b`/`repro_105b`, confirming the branch supports novel pattern data rather than exact-byte clones only.
+- **mp2_v7_diag_h5_both_sparse.xy** — Diagnostic: both T1 and T3 carry note data in both patterns (sparse), 5-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_h7_both_sparse.xy** — Same sparse musical data, 7-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_h5_both_dense.xy** — Diagnostic: both tracks active in both patterns with denser drum+bass content (A/B variation + fill), 5-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_h7_both_dense.xy** — Same dense musical data, 7-byte descriptor form. Device load result: **PASS**.
+- **mp2_v7_diag_t1both_dense_t3clone.xy** — Control: dense T1 A/B with T3 clone-only active. Device load result: **PASS**.
+- Combined takeaway: multi-pattern generation across multiple tracks (T1+T3) is now validated on-device; prior failures were due to a Track 3 leader event offset bug, not an inherent firmware limitation on dual-track A/B pattern content.
