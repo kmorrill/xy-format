@@ -299,10 +299,10 @@ class TestAppendNotesToTrack:
         )
 
         # Reproduce the unnamed 93 T4 event: C4, vel 100, explicit gate 480 ticks
+        # event_type_for_track(4) returns 0x1F (Pluck/EPiano native)
         result = append_notes_to_track(
             project, track_index=4,
             notes=[Note(step=1, note=60, velocity=100, gate_ticks=480)],
-            native=True,
         )
 
         # T4 body must match unnamed 93 specimen exactly
@@ -367,28 +367,22 @@ class TestAppendNotesToTrack:
 class TestEventTypeForTrack:
     """Verify event type selection for each track slot."""
 
-    def test_track1_always_0x25(self):
+    def test_track1_0x25(self):
         assert event_type_for_track(1) == 0x25
-        assert event_type_for_track(1, native=True) == 0x25
 
-    def test_universal_fallback(self):
-        """Without native=True, all non-T1 tracks return 0x21."""
-        for t in range(2, 17):
-            assert event_type_for_track(t) == 0x21
-
-    def test_native_types(self):
-        """With native=True, tracks return firmware-native event types."""
+    def test_device_verified_types(self):
+        """Tracks return firmware-native event types (device-verified on T1-T5, T7)."""
         expected = {
             1: 0x25, 2: 0x21, 3: 0x21, 4: 0x1F,
             5: 0x21, 6: 0x1E, 7: 0x20, 8: 0x20,
         }
         for track, etype in expected.items():
-            assert event_type_for_track(track, native=True) == etype
+            assert event_type_for_track(track) == etype
 
-    def test_tracks_9_16_native_fallback(self):
-        """Tracks 9-16 have no native mapping, fall back to 0x21."""
+    def test_tracks_9_16_fallback(self):
+        """Tracks 9-16 (auxiliary) fall back to 0x21."""
         for t in range(9, 17):
-            assert event_type_for_track(t, native=True) == 0x21
+            assert event_type_for_track(t) == 0x21
 
     def test_out_of_range(self):
         with pytest.raises(ValueError):

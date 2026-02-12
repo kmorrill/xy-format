@@ -70,8 +70,6 @@ def append_notes_to_track(
     project: XYProject,
     track_index: int,
     notes: List[Note],
-    *,
-    native: bool = False,
 ) -> XYProject:
     """Return a new XYProject with notes appended to the given track.
 
@@ -87,17 +85,13 @@ def append_notes_to_track(
         1-based track number (1-16).
     notes : list[Note]
         Notes to append.
-    native : bool
-        If True, use firmware-native event types per track slot.
     """
-    return append_notes_to_tracks(project, {track_index: notes}, native=native)
+    return append_notes_to_tracks(project, {track_index: notes})
 
 
 def append_notes_to_tracks(
     project: XYProject,
     track_notes: Dict[int, List[Note]],
-    *,
-    native: bool = False,
 ) -> XYProject:
     """Return a new XYProject with notes appended to multiple tracks.
 
@@ -111,9 +105,6 @@ def append_notes_to_tracks(
         The source project (not mutated).
     track_notes : dict[int, list[Note]]
         Mapping of 1-based track index to list of notes.
-    native : bool
-        If True, use firmware-native event types per track slot.
-        If False (default), use 0x25 for T1 and 0x21 for all others.
     """
     if not track_notes:
         raise ValueError("need at least one track with notes")
@@ -133,7 +124,7 @@ def append_notes_to_tracks(
 
         target = tracks[idx]
         new_body = _activate_body(target.body)
-        etype = event_type_for_track(track_index, native=native)
+        etype = event_type_for_track(track_index)
         event_blob = build_event(notes, event_type=etype)
 
         if target.engine_id in _TAIL_ENGINES and len(new_body) >= _TAIL_SIZE:

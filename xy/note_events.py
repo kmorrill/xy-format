@@ -114,45 +114,33 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
     return bytes(buf)
 
 
-def event_type_for_track(track_index: int, *, native: bool = False) -> int:
+def event_type_for_track(track_index: int) -> int:
     """Return the correct event type byte for a 1-based track index.
 
-    Track 1 requires 0x25; Tracks 2-16 default to 0x21 (universal fallback).
-    Device-verified: 0x21 on T1 crashes, 0x25 on T2 crashes.
+    Uses firmware-native types per default engine assignment (unnamed 93).
+    Device-verified on T1-T5 and T7.  0x21 is NOT universal — it crashes
+    on T1 (needs 0x25) and T4 (needs 0x1F).
 
-    Parameters
-    ----------
-    track_index : int
-        1-based track number (1-16).
-    native : bool
-        If True, return the firmware-native event type for each track slot
-        (from unnamed 93 MIDI harness experiment).  Native types match what
-        the device itself writes and may unlock engine-specific features.
-        If False (default), return the safe universal fallback (0x21 for T2+).
-
-    Native mapping (unnamed 93, default engines):
-        T1  0x25 (Drum boop)      T5  0x21 (Dissolve)
-        T2  0x21 (Drum phase)     T6  0x1E (Hardsync)
-        T3  0x21 (Prism)          T7  0x20 (Axis)
-        T4  0x1F (Pluck/EPiano)   T8  0x20 (Multisampler)
+    Mapping:
+        T1  0x25 (Drum boop)       T5  0x21 (Dissolve)
+        T2  0x21 (Drum phase)      T6  0x1E (Hardsync)
+        T3  0x21 (Prism)           T7  0x20 (Axis)
+        T4  0x1F (Pluck/EPiano)    T8  0x20 (Multisampler)
+        T9-16: 0x21 (auxiliary, untested)
     """
     if track_index < 1 or track_index > 16:
         raise ValueError(f"track_index must be 1-16, got {track_index}")
-    if track_index == 1:
-        return 0x25
-    if not native:
-        return 0x21
-    # Firmware-native types per default engine assignment (unnamed 93)
-    _NATIVE = {
-        2: 0x21,   # Drum phase
-        3: 0x21,   # Prism
-        4: 0x1F,   # Pluck / EPiano
-        5: 0x21,   # Dissolve
-        6: 0x1E,   # Hardsync
-        7: 0x20,   # Axis
-        8: 0x20,   # Multisampler
+    _EVENT_TYPES = {
+        1: 0x25,   # Drum boop — device-verified
+        2: 0x21,   # Drum phase — device-verified
+        3: 0x21,   # Prism — device-verified
+        4: 0x1F,   # Pluck/EPiano — device-verified (0x21 crashes)
+        5: 0x21,   # Dissolve — device-verified
+        6: 0x1E,   # Hardsync — native, untested
+        7: 0x20,   # Axis — device-verified
+        8: 0x20,   # Multisampler — native, untested
     }
-    return _NATIVE.get(track_index, 0x21)
+    return _EVENT_TYPES.get(track_index, 0x21)
 
 
 def build_0x21_event(notes: List[Note]) -> bytes:
