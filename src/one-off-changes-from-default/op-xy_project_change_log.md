@@ -108,3 +108,8 @@ This document lists all changes made to OP-XY project files relative to their de
 - **unnamed_82** — Set track 1 high pass filter to value 1 and reduced velocity sensitivity to 0
 - **unnamed_83** — Remapped track 1 modulation routings: modwheel→synth2 (-50), aftertouch→LFO4 (+50), pitchbend→ADSR1 (+25), velocity→filter3 (-25)
 - **unnamed_84** — Rerouted track 1 pitch bend target from synth1 to filter3 (other mod routings left at defaults)
+- **unnamed_95** — MIDI harness capture (`cc_cutoff_steps`): Track 3 (ch 3, Prism), single C4 note on step 1 + CC32 (filter cutoff) automation at 4 steps: step 1=0, step 5=42, step 9=85, step 13=127. First CC automation capture — reveals where CC data is stored in track block
+- **unnamed_96** — MIDI harness capture (`cc_only_no_notes`): Track 3 (ch 3, Prism), CC32 (filter cutoff)=127 at step 1, NO notes. Tests whether CC-only automation is recorded without a note event anchor
+- **unnamed_97** — MIDI harness capture (`cc_multi_lane`): Track 3 (ch 3, Prism), single C4 note on step 1 + three different CCs all at value 64: CC12 (Param 1) at step 1, CC32 (cutoff) at step 5, CC33 (resonance) at step 9. Reveals how multiple CC automation lanes are stored
+- **unnamed_98** — MIDI harness capture (`cc_amp_envelope`): Track 3 (ch 3, Prism), single C4 note on step 1 + all 4 amp envelope CCs at step 1: CC20 (attack)=100, CC21 (decay)=80, CC22 (sustain)=60, CC23 (release)=40. Tests whether related envelope params are stored together or individually
+- **unnamed_99** — MIDI harness capture (`cc_volume_pan`): Track 3 (ch 3, Prism), single C4 note on step 1 + CC7 (volume)=100 at step 1, CC10 (pan)=0 at step 5, CC10 (pan)=127 at step 9. Tests mixer-level CC storage vs synth parameter CC storage

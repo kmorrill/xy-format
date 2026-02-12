@@ -69,12 +69,38 @@ class NoteEvent:
         return f"ch{self.channel+1}:step{self.step}:{name}:v{self.velocity}:{self.duration_steps}s"
 
 
+# OP-XY CC number → parameter name (synth tracks)
+CC_NAMES = {
+    7: "Track Volume", 9: "Track Mute", 10: "Track Pan",
+    12: "Param 1", 13: "Param 2", 14: "Param 3", 15: "Param 4",
+    20: "Amp Attack", 21: "Amp Decay", 22: "Amp Sustain", 23: "Amp Release",
+    24: "Filt Attack", 25: "Filt Decay", 26: "Filt Sustain", 27: "Filt Release",
+    28: "Poly/Mono/Legato", 29: "Portamento", 30: "PB Amount", 31: "Engine Volume",
+    32: "Filter Cutoff", 33: "Resonance", 34: "Env Amount", 35: "Key Tracking",
+    36: "Send Ext", 37: "Send Tape", 38: "Send FX I", 39: "Send FX II",
+}
+
+
+@dataclass
+class CCEvent:
+    """A single CC message to send during a test."""
+    channel: int    # MIDI channel 0-15 (displayed as 1-16)
+    step: int       # 1-based grid step
+    cc: int         # CC number 0-127
+    value: int      # CC value 0-127
+
+    def __str__(self) -> str:
+        name = CC_NAMES.get(self.cc, f"CC{self.cc}")
+        return f"ch{self.channel+1}:step{self.step}:{name}={self.value}"
+
+
 @dataclass
 class TestPlan:
     """A complete test to run on the OP-XY."""
     name: str
     description: str
     events: List[NoteEvent]
+    cc_events: List[CCEvent] = field(default_factory=list)
     bars: int = 1               # bars of content
     pre_roll_bars: int = 0      # empty bars before notes
     post_roll_bars: int = 0     # empty bars after notes (for release tails)
@@ -278,6 +304,132 @@ def make_selective_multi_note() -> TestPlan:
     )
 
 
+# ---------------------------------------------------------------------------
+# CC automation experiments
+# ---------------------------------------------------------------------------
+
+def make_cc_cutoff_steps() -> TestPlan:
+    """Note + filter cutoff at 4 known values on known steps.
+
+    Purpose: find where CC automation lives in the track block and decode
+    the value/step encoding. Filter cutoff (CC32) is a continuous param
+    that the OP-XY should quantize to the step grid.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="cc_cutoff_steps",
+        description="C4 on step 1 (T3) + CC32 (filter cutoff) at steps 1/5/9/13 "
+                    "with values 0/42/85/127. Reveals CC automation encoding.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        cc_events=[
+            CCEvent(channel=2, step=1, cc=32, value=0),
+            CCEvent(channel=2, step=5, cc=32, value=42),
+            CCEvent(channel=2, step=9, cc=32, value=85),
+            CCEvent(channel=2, step=13, cc=32, value=127),
+        ],
+        bars=1,
+    )
+
+
+def make_cc_multi_lane() -> TestPlan:
+    """Note + 3 different CCs to see how multiple automation lanes are stored.
+
+    Purpose: determine if different CC numbers create separate lanes/blocks
+    or if they share a common automation structure.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="cc_multi_lane",
+        description="C4 on step 1 (T3) + CC12 (Param 1)=64 at step 1, "
+                    "CC32 (cutoff)=64 at step 5, CC33 (resonance)=64 at step 9. "
+                    "Reveals multi-lane CC storage.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        cc_events=[
+            CCEvent(channel=2, step=1, cc=12, value=64),
+            CCEvent(channel=2, step=5, cc=32, value=64),
+            CCEvent(channel=2, step=9, cc=33, value=64),
+        ],
+        bars=1,
+    )
+
+
+def make_cc_only_no_notes() -> TestPlan:
+    """CC automation with NO notes — does the device record it?
+
+    Purpose: test if CC automation can exist without note events.
+    If not, the .xy file will match baseline (no changes).
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="cc_only_no_notes",
+        description="CC32 (cutoff)=127 at step 1, NO notes. "
+                    "Tests whether CC-only automation is recorded.",
+        events=[],
+        cc_events=[
+            CCEvent(channel=2, step=1, cc=32, value=127),
+        ],
+        bars=1,
+    )
+
+
+def make_cc_amp_envelope() -> TestPlan:
+    """Note + all 4 amp envelope CCs at known values.
+
+    Purpose: test a family of related CCs (attack/decay/sustain/release)
+    to see if envelope params are stored together or as individual lanes.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="cc_amp_envelope",
+        description="C4 on step 1 (T3) + amp envelope CCs at step 1: "
+                    "CC20 (attack)=100, CC21 (decay)=80, CC22 (sustain)=60, CC23 (release)=40. "
+                    "Reveals envelope parameter storage.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        cc_events=[
+            CCEvent(channel=2, step=1, cc=20, value=100),
+            CCEvent(channel=2, step=1, cc=21, value=80),
+            CCEvent(channel=2, step=1, cc=22, value=60),
+            CCEvent(channel=2, step=1, cc=23, value=40),
+        ],
+        bars=1,
+    )
+
+
+def make_cc_volume_pan() -> TestPlan:
+    """Note + track volume and pan CCs.
+
+    Purpose: test mixer-level CCs (volume=CC7, pan=CC10) which may be
+    stored differently from synth parameter CCs.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    return TestPlan(
+        name="cc_volume_pan",
+        description="C4 on step 1 (T3) + CC7 (volume)=100 at step 1, "
+                    "CC10 (pan)=0 at step 5, CC10 (pan)=127 at step 9. "
+                    "Tests mixer-level CC storage.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        ],
+        cc_events=[
+            CCEvent(channel=2, step=1, cc=7, value=100),
+            CCEvent(channel=2, step=5, cc=10, value=0),
+            CCEvent(channel=2, step=9, cc=10, value=127),
+        ],
+        bars=1,
+    )
+
+
 EXPERIMENTS: Dict[str, TestPlan] = {}
 _single_plans = make_single_note_per_track()
 for _p in _single_plans:
@@ -290,6 +442,11 @@ EXPERIMENTS["chord_test"] = make_chord_test()
 EXPERIMENTS["track2_test"] = make_track2_test()
 EXPERIMENTS["pitchbend_sweep"] = make_pitchbend_sweep()
 EXPERIMENTS["selective_multi_note"] = make_selective_multi_note()
+EXPERIMENTS["cc_cutoff_steps"] = make_cc_cutoff_steps()
+EXPERIMENTS["cc_multi_lane"] = make_cc_multi_lane()
+EXPERIMENTS["cc_only_no_notes"] = make_cc_only_no_notes()
+EXPERIMENTS["cc_amp_envelope"] = make_cc_amp_envelope()
+EXPERIMENTS["cc_volume_pan"] = make_cc_volume_pan()
 
 
 # ---------------------------------------------------------------------------
@@ -340,6 +497,14 @@ class MidiHarness:
                                  note=ev.note, velocity=0)
                 )
 
+        # CC events
+        for cc_ev in plan.cc_events:
+            pulse = pre_roll_pulses + (cc_ev.step - 1) * CLOCKS_PER_16TH
+            schedule.setdefault(pulse, []).append(
+                mido.Message("control_change", channel=cc_ev.channel,
+                             control=cc_ev.cc, value=cc_ev.value)
+            )
+
         # Special: pitch bend ramp for the pitchbend_sweep experiment
         if plan.name == "pitchbend_sweep":
             steps_total = plan.bars * STEPS_PER_BAR
@@ -378,6 +543,10 @@ class MidiHarness:
         print(f"  Notes:")
         for ev in plan.events:
             print(f"    {ev}")
+        if plan.cc_events:
+            print(f"  CCs:")
+            for cc_ev in plan.cc_events:
+                print(f"    {cc_ev}")
         print(f"{'='*60}")
 
         # Wait for user
@@ -403,10 +572,13 @@ class MidiHarness:
             if pulse in schedule:
                 for msg in schedule[pulse]:
                     self.port.send(msg)
+                    step = (pulse // CLOCKS_PER_16TH) + 1
                     if msg.type == "note_on":
                         notes_sent += 1
-                        step = (pulse // CLOCKS_PER_16TH) + 1
                         print(f"  [pulse {pulse:4d}, step {step:2d}] {msg}")
+                    elif msg.type == "control_change" and msg.control != 123:
+                        cc_name = CC_NAMES.get(msg.control, f"CC{msg.control}")
+                        print(f"  [pulse {pulse:4d}, step {step:2d}] ch{msg.channel+1} {cc_name}={msg.value}")
 
             # Send clock
             self.port.send(mido.Message("clock"))
@@ -452,6 +624,25 @@ def parse_note_spec(spec: str) -> NoteEvent:
     )
 
 
+def parse_cc_spec(spec: str) -> CCEvent:
+    """Parse 'channel:step:cc:value' string.
+
+    Examples:
+      '3:1:32:127'    channel 3, step 1, CC32 (filter cutoff), value 127
+      '3:5:33:64'     channel 3, step 5, CC33 (resonance), value 64
+    """
+    parts = spec.strip().split(":")
+    if len(parts) != 4:
+        raise ValueError(f"expected channel:step:cc:value, got {spec!r}")
+    ch, step, cc, value = parts
+    return CCEvent(
+        channel=int(ch) - 1,
+        step=int(step),
+        cc=int(cc),
+        value=int(value),
+    )
+
+
 def list_ports() -> None:
     """Print available MIDI output ports."""
     ports = mido.get_output_names()
@@ -483,9 +674,13 @@ Examples:
   %(prog)s --list-ports
   %(prog)s --list-experiments
   %(prog)s --port "OP-XY" --experiment single_note_all_tracks
-  %(prog)s --port "OP-XY" --experiment track2_test
+  %(prog)s --port "OP-XY" --experiment cc_cutoff_steps
   %(prog)s --port "OP-XY" --notes "3:1:60:100:1 3:5:62:80:2"
+  %(prog)s --port "OP-XY" --ccs "3:1:32:127 3:5:33:64"
+  %(prog)s --port "OP-XY" --notes "3:1:60:100:1" --ccs "3:1:32:127"
   %(prog)s --port "OP-XY" --experiment velocity_sweep --bpm 100
+
+CC spec format: channel:step:cc_number:value (channel is 1-based)
 """,
     )
     parser.add_argument("--list-ports", action="store_true",
@@ -498,6 +693,8 @@ Examples:
                         help="Built-in experiment name (use --list-experiments)")
     parser.add_argument("--notes", "-n", type=str, default=None,
                         help="Custom notes: 'ch:step:note:vel:dur' space-separated")
+    parser.add_argument("--ccs", type=str, default=None,
+                        help="Custom CCs: 'ch:step:cc:value' space-separated")
     parser.add_argument("--bpm", type=float, default=120.0,
                         help="Tempo in BPM (default: 120, should match project)")
     parser.add_argument("--bars", type=int, default=None,
@@ -531,16 +728,23 @@ Examples:
             parser.error(f"unknown experiment {args.experiment!r}. "
                          f"Use --list-experiments to see options.")
         plan = EXPERIMENTS[args.experiment]
-    elif args.notes:
-        events = [parse_note_spec(s) for s in args.notes.split()]
+    elif args.notes or args.ccs:
+        events = [parse_note_spec(s) for s in args.notes.split()] if args.notes else []
+        cc_events = [parse_cc_spec(s) for s in args.ccs.split()] if args.ccs else []
+        parts = []
+        if events:
+            parts.append(f"{len(events)} custom notes")
+        if cc_events:
+            parts.append(f"{len(cc_events)} custom CCs")
         plan = TestPlan(
             name="custom",
-            description=f"{len(events)} custom notes",
+            description=", ".join(parts),
             events=events,
+            cc_events=cc_events,
             bars=args.bars or 1,
         )
     else:
-        parser.error("specify --experiment or --notes")
+        parser.error("specify --experiment, --notes, or --ccs")
 
     # Apply overrides
     if args.bars is not None:

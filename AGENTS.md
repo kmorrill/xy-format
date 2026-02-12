@@ -621,9 +621,14 @@ Engine-to-event-type mapping observed in MIDI harness (what the device WRITES �
 
 ### Practical Authoring Rule (Device-Verified)
 - **Track 1 → 0x25** (only type that works; 0x21 and 0x2D both crash)
+- **Track 4 → 0x1F** (0x21 crashes; insert-before-tail required)
+- **Track 6 → 0x1E** (device-verified via test_D_single_t6.xy)
+- **Track 7 → 0x20** (device-verified single + multi-note via test_B/C)
+- **Track 8 → 0x20** (same engine family as T7; untested but expected to work)
 - **All other tracks → 0x21** (safe universal fallback, verified on T2, T3, T5)
-- Engine-native types (0x1E, 0x1F, 0x20) remain untested for authoring.
+- All native types (0x1E, 0x1F, 0x20, 0x25) confirmed working for authoring.
 - 0x2D may only be safe for single-note (count=1) events.
+- **Chords work**: flag=0x02 encoding accepted on T1 (0x25) and T3 (0x21), both pure chord and chord+melody mix.
 
 ### Previous Hypotheses (Resolved)
 
@@ -634,10 +639,17 @@ Three competing hypotheses were proposed before testing:
 4. ~~Engine determines type~~ — DISPROVED for authoring: the MIDI harness showed the device WRITES different types per engine, but for authoring the firmware only cares about track slot position. Changing engine_id byte alone does not change accepted event types (test_B).
 
 ### Device-Verified Test Results
-- 0x25 on Track 1: WORKS (unnamed 2, 3, 52, 80, 81; output/velocity_ramp_0x25.xy)
+- 0x25 on Track 1: WORKS (unnamed 2, 3, 52, 80, 81; velocity_ramp_0x25.xy)
+- 0x25 chord on Track 1: WORKS (test_E_chord_t1.xy — 3 simultaneous drum hits)
 - 0x21 on Track 1: CRASHES (`num_patterns > 0`) — Crash #4
-- 0x21 on Track 2: WORKS (output/drum_pattern.xy, unnamed 93)
-- 0x21 on Track 3: WORKS (output/ode_to_joy_v2.xy, gate_test.xy, ode_to_joy_full.xy)
+- 0x21 on Track 2: WORKS (drum_pattern.xy, unnamed 93)
+- 0x21 on Track 3: WORKS (ode_to_joy_v2.xy, gate_test.xy, ode_to_joy_full.xy)
+- 0x21 chord on Track 3: WORKS (test_A_chord_t3.xy — C+E+G triad)
+- 0x21 chord+melody on Track 3: WORKS (test_F_mixed_t3.xy — chord step 1 + singles steps 5, 9)
+- 0x1E on Track 6: WORKS (test_D_single_t6.xy — Hardsync native type)
+- 0x1F on Track 4: WORKS (unnamed 93 byte-match via insert-before-tail)
+- 0x20 on Track 7 single: WORKS (test_B_single_t7.xy — Axis native type)
+- 0x20 on Track 7 multi: WORKS (test_C_melody_t7.xy — 4-note melody)
 - 0x25 on Track 2: CRASHES (device-verified)
 - 0x25 on Track 3 (Prism): CRASHES — 0x25 is Track-1-only (test_A)
 - 0x21 on Track 1 (engine changed to Prism 0x12): CRASHES — slot-based, not engine (test_B)
@@ -658,8 +670,10 @@ Three competing hypotheses were proposed before testing:
 
 ### Remaining Tests
 1. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Simple (0x20) → complete the engine-to-event-type lookup table (observational only — what the device writes)
-2. Try native event types (0x1E, 0x1F, 0x20) for authoring on their respective tracks → verify firmware accepts engine-native types, or whether 0x21 is the ONLY accepted type for T2+
+2. ~~Try native event types (0x1E, 0x1F, 0x20) for authoring~~ → **DONE**: all three confirmed working (0x1E on T6, 0x1F on T4, 0x20 on T7)
 3. Try 0x2D with single-note (count=1) events → device-written 0x2D files all had count=1; multi-note 0x2D crashes
+4. Test 0x20 on Track 8 (Multisampler) — expected to work (same type as T7)
+5. Test 0x21 on T6, T7, T8 — verify universal fallback also works on these tracks, or whether native types are required (like T1 and T4)
 
 ### Note on 0x2D
 The byte `0x2D` appears in two different contexts — don't confuse them:
@@ -863,4 +877,4 @@ Both formats are device-generated and accepted by firmware. The grid format is m
 - All MIDI-recorded notes get **explicit gate** (not the 0xF0 default marker).
 
 ### Builder Impact
-Our `build_event()` emits chord notes with `flag=0x02` and tick=0, which differs from both the MIDI format (flag=0x04, no tick field) and grid format (flag=0x00, repeated tick_u32). Device verification of our chord encoding format is still needed.
+Our `build_event()` emits chord notes with `flag=0x02` and tick=0, which differs from both the MIDI format (flag=0x04, no tick field) and grid format (flag=0x00, repeated tick_u32). **Device-verified working**: test_A (pure chord on T3), test_E (chord on T1), test_F (chord+melody mix on T3) all load and play correctly. The firmware accepts all three chord encoding variants.
