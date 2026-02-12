@@ -1,15 +1,17 @@
 """Build sequential note events for OP-XY track blocks.
 
-Four event types share identical per-note encoding, differing only in the
-type byte.  The type is determined by track slot, not engine:
+Five event types share identical per-note encoding, differing only in the
+type byte.  Track 1 always uses 0x25; Tracks 2-16 use engine-dependent types:
 
   0x25 — Track 1 only (device-verified; 0x21 on T1 crashes)
-  0x21 — Tracks 2-16 universal fallback (device-verified on T2, T3)
-  0x2d — firmware-native for synth-slot tracks (T3 Wavetable, T4 Drum)
-  0x20 — firmware-native for Tracks 7-8 (Axis, Multisampler)
+  0x21 — Drum/Prism/Dissolve engines on Tracks 2+ (safe universal fallback)
+  0x2d — firmware-native for some track/engine combos (T3 Wavetable, T4 Drum)
+  0x20 — Axis/Multisampler engines (Tracks 7-8 default)
+  0x1f — EPiano engine
+  0x1e — Hardsync engine
 
-The same Drum engine (0x03) uses different event types depending on track:
-  Track 1 Drum -> 0x25, Track 2 Drum -> 0x21, Track 4 Drum -> 0x2d.
+Discovered via unnamed 93 MIDI harness experiment (all 8 tracks recorded
+simultaneously).  0x21 is accepted as a universal fallback on all non-T1 slots.
 
 For authoring: Track 1 -> 0x25, all others -> 0x21 (safe universal).
 
@@ -65,8 +67,8 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
     """
     if not notes:
         raise ValueError("need at least one note")
-    if event_type not in (0x20, 0x21, 0x25, 0x2d):
-        raise ValueError(f"event_type must be 0x20/0x21/0x25/0x2d, got 0x{event_type:02X}")
+    if event_type not in (0x1e, 0x1f, 0x20, 0x21, 0x25, 0x2d):
+        raise ValueError(f"event_type must be 0x1e/0x1f/0x20/0x21/0x25/0x2d, got 0x{event_type:02X}")
 
     # Sort by absolute tick
     sorted_notes = sorted(notes, key=lambda n: (n.step - 1) * STEP_TICKS + n.tick_offset)
@@ -116,9 +118,9 @@ def event_type_for_track(track_index: int) -> int:
     Track 1 requires 0x25; Tracks 2-16 use 0x21 (universal fallback).
     Device-verified: 0x21 on T1 crashes, 0x25 on T2 crashes.
 
-    The firmware natively uses more specific types on some tracks (0x2D on
-    T3-6 for non-Prism engines, 0x20 on T7-8), but 0x21 is accepted on
-    all non-Track-1 slots and is the safe choice for multi-note authoring.
+    The firmware natively uses engine-specific types (0x1E Hardsync, 0x1F
+    EPiano, 0x20 Axis/Multisampler, 0x2D Drum on T3+), but 0x21 is accepted
+    on all non-Track-1 slots and is the safe choice for authoring.
     """
     if track_index < 1 or track_index > 16:
         raise ValueError(f"track_index must be 1-16, got {track_index}")

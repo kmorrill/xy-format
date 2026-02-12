@@ -106,7 +106,14 @@ class TrackBlock:
 
     @property
     def engine_id(self) -> int:
-        return self.body[3]
+        """Engine ID byte.  Position depends on type byte:
+        - type 0x05 (has padding): body[0x0D]
+        - type 0x07 (no padding): body[0x0B]
+        """
+        if self.type_byte == 0x05:
+            return self.body[0x0D]
+        else:
+            return self.body[0x0B]
 
     @property
     def type_byte(self) -> int:

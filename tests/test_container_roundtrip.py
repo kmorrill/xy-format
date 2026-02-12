@@ -46,11 +46,32 @@ def test_project_structure_baseline() -> None:
     assert len(proj.tracks) == 16
     assert proj.pre_track[:8] == b"\xDD\xCC\xBB\xAA\x09\x13\x03\x86"
 
-    # All baseline tracks are engine 0x03 (Drum), type 0x05 (default)
+    # All baseline tracks are type 0x05 (default, with padding)
+    EXPECTED_ENGINES = {
+        0: 0x03,   # Drum
+        1: 0x03,   # Drum
+        2: 0x12,   # Prism
+        3: 0x07,   # Pluck
+        4: 0x14,   # Dissolve
+        5: 0x13,   # Hardsync
+        6: 0x16,   # Axis
+        7: 0x1E,   # Multisampler
+        8: 0x12,   # Prism (aux)
+        9: 0x12,   # Prism (aux)
+        10: 0x12,  # Prism (aux)
+        11: 0x12,  # Prism (aux)
+        12: 0x12,  # Prism (aux)
+        13: 0x12,  # Prism (aux)
+        14: 0x00,  # aux
+        15: 0x05,  # aux
+    }
     for track in proj.tracks:
-        assert track.engine_id == 0x03
         assert track.type_byte == 0x05
         assert track.has_padding is True
+        assert track.engine_id == EXPECTED_ENGINES[track.index], (
+            f"Track {track.index}: expected engine 0x{EXPECTED_ENGINES[track.index]:02X}, "
+            f"got 0x{track.engine_id:02X}"
+        )
 
 
 @pytest.mark.parametrize("xy_file", CORPUS, ids=lambda p: p.name)
