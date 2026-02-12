@@ -305,6 +305,108 @@ def make_selective_multi_note() -> TestPlan:
 
 
 # ---------------------------------------------------------------------------
+# Multi-bar experiments
+# ---------------------------------------------------------------------------
+
+# Drum kit mapping (T1 "boop" / T2 "phase")
+_KICK = 48
+_SNARE = 50
+_CH = 56    # closed hat
+_OH = 58    # open hat
+_CLAP = 53
+_RIM = 52
+
+
+def make_4bar_drums_bass() -> TestPlan:
+    """4-bar drum groove on T1 + bass line on T3.
+
+    Purpose: first multi-bar authoring test.  Verifies that MIDI-recorded
+    events beyond bar 1 are stored correctly and that our future multi-bar
+    writer can reproduce them.
+
+    Requires:
+      - MIDI ch 1 → T1, ch 3 → T3
+      - Both tracks extended to 4 bars on the device
+      - 120 BPM
+    """
+    events: list[NoteEvent] = []
+
+    # ── T1 Drums (ch 0) ─────────────────────────────────────────────
+    # 4 bars of a simple rock-ish groove.
+    # Kick on 1 and 9 (quarter notes), snare on 5 and 13.
+    # Closed hat on every step, open hat replaces closed on beat 2/4.
+    # Bar 4 has a fill variation.
+    for bar in range(4):
+        base = bar * 16  # step offset for this bar
+
+        if bar < 3:
+            # Bars 1-3: steady groove
+            # Kicks
+            events.append(NoteEvent(channel=0, step=base+1,  note=_KICK,  velocity=120, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+9,  note=_KICK,  velocity=110, duration_steps=1.0))
+            # Snares
+            events.append(NoteEvent(channel=0, step=base+5,  note=_SNARE, velocity=110, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+13, note=_SNARE, velocity=115, duration_steps=1.0))
+            # Hats: 8th notes (every 2 steps), open on beats 2 and 4
+            for s in range(1, 17, 2):
+                if s in (5, 13):
+                    events.append(NoteEvent(channel=0, step=base+s, note=_OH, velocity=80, duration_steps=0.5))
+                else:
+                    events.append(NoteEvent(channel=0, step=base+s, note=_CH, velocity=70, duration_steps=0.5))
+        else:
+            # Bar 4: fill — kick doubles, snare roll, crash
+            events.append(NoteEvent(channel=0, step=base+1,  note=_KICK,  velocity=120, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+3,  note=_KICK,  velocity=100, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+5,  note=_SNARE, velocity=110, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+7,  note=_SNARE, velocity=100, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+9,  note=_SNARE, velocity=105, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+10, note=_SNARE, velocity=100, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+11, note=_SNARE, velocity=110, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+12, note=_SNARE, velocity=105, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+13, note=_SNARE, velocity=115, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+14, note=_SNARE, velocity=110, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+15, note=_SNARE, velocity=120, duration_steps=1.0))
+            events.append(NoteEvent(channel=0, step=base+16, note=_SNARE, velocity=127, duration_steps=1.0))
+
+    # ── T3 Bass (ch 2, Prism) ────────────────────────────────────────
+    # Simple 4-bar bass line in C minor.
+    # Uses low notes (C2=36 through G2=43). Each note ~2 steps long.
+    bass_pattern = [
+        # Bar 1: C minor root movement
+        (1,  36, 100, 2.0),   # C2, 2 steps
+        (5,  36, 95,  2.0),   # C2
+        (9,  43, 100, 2.0),   # G2
+        (13, 41, 95,  2.0),   # F2
+        # Bar 2: descending line
+        (17, 39, 100, 2.0),   # Eb2
+        (21, 38, 95,  2.0),   # D2
+        (25, 36, 100, 4.0),   # C2, held 4 steps
+        # Bar 3: variation
+        (33, 36, 100, 1.0),   # C2, staccato
+        (35, 36, 80,  1.0),   # C2, ghost
+        (37, 43, 100, 2.0),   # G2
+        (41, 41, 95,  2.0),   # F2
+        (45, 39, 100, 2.0),   # Eb2
+        # Bar 4: build to resolution
+        (49, 36, 100, 2.0),   # C2
+        (53, 38, 95,  2.0),   # D2
+        (57, 39, 100, 2.0),   # Eb2
+        (61, 43, 110, 4.0),   # G2, held to end
+    ]
+    for step, note, vel, dur in bass_pattern:
+        events.append(NoteEvent(channel=2, step=step, note=note, velocity=vel, duration_steps=dur))
+
+    return TestPlan(
+        name="4bar_drums_bass",
+        description="4-bar drum groove (T1 ch1) + bass line (T3 ch3). "
+                    "First multi-bar test. Bars 1-3 steady, bar 4 fill. "
+                    "Bass in C minor with varied gate lengths.",
+        events=events,
+        bars=4,
+    )
+
+
+# ---------------------------------------------------------------------------
 # CC automation experiments
 # ---------------------------------------------------------------------------
 
@@ -442,6 +544,7 @@ EXPERIMENTS["chord_test"] = make_chord_test()
 EXPERIMENTS["track2_test"] = make_track2_test()
 EXPERIMENTS["pitchbend_sweep"] = make_pitchbend_sweep()
 EXPERIMENTS["selective_multi_note"] = make_selective_multi_note()
+EXPERIMENTS["4bar_drums_bass"] = make_4bar_drums_bass()
 EXPERIMENTS["cc_cutoff_steps"] = make_cc_cutoff_steps()
 EXPERIMENTS["cc_multi_lane"] = make_cc_multi_lane()
 EXPERIMENTS["cc_only_no_notes"] = make_cc_only_no_notes()

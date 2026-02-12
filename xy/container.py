@@ -6,9 +6,9 @@ from typing import List
 from .structs import find_track_blocks
 
 
-MAGIC = b"\xDD\xCC\xBB\xAA\x09\x13\x03\x86"
+MAGIC = b"\xDD\xCC\xBB\xAA"  # First 4 bytes; bytes 4-7 vary by firmware version
 HEADER_SIZE = 0x18
-PRE_TRACK_SIZE = 0x7C  # Everything before the first track preamble
+PRE_TRACK_SIZE = 0x7C  # Baseline corpus value; actual size varies (121-233 bytes observed)
 HANDLE_TABLE_OFFSET = 0x58
 HANDLE_TABLE_ENTRIES = 9
 MIN_PROJECT_SIZE = 0x80
@@ -120,6 +120,11 @@ class TrackBlock:
         return self.body[9]
 
     @property
+    def bar_count(self) -> int:
+        """Number of bars (1-4).  Encoded in preamble byte 2 as bar_count << 4."""
+        return self.preamble[2] >> 4
+
+    @property
     def has_padding(self) -> bool:
         return self.type_byte == 0x05
 
@@ -135,14 +140,14 @@ class XYProject:
     for every valid project file in the corpus.
     """
 
-    pre_track: bytes  # Everything before the first track preamble (0x00-0x7B)
+    pre_track: bytes  # Everything before the first track preamble (variable length)
     tracks: List[TrackBlock]  # Exactly 16 track blocks
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "XYProject":
         if len(data) < MIN_PROJECT_SIZE:
             raise ValueError(f"file too short ({len(data)} bytes)")
-        if data[:8] != MAGIC:
+        if data[:4] != MAGIC:
             raise ValueError(f"bad magic: {data[:8].hex()}")
 
         sig_offsets = find_track_blocks(data)

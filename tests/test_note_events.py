@@ -506,3 +506,32 @@ class TestChordEncoding:
         # Note 4: 4+1+4+1+1+2 = 13 (last, tick>0)
         # Total: 2 + 12 + 12 + 12 + 13 = 51
         assert len(blob) == 51
+
+
+# ── bar_count property tests ──────────────────────────────────────
+
+
+class TestBarCount:
+    """Verify TrackBlock.bar_count decodes preamble byte 2 correctly."""
+
+    def test_baseline_all_one_bar(self):
+        project = XYProject.from_bytes(TEMPLATE.read_bytes())
+        for i in range(16):
+            assert project.tracks[i].bar_count == 1
+
+    def test_unnamed_17_two_bars(self):
+        project = XYProject.from_bytes((CORPUS / "unnamed 17.xy").read_bytes())
+        assert project.tracks[0].bar_count == 2
+        for i in range(1, 16):
+            assert project.tracks[i].bar_count == 1
+
+    def test_unnamed_19_four_bars(self):
+        project = XYProject.from_bytes((CORPUS / "unnamed 19.xy").read_bytes())
+        assert project.tracks[0].bar_count == 4
+
+    def test_unnamed_101_two_tracks_four_bars(self):
+        project = XYProject.from_bytes((CORPUS / "unnamed 101.xy").read_bytes())
+        assert project.tracks[0].bar_count == 4   # T1
+        assert project.tracks[1].bar_count == 1   # T2 unchanged
+        assert project.tracks[2].bar_count == 4   # T3
+        assert project.tracks[3].bar_count == 1   # T4 unchanged

@@ -878,3 +878,59 @@ Both formats are device-generated and accepted by firmware. The grid format is m
 
 ### Builder Impact
 Our `build_event()` emits chord notes with `flag=0x02` and tick=0, which differs from both the MIDI format (flag=0x04, no tick field) and grid format (flag=0x00, repeated tick_u32). **Device-verified working**: test_A (pure chord on T3), test_E (chord on T1), test_F (chord+melody mix on T3) all load and play correctly. The firmware accepts all three chord encoding variants.
+
+## unnamed 101 — 4-Bar Drum + Bass (First Multi-Bar Test)
+
+### Method
+Used `tools/midi_harness.py` experiment `4bar_drums_bass` with `--post-roll 0` (384 MIDI clocks = exactly 4 bars). T1 (ch1, Drum) and T3 (ch3, Prism) both extended to 4 bars on device before recording. 120 BPM.
+
+### Bar Count Field (DECODED)
+
+**Location**: Preamble byte 2 of each track's 4-byte preamble word.
+
+```
+Preamble word (4 bytes LE):
+  [byte 0]  [byte 1]  [byte 2]       [byte 3]
+   ptr_lo    ptr_hi    bar_steps       0xF0 (tag)
+```
+
+**Formula**: `bar_count = preamble[2] >> 4`
+
+| Bars | Byte 2 | Steps |
+|------|--------|-------|
+| 1 | 0x10 | 16 |
+| 2 | 0x20 | 32 |
+| 3 | 0x30 | 48 |
+| 4 | 0x40 | 64 |
+
+Verified across unnamed 1 (1 bar), 17 (2 bars), 18 (3 bars), 19 (4 bars), and 101 (4 bars on T1+T3). 100% match across all 1408 track blocks in the corpus.
+
+**Key properties**:
+- Per-track (each track has independent bar count)
+- Range: 1-4 bars (low nibble of byte 2 always 0)
+- Changing bar count on the device triggers type 05→07 conversion (even without adding notes)
+- `container.py` now exposes `TrackBlock.bar_count` property
+- `project_builder.py` auto-sets bar count from the maximum step in the note list
+
+### Structural Findings
+- **File size**: 10,410 bytes (baseline 9,499, +911)
+- **T1**: type 07, body +681 bytes (48 drum notes), bar_count=4
+- **T3**: type 07, body +230 bytes (16 bass notes), bar_count=4
+- **T2, T4**: preamble byte 0 changed to 0x64 (follows activated tracks)
+- **T5-T16**: unchanged
+
+### Multi-Bar Note Encoding
+Notes beyond bar 1 use the same encoding — just larger tick values. No structural change needed for multi-bar events; the event blob simply contains notes with ticks > 7680 (16 steps × 480 ticks).
+
+- T1: 48 notes, single 0x25 event with count=48
+- T3: 16 notes, single 0x21 event with count=16
+- Simultaneous drum hits at same tick use flag 0x04 chord continuation (same as unnamed 94)
+- Gate lengths from 480t (1 step) to 1920t (4 steps) all encoded correctly
+
+### Tick +1 Anomaly (MIDI Timing Drift)
+Both tracks show a consistent +1 tick offset at every 8th-step boundary:
+- Step 9 = tick 3841 (expected 3840)
+- Step 17 = tick 7681 (expected 7680)
+- Pattern continues at every half-bar boundary
+
+Same artifact seen in unnamed 80 (grid-entered). This is a MIDI capture timing issue (possibly clock jitter accumulation), not a format requirement. Our builder should emit exact tick values (step-1) × 480.
