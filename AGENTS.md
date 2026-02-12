@@ -59,6 +59,7 @@
 - `unnamed 1.xy` is the pristine baseline.
 - Each `unnamed N.xy` adds a single, documented tweak (tempo change, step component toggle, filter adjustments, etc.). File sizes hover around 9.3 KB except sequence-heavy samples (`unnamed 6`, `unnamed 7`, `unnamed 3`) that are larger—good markers for structural inflation.
 - `unnamed 79.xy` — hand-entered, non-quantized note on Track 3 landing on sequencer step 13 with a noticeable late micro-offset. The 0x21/0x01 node at 0x104D stores start ticks `0x16F5` (5877) which resolves to step 13 plus +117 tick drift, while the accompanying `0x00018B` word is the gate length (395 ticks ≈ 0.82 step).
+- `unnamed 92.xy` — 3 notes on Track 3 with different gate lengths: step 1 (2 steps), step 5 (4 steps), step 11 (6 steps). Uses 0x21 sequential event with explicit gate encoding (`[gate_u32_le] 00`). Body is byte-identical to baseline apart from type byte flip, padding removal, and appended event.
 - Change log gives us controlled deltas for: note events, tempo decimals, groove types, pattern length, step components, track parameters, EQ/FX adjustments, and song creation.
 
 ## Integration Tests
@@ -170,8 +171,8 @@
 - **Preset strings** (`track+0x0FC0`, absolute `0x1040` for Track 1): projects that keep the bundled preset embed ASCII segments here. The untouched baseline (`unnamed 1.xy`) shows `00 00 F7 62 61 73 73 00 2F 73 68 6F 75 6C 64 65 72 00`, i.e. folder and filename (`"bass"`, `"/shoulder"`) as null-terminated slices prefixed by a single status byte (`0xF7`). Selecting an engine with “No preset” wipes the block to `0x00/0xFF` padding and leaves only the `'  N'` marker elsewhere, so serializers must restore the full ASCII payload when referencing a preset.
 - File sizes track the pointer complexity: synth engines sit between 8057 B (Axis) and 8122 B (Simple), sample-based engines and Organ push into the 8130–8144 B range, and every diff stays inside the first track block (`offset 0x008d` through `0x1f78`).
 - **Value scaling (tentative)**: fitting the observed pairs `(ui, raw)` = `(0, 0x0000)`, `(15, 0x147a)`, `(99, 0x7f01)` yields an almost linear rule `raw ≈ 324.65 * ui + 372.18`. More mid-range captures should tell us whether the firmware quantizes to a tidy step (e.g., `raw = ui * 0x0145 + bias`) or performs table lookup.
-- **Record layout hypothesis- **Structure (Single Note - Grid)**:
-  - `0x00`: `0x25` (Event Type - Drum/Sampler) OR `0x2d` (Event Type - Synth).
+- **Record layout hypothesis — Structure (Single Note - Grid)**:
+  - `0x00`: `0x25` (Track 1 only) OR `0x2d` (Track 3+ synth slots) OR `0x20` (Track 7-8). See "Event Type Selection" section for track-slot rules.
   - `0x01`: `u8` Count (Number of notes)
   - `0x02`: `u16` Absolute Fine Ticks (Little Endian).
   - `0x04`: `u32` Preamble.
@@ -179,15 +180,15 @@
       - **If Ticks > 0**: `00 00 00 F0 00 00` (6 bytes).
   - **Payload** (6 bytes for Grid):
       - `0x00`: `u8` Voice ID (`01`)
-      - `0x01`: `u8` Note (`3C` for C4). For Synth (`0x2d`), `30` (48) = C4?
+      - `0x01`: `u8` Note (`3C` for C4).
       - `0x02`: `u8` Velocity (`64`)
       - `0x03`: `u24` Gate/Flags.
           - `00 00 00`: Default Grid Gate.
           - `00 00 64`: Explicit Gate 100%.
 
-- **Structure (Live / Complex - 0x21)**:
-  - Used for Live recording, Micro-timing, Custom Gate/Velocity.
-  - `0x00`: `0x21` (Event Type)
+- **Structure (Live / Complex - 0x21)** — used on Track 3+ synth slots:
+  - Used for sequential notes, live recording, micro-timing, custom gate/velocity.
+  - `0x00`: `0x21` (Event Type — synth track slots)
   - `0x01`: `u8` Count (`01`)
   - `0x02`: `u32` Start Ticks (LE).
   - `0x06`: `00` (Padding?)
@@ -232,7 +233,7 @@ The `0x25` tag marks the start of a note-event block.
 - **0x25 variants** (`tools/inspect_xy.py`): the inspector now labels each event `form=…` as it parses. `inline-single` means a single grid trig with clean `fine` ticks (count = 1, fine divisible by 480). `hybrid-tail` covers mixed inline + tail records (triads, chords). `pointer-tail` flags cases with no reliable inline data (tail only). Tail bytes are emitted verbatim so we can see the pointer words (`… 0xF010` etc.) that jump into the per-step slabs; pointer decoding still needs to be formalised.
 - **Tail word rescue pass**: when a `0x25` event still lacks voices after parsing inline records plus structured tail entries, we now scan all `tail_words` for `u16` values with `1 < velocity <= 0x7F`. This surfaces hidden chord voices such as the F4 in `unnamed_80` while ignoring pointer scaffolding (`velocity ≤ 1` or `> 0x7F`). Inline single-note captures with `fine % STEP_TICKS == 0` force their tail entries to pointer-only so legacy lattice words (`0x1001`, `0xF010`, …) no longer render as phantom `C#-1` notes.
 - **Pointer-21 tail cleanup**: every `0x21` tail token is currently reported as pointer metadata with note/velocity nulled. This prevents the earlier A8/D7/G#7 clutter on files like `unnamed_39` and `unnamed_87`. Real pitch/step/gate data still lives in the per-step slabs that these pointers reference; decoding those blocks remains a TODO.
-- **Encoding split (grid vs. live)**: pure step-entry notes keep the inline `0x25` record regardless of engine—see Drum (`unnamed 2.xy:0x07A6`), Prism chord entry (`unnamed 3.xy`), Multisampler (`unnamed 65.xy:0x0FE7`), and Wavetable step capture (`unnamed 85.xy:0x0FD0`). Every live-recorded Prism take instead emits the meta-form `0x21 01 …` header with embedded start/gate ticks (`unnamed 50.xy:0x1051`, `unnamed 79.xy:0x104D`, `unnamed 87.xy:0x1051`). Live Wavetable capture (`unnamed 86.xy`) stays on `0x25` but redirects the inline dwords to a tail block at `0x2330`, matching the “pointer-tail” parse, and Multiply-driven grid edits (`unnamed 78.xy`) also surface as `0x21`. Conclusion: workflow alone does not select the format—Prism’s engine code prefers the `0x21` meta event for recorded notes, while other engines may reuse the `0x25` block with an attached tail. Serialisers must preserve the observed form rather than normalising all notes to one opcode.
+- **Encoding split (empirical, mechanism TBD)**: corpus analysis of 91 default-project files shows Track 1 always uses `0x25` and Tracks 2+ use `0x21` or `0x2D` (see "Event Type Selection" section). The selection mechanism is not yet proven — three hypotheses remain (track index, body structure, collision avoidance). **NOTE**: an earlier claim that "all activated tracks share engine 0x03" was based on a bug reading `body[3]` (always `0x03`, part of the track block signature) instead of the actual engine_id at `body[0x0D]` (type-05) or `body[0x0B]` (type-07). The default project actually uses different engines per track. **Device-verified authoring rule**: use `0x25` on Track 1 only, `0x21` on all other tracks. Step-entry examples: Drum (`unnamed 2.xy:0x07A6`), Prism chord entry (`unnamed 3.xy`). Live-record examples on Track 3: `unnamed 50.xy:0x1051`, `unnamed 79.xy:0x104D`, `unnamed 87.xy:0x1051`.
 - **Quantised `0x25` event layout** (`unnamed 2.xy:0x07A6`): the Track 1 capture shows the 16-byte record explicitly (ticks-per-step ≈ 0xF0 = 240):
   - bytes `0–1`: `0x25 0x01` (note event + single entry)
   - bytes `2–3`: fine tick (`0x12C0`, 20× the coarse start)
@@ -360,7 +361,7 @@ The `0x25` tag marks the start of a note-event block.
 ## Next Steps
 1. **DONE: Byte-perfect round-trip parser** — `xy/container.py` (XYProject) verified across 88 corpus files.
 2. **DONE: First successful device-loadable file** — `output/ode_to_joy_v2.xy` confirmed working on OP-XY hardware using 0x21 event format + pure-append recipe.
-3. **Extend to full Ode to Joy melody**: add remaining notes (15+ notes across multiple bars) using the proven 0x21 format.
+3. **DONE: Full Ode to Joy with varied note lengths** — `output/ode_to_joy_full.xy` plays 15 notes across 4 bars (quarter, dotted-quarter, eighth, half) confirmed on device.
 4. **Build a proper note writer API**: encode the pure-append recipe into `xy/container.py` or a new `xy/writer.py` module for programmatic note authoring.
 5. **Decode pointer-21 events**: the inspector still shows "note data unresolved" for these. The per-voice node slabs need deterministic rules.
 6. Diff track-scale and pattern-length edits on another track to confirm stride patterns.
@@ -423,7 +424,7 @@ The `0x25` tag marks the start of a note-event block.
 - Practical recipe: to author a synth/multisampler note, rotate the triplet for the target step, drop the eight-word record at `block+0xF0` with the desired pitch/velocity/gate, and emit a type-1 `0x21` chunk pointing at that record.
 
 ## 2025-02-xx — Pointer-21 Corpus Sweep
-- Ran a quick audit across `src/one-off-changes-from-default/*.xy` using the inspector helpers: only two engines emit note payloads today. Engine `0x00` (baseline synth placeholder) produces both `0x25` (inline / hybrid) and `0x21` (“pointer-21”) records, while EPiano (engine `0x07`) sticks exclusively to the pointer-21 form.
+- Ran a quick audit across `src/one-off-changes-from-default/*.xy` using the inspector helpers. **NOTE**: the original analysis attributed event type to engine type, but subsequent corpus analysis (91 files) shows a consistent pattern of Track 1 → `0x25`, Tracks 2+ → `0x21` or `0x2D`. The exact selection mechanism (track index vs. body structure vs. collision avoidance) remains unproven — see "Event Type Selection" section.
 - Every pointer-21 capture (12 files in the change log) exposes the same five-entry tail ladder. Only the pair `lo=0xF000` (`swap_lo=0x00F0`) resolves inside the owning track (`track+0x00F0`); the remaining pairs (`0x0000/0x01E0`, `0x0800/0x002B`, `0xFFF1/0x0020`, `0xFFFA/0x004F`, `0x000B/0x0045`, `0xFFFB`) jump beyond the project file, implying they reference firmware lookup tables rather than serialized data.
 - `track+0x00F0` behaves like a preset slab for pointer-21 events: Track 4 captures tied to metronome/groove edits keep the baseline template `5983 5555 1501 0000 7904 0034 0000 6446`; `unnamed_38` (Track 4 extreme notes) rewrites the slab to `5555 1501 0000 7904 0034 0000 6446 0000`; `unnamed_6` (Track 5) replaces its track-specific baseline with the same Track 4-style template. The neighbouring slot originally holding the preset marker (`track+0x01B8`) now stores per-note records where the lower 16 bits encode `velocity << 8 | note` (e.g., `0x1F00` → note 0, velocity 31; `0x647C` → note 124, velocity 100).
 - Raw 18-byte headers (example `unnamed_38`: `21 00 02 00 16 00 F3 FF 0F 00 FD FF 47 00 07 00 1D 00`) show `count = 0x0002`, with start ticks packed into bytes 4–7 and gate ticks encoded in bytes 8–11. We still need to normalise those values (likely wrap into unsigned tick counts) and decode the positional fields.
@@ -452,6 +453,25 @@ Every crash dump from loading custom-generated `.xy` files on the OP-XY is docum
 - **Significance**: PROGRESS -- got past the `num_patterns > 0` structural validation (Crash #1). The firmware now parses the track structure correctly but overflows a fixed-size vector during note event parsing.
 - **Likely cause**: Used 0x25/0x2d events for sequential notes on different steps, but unnamed 89 (3 sequential notes from the device) uses the 0x21 event type for this purpose. The 0x25/0x2d format may have different per-note record sizes that caused the vector to overflow.
 - **Screenshot**: `IMG_4565.heic`
+
+### Crash #3: `num_patterns > 0` on two-track drum pattern
+- **Source file**: `output/drum_pattern.xy` (Track 1 + Track 2 both modified with 0x21 events)
+- **Firmware**: v1.1.1 (build Oct 14 2025)
+- **Assertion**: `../src/sequencer/serialize/serialize_latest.cpp:90 num_patterns > 0`
+- **Screenshot**: `IMG_4566.heic`
+- **Stack trace** (partial, from crash screen):
+  ```
+  SP: 0x840d0b34
+  FP: 0x840d0b9c
+  0x8fed322e, 0x8fed2b2c, 0x8d57f770, 0x8d57f96c,
+  0x8d56f19e, 0x8d56f76c, 0x8d55fe98, 0x8d4cdbcc
+  ```
+- **Context**: First attempt at multi-track note authoring. The pure-append recipe was applied to both Track 1 and Track 2 (both drum engine 0x03). Track 1 got 8 notes (kick/snare), Track 2 got 16 notes (hats/percussion). The 0x21 event format, type byte flip, and padding removal were applied identically to the proven single-track recipe that worked for `ode_to_joy_v2.xy`.
+- **Key difference from working file**: `ode_to_joy_v2.xy` only modified Track 3 (small body, 419B baseline). `drum_pattern.xy` modifies Track 1 AND Track 2 (large drum bodies, ~1800B each). This is the first time two adjacent tracks were both activated.
+- **Line number difference**: This crash is at line **90**, vs line **30** for Crash #1. Same assertion text (`num_patterns > 0`) but different location in the deserialization code — suggests the firmware hits this check once per track or per block, and the crash occurs at a later track than Crash #1 did.
+- **Root cause (SOLVED)**: The `0x64` preamble sentinel was MISSING on Track 2. The initial incorrect rule said "activated tracks keep original preamble; 0x64 only on first unmodified track after the group." This was wrong for adjacent activated tracks.
+- **Correct rule** (proven by `unnamed 93.xy`, 8 adjacent activated tracks T1-T8): Every track immediately following an activated track gets 0x64 preamble byte 0, even if that track is itself activated. The first activated track in a chain keeps its original preamble.
+- **Fix**: `append_notes_to_tracks()` sets 0x64 on `idx+1` for every activated track idx, not just the first unmodified one. For T1+T2: T1 keeps 0xD6 (original), T2 gets 0x64, T3 gets 0x64. **Device-verified working.**
 
 ## 2025-02-11 -- 0x21 Sequential Note Event Format
 
@@ -492,3 +512,182 @@ C0 03 00 00 00 F0 00 00 01 3C 64 00 00        # Note 3: tick=960, note=C(0x3C), 
 
 ### Device Test Result: SUCCESS
 The file `output/ode_to_joy_v2.xy` loaded and played correctly on the OP-XY hardware. This is the **first custom-authored .xy file to successfully load on the device**. The 0x21 event format, pure-append recipe, and preamble update are all confirmed correct.
+
+### Gate Encoding in 0x21 Multi-Note Events (CONFIRMED WORKING)
+
+#### Discovery
+The `F0 00 00 01` token in note records is a **default gate marker** (4 bytes). To encode custom gate lengths, replace it with an **explicit gate** value: `gate_u32_le + 0x00` (5 bytes total — one byte longer per note).
+
+#### Two Gate Modes
+| Mode | Bytes | Format | Meaning |
+|------|-------|--------|---------|
+| Default gate | 4 | `F0 00 00 01` | Short default gate (~240 ticks) |
+| Explicit gate | 5 | `[gate_u32_le] 00` | Custom gate in ticks |
+
+The parser distinguishes the two by checking if the byte at the gate position is `0xF0`.
+
+#### Record Sizes with Explicit Gate (1 byte longer than F0-token versions)
+- **First note (tick=0)**: `00 00` (2B tick) + `02` (flag) + `gate_u32_le` (4B) + `00` (sep) + note + vel + `00 00 00` = **13 bytes**
+- **Middle note (tick>0)**: `tick_le32` (4B) + `00` (flag) + `gate_u32_le` (4B) + `00` (sep) + note + vel + `00 00 00` = **15 bytes**
+- **Last note (tick>0)**: `tick_le32` (4B) + `00` (flag) + `gate_u32_le` (4B) + `00` (sep) + note + vel + `00 00` = **14 bytes**
+
+#### Tick-to-Step Gate Reference
+| Duration | Ticks | Steps |
+|----------|-------|-------|
+| Sixteenth | 480 | 1 |
+| Eighth | 960 | 2 |
+| Quarter | 1920 | 4 |
+| Dotted quarter | 2880 | 6 |
+| Half | 3840 | 8 |
+| Whole | 7680 | 16 |
+
+#### Corpus Evidence
+- **Explicit gate (16-byte single-note events)**: unnamed 50 (gate=329), unnamed 56 (gate=960), unnamed 57 (gate=1920), unnamed 79 (gate=395), unnamed 87 (gate=335)
+- **F0 token (15-byte single-note events)**: unnamed 65, unnamed 78 — both use `F0 00 00 01`
+- **F0 token (multi-note)**: unnamed 89 — all 3 notes use `F0 00 00 01`
+- **Explicit gate (multi-note)**: unnamed 92 — 3 notes with different gates (960/1920/2880 ticks = 2/4/6 steps). Device capture confirms explicit gate in multi-note sequential events. Body is byte-identical to baseline (no step state table changes). +42 bytes net (44-byte event minus 2-byte padding removal).
+
+#### Working Code Pattern
+```python
+def build_note_record(tick, note, vel, gate_ticks, is_first, is_last):
+    parts = []
+    if is_first:
+        parts.append(struct.pack('<H', tick))  # u16 for first note
+        parts.append(b'\x02')                  # first note flag
+    else:
+        parts.append(struct.pack('<I', tick))  # u32 for subsequent
+        parts.append(b'\x00')                  # subsequent flag
+    # Custom gate: gate_u32_le + 00 separator (5 bytes)
+    parts.append(struct.pack('<I', gate_ticks))
+    parts.append(b'\x00')  # separator after gate
+    parts.append(bytes([note, vel]))
+    parts.append(b'\x00\x00' if is_last else b'\x00\x00\x00')
+    return b''.join(parts)
+```
+
+#### Device Test Results
+- `output/gate_test.xy`: 4 notes with gates 1920/3840/960/7200 ticks. **CONFIRMED WORKING** — device showed 4/8/2/15 step note lengths as expected.
+- `output/ode_to_joy_full.xy`: 15 notes across 4 bars with quarter, dotted-quarter, eighth, and half note durations. **CONFIRMED WORKING ON DEVICE** (2025-02-11). Full Ode to Joy first phrase plays correctly with varied note lengths visible in step sequencer.
+
+#### Failed Approaches (for reference)
+1. `[gate_u16_le] [00] [01]` replacing F0 token (4 bytes) — notes sustained forever
+2. `[F0] [gate_u16_le] [01]` keeping F0 marker — notes sustained forever
+3. Multiple concatenated `21 01` single-note events — crashes with `num_patterns > 0`
+
+## Event Type Selection (Partially Understood)
+
+### What We Know Empirically
+
+**Device-verified results (files loaded and played on OP-XY hardware):**
+- 0x25 on Track 1: WORKS (unnamed 2, 3, 52, 80, 81; output/velocity_ramp_0x25.xy)
+- 0x21 on Track 1: CRASHES (`num_patterns > 0`) — Crash #4
+- 0x21 on Track 3: WORKS (output/ode_to_joy_v2.xy, gate_test.xy, ode_to_joy_full.xy)
+- 0x21 on Track 2: WORKS (output confirmed by other agents)
+- 0x25 on Track 2: CRASHES (confirmed by other agents)
+
+**Corpus observations (device-captured files, not generated by us):**
+- Track 1 events always use 0x25 (5 files: unnamed 2, 3, 52, 80, 81)
+- Track 3 events use 0x21 (10 files) or 0x2D (2 files: unnamed 85, 86)
+- Track 4 events use 0x2D (1 file: unnamed 91 — engine changed to Drum 0x03)
+- Track 7/8 events use 0x20 (unnamed 64, 65)
+- No Track 2 events in device-captured corpus
+- No events on Tracks 5-6 or 9-16 in corpus
+
+**Per-note encoding is identical across all event types (0x20, 0x21, 0x25, 0x2D) — only the type byte differs.**
+
+### Practical Authoring Rule (Device-Verified)
+- **Track 1 → 0x25** (0x21 crashes)
+- **All other tracks → 0x21** (verified on T2, T3; safe fallback)
+
+### What We Don't Know: The Selection Mechanism
+
+The default project's 8 instrument tracks have different engines and body structures:
+
+| Track | Engine ID | Engine | Body Size | Embedded 0x21/0x25/0x2D bytes? |
+|-------|-----------|--------|-----------|-------------------------------|
+| T1 | 0x03 | Drum | 1832B | Yes — 0x2D at pos 376 (grid data), 0x21 at pos 1549 |
+| T2 | 0x03 | Drum | 1792B | No — clean body |
+| T3 | 0x12 | Prism | 419B | Minimal |
+| T4 | 0x07 | Pluck | 490B | Yes — 0x2D at pos 317, 0x21 at pos 460 |
+| T5 | 0x14 | ? | 419B | Unknown |
+| T6 | 0x13 | ? | 433B | Unknown |
+| T7 | 0x16 | ? | 454B | Unknown |
+| T8 | 0x1E | Multisampler | 750B | Unknown |
+
+**Three competing hypotheses for why Track 1 needs 0x25 while Track 2 accepts 0x21:**
+
+1. **Track index**: Track 1 is special, everything else uses 0x21. Simple but no clear reason *why* the firmware would care about index.
+
+2. **Body structure**: Both Track 1 and Track 2 are populated drum kits with 24 sample paths each (T1="boop" kit, T2="phase" kit), but T1 body is 40B larger (1832B vs 1792B). T1 has embedded 0x21 and 0x2D bytes in its static body; T2 has none. The firmware may use different parsers based on some structural difference in these 40 extra bytes.
+
+3. **Collision avoidance** (proposed by another agent): The event type must not collide with bytes already embedded in the static body. Track 1 has 0x21 (pos 1549) and 0x2D (pos 376) embedded in its default body → only 0x25 is safe. Track 2 has no 0x21/0x25/0x2D embedded → 0x21 works. Note: default Track 4 body also has 0x2D (pos 317) and 0x21 (pos 460) embedded, but unnamed 91's 0x2D event on Track 4 is after an engine change that rewrote the body entirely, so it doesn't contradict or confirm this theory.
+
+**Corrected engine_id bug**: An earlier analysis claimed "all activated tracks share engine 0x03" — this was wrong. The `container.py` `engine_id` property was reading `body[3]`, which is always 0x03 (part of the track block signature `00 00 01 03 ff 00 fc 00`). The correct engine ID locations are: type-05 → `body[0x0D]`, type-07 → `body[0x0B]`.
+
+### Tests That Would Distinguish Hypotheses
+1. Change Track 1's engine to Prism (no kit), try 0x21 → tests whether it's about kit/body structure
+2. Try 0x25 on Track 2 (already has "phase" kit with 24 sample paths) → tests if 0x25 crash is track-specific or body-dependent
+3. Try 0x25 on Track 3 → tests whether 0x25 is Track-1-only or drum-only
+4. Author 0x21 notes on Track 2 via device UI, capture the .xy → would tell us if firmware itself uses 0x21 for T2 or something else
+
+### Note on 0x2D
+The byte `0x2D` appears in two different contexts — don't confuse them:
+1. **Structural 0x2D**: in Track 1 drum body at pos 376 (grid preset data region), NOT an event
+2. **Event 0x2D**: real note events on some tracks (unnamed 85, 86, 91). Per-note encoding is identical to 0x25/0x21.
+
+### 0x2D Event Format (DECODED — unnamed 91)
+```
+2d 01 00 00 02 f0 00 00 01 53 64 00 00
+│  │  └──┘  │  └───────┘  │  │  └──┘
+│  │  tick  │  gate(def)   │  │  trail
+│  count   flag            note vel
+type
+```
+- type=0x2d, count=1, tick=0, flag=0x02, gate=F0 default, note=83 (B5), vel=100
+- Multi-note 0x2d events crashed in early testing (Crash #2: fixed_vector overflow)
+- Safe for single-note grid events; use 0x21 for multi-note sequential authoring
+
+## unnamed 91 — Engine Change + Single Note (Track 4)
+
+### What changed
+Track 4 engine changed from Pluck (0x07) to Drum (0x03), single hit on step 1.
+
+### Structural delta (Track 4 body, vs baseline unnamed 1)
+| Region | Baseline | unnamed 91 | Delta |
+|--------|----------|------------|-------|
+| Type byte (body[9]) | 0x05 | 0x07 | flip |
+| Padding (body[10:12]) | `08 00` | removed | -2B |
+| Engine ID | 0x07 (Pluck) at body[0x0D] | 0x03 (Drum) at body[0x0B] | changed |
+| Engine-specific params | 42B | 38B | -4B |
+| Common params (`55 55 01 15` anchor) | 183B | 183B identical | 0 |
+| f7 + patch name | `pluck/beach bum\0\0` (17B) | `/\0\0` (3B) | -14B |
+| Event data | none | 0x2d single note (+13B) | +13B |
+| Tail data | 42B (first byte 0x28) | 42B (first byte 0x08) | 0 |
+| **Net** | 490B | 483B | **-7B** |
+
+### Preamble 0x64 NOT set on engine-change files
+- unnamed 2 (note-only edit on Track 1): Track 2 preamble[0] = 0x64 ✓
+- unnamed 91 (engine change + note on Track 4): Track 5 preamble[0] UNCHANGED
+- Hypothesis: 0x64 sentinel is only needed for note-append-without-engine-change. When the firmware writes an engine change, it rewrites the entire track body rather than appending, so the bookkeeping differs.
+
+### Engine ID location (corrected)
+The `engine_id` property in container.py was reading `body[3]` (always 0x03, part of the fixed signature `00 00 01 03`). The real engine ID position depends on the type byte:
+- type-05 (has padding): `body[0x0D]`
+- type-07 (no padding): `body[0x0B]`
+
+Both resolve to the same structural field — the shift is due to the 2-byte padding presence/absence.
+
+### Full engine map (baseline unnamed 1, all type-05)
+| Track | body[0x0D] | Engine |
+|-------|-----------|--------|
+| 1 | 0x03 | Drum |
+| 2 | 0x03 | Drum |
+| 3 | 0x12 | Prism |
+| 4 | 0x07 | Pluck |
+| 5 | 0x14 | Dissolve |
+| 6 | 0x13 | Hardsync |
+| 7 | 0x16 | Axis |
+| 8 | 0x1E | Multisampler |
+| 9-14 | 0x12 | Prism (aux) |
+| 15 | 0x00 | (aux) |
+| 16 | 0x05 | (aux) |
