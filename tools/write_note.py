@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Refactored writer for adding multiple note triggers to Track 1.
+"""DEPRECATED — uses wrong note encoding (raw byte injection at fixed offsets).
 
-Based on reverse-engineering of unnamed 80.xy (Grid Notes).
-Supports:
-- Arbitrary steps (Absolute Ticks calculation).
-- Multiple notes (Count + Loop).
-- Correct Preamble generation for Grid notes.
+Use xy.project_builder.append_notes_to_track() instead, which correctly
+encodes notes via xy.note_events.build_event().
+
+Original description: writer for adding multiple note triggers to Track 1.
+Based on early reverse-engineering of unnamed 80.xy (Grid Notes).
 """
 
 import sys

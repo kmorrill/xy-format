@@ -608,15 +608,16 @@ Engine-to-event-type mapping observed in MIDI harness (what the device WRITES �
 
 | Engine ID | Engine Name | Event Type (device-written) |
 |-----------|-------------|------------|
-| 0x03 | Drum | 0x21 (T2), 0x2D (T3-4 after engine change) |
+| 0x03 | Drum | 0x21 (T2), 0x25 (T1), 0x2D (T5 after engine change to Drum) |
 | 0x12 | Prism | 0x21 |
 | 0x14 | Dissolve | 0x21 |
 | 0x07 | EPiano | 0x1F |
 | 0x13 | Hardsync | 0x1E |
 | 0x16 | Axis | 0x20 |
+| 0x1F | Wavetable | 0x2D (T3, unnamed 94) |
 | 0x1E | Multisampler | 0x20 |
 
-**Untested engines**: Sampler (0x02), Organ (0x06), MIDI (0x1D), Wavetable (0x1F), Simple (0x20).
+**Untested engines**: Sampler (0x02), Organ (0x06), MIDI (0x1D), Simple (0x20).
 
 ### Practical Authoring Rule (Device-Verified)
 - **Track 1 → 0x25** (only type that works; 0x21 and 0x2D both crash)
@@ -646,9 +647,9 @@ Three competing hypotheses were proposed before testing:
 ### Corpus Evidence Summary
 - Track 1: 0x25 (5 files: unnamed 2, 3, 52, 80, 81)
 - Track 2: 0x21 (unnamed 93)
-- Track 3: 0x21 (10 files) or 0x2D (2 files: unnamed 85, 86)
+- Track 3: 0x21 (10 files) or 0x2D (3 files: unnamed 85, 86, 94-Wavetable)
 - Track 4: 0x1F (unnamed 93), 0x2D (unnamed 91 — after engine change to Drum)
-- Track 5: 0x21 (unnamed 93)
+- Track 5: 0x21 (unnamed 93), 0x2D (unnamed 94 — after engine change to Drum)
 - Track 6: 0x1E (unnamed 93)
 - Track 7: 0x20 (unnamed 64, 65, 93)
 - Track 8: 0x20 (unnamed 64, 65, 93)
@@ -656,7 +657,7 @@ Three competing hypotheses were proposed before testing:
 **Corrected engine_id bug**: An earlier analysis claimed "all activated tracks share engine 0x03" — this was wrong. The `container.py` `engine_id` property was reading `body[3]`, which is always 0x03 (part of the track block signature `00 00 01 03 ff 00 fc 00`). The correct engine ID locations are: type-05 → `body[0x0D]`, type-07 → `body[0x0B]`.
 
 ### Remaining Tests
-1. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Wavetable (0x1F), Simple (0x20) → complete the engine-to-event-type lookup table (observational only — what the device writes)
+1. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Simple (0x20) → complete the engine-to-event-type lookup table (observational only — what the device writes)
 2. Try native event types (0x1E, 0x1F, 0x20) for authoring on their respective tracks → verify firmware accepts engine-native types, or whether 0x21 is the ONLY accepted type for T2+
 3. Try 0x2D with single-note (count=1) events → device-written 0x2D files all had count=1; multi-note 0x2D crashes
 
@@ -738,7 +739,7 @@ Built `tools/midi_harness.py` using `mido`/`python-rtmidi` to send controlled MI
 - **Event blob**: all 8 events are byte-identical (14 bytes) except the type byte: `XX 01 00 00 02 E0 01 00 00 00 3C 64 00 00`
 
 ### Event Type Discovery (Major Finding)
-See "Event Type Selection" section above. The key result: **five distinct event types** (0x1E, 0x1F, 0x20, 0x21, 0x25) with engine-dependent selection. This was the first experiment to activate all 8 tracks simultaneously, giving us complete coverage of the default engine set.
+See "Event Type Selection" section above. The key result: **five distinct event types** observed in device-written data (0x1E, 0x1F, 0x20, 0x21, 0x25). The device writes different types per engine, but subsequent device testing proved that for **authoring**, event type selection depends on track slot position, not engine: T1 → 0x25 only, T2+ → 0x21 universally.
 
 ### Event Insertion Strategies (Deep Decode Finding)
 Two distinct strategies observed for how events are placed in track bodies:
@@ -760,10 +761,106 @@ When MIDI channels are assigned to tracks, the pre-track header grows:
 - Handle table values at 0x58-0x7B are identical, just shifted by 7 bytes
 
 ### Preamble 0x64 Behavior in Multi-Track Recording
-- T1: keeps original preamble 0xD6 (first activated track in chain)
+**unnamed 93** (all 8 tracks activated, contiguous):
+- T1: keeps original 0xD6 (first activated)
 - T2-T4: all get 0x64
-- **T5: keeps original 0x2E** — anomaly, reason unknown (Dissolve engine or 5th slot special?)
+- **T5: keeps original 0x2E** — T5 is exempt from 0x64 rule
 - T6-T8: all get 0x64
-- T9: also gets 0x64 (first unmodified track after the activated chain)
-- T10-T16: unchanged
-- The T5 exception breaks the simple "every track after an activated track gets 0x64" rule. Both T1 and T5 keep their original preambles. Our writer ignores this exception; device-verified working for 1-2 track activations.
+- T9: gets 0x64 (first unmodified after chain)
+
+**unnamed 94** (T1/T3/T5/T7 activated, non-contiguous, T3→Wavetable, T5→Drum):
+- T1: keeps original 0xD6 (activated)
+- T2: gets 0x64 (follows activated T1, itself NOT activated)
+- T3: keeps original 0x86 (activated)
+- T4: gets 0x64 (follows activated T3, not activated)
+- **T5: keeps original 0x2E** (activated, follows non-activated T4)
+- T6: gets 0x64 (follows activated T5)
+- T7: keeps original 0x83 (activated)
+- T8: gets 0x64 (follows activated T7)
+- T9-T16: unchanged
+
+**T5 anomaly is consistent**: T5 keeps 0x2E regardless of whether T4 is activated (unnamed 93) or not (unnamed 94), and regardless of T5's engine (Dissolve in 93, Drum in 94). This is a **slot-specific** exemption — T5 never gets 0x64. Setting T5 to 0x64 crashes the device (Crash #6).
+
+## unnamed 94 — MIDI Harness Experiment (Non-Contiguous Tracks + Engine Changes)
+
+### Method
+Used `tools/midi_harness.py` experiment `selective_multi_note` to send controlled MIDI data to 4 non-contiguous tracks (T1, T3, T5, T7). Before recording, user manually changed engines: T3 from Prism to Wavetable, T5 from Dissolve to Drum (empty sampler). T1 (Drum) and T7 (Axis) kept defaults.
+
+**Events sent via MIDI**:
+- T1 (ch1, Drum): C4 at step 1 + D4 at step 5, velocity 100, 1-step gate
+- T3 (ch3, Wavetable): C4+E4+G4 chord at step 1, velocity 100, 1-step gate
+- T5 (ch5, Drum): C4 at step 1, velocity 50, 1-step gate
+- T7 (ch7, Axis): E4 at step 9, velocity 100, 4-step hold
+
+### Structural Findings
+- **File size**: 9568 bytes (baseline 9499, +69 bytes)
+- **Pre-track**: 131 bytes (+7 from baseline, same growth as unnamed 93 — MIDI config)
+- **4 of 8 instrument tracks activated** (type 0x05 → 0x07): T1, T3, T5, T7
+- **Non-activated tracks** (T2, T4, T6, T8) kept type 0x05 but preamble changed to 0x64
+- Engine changes visible in body: T3 engine_id 0x12→0x1F (Wavetable), T5 engine_id 0x14→0x03 (Drum)
+- T3 and T5 bodies had ~150+ interior byte changes due to engine change (params, preset name)
+- T1 and T7 had only 1 interior diff (type byte 05→07) — pure append
+
+### Event Type Findings (Major Update)
+
+| Track | Engine | Event Type | Count | Notes |
+|-------|--------|------------|-------|-------|
+| T1 | 0x03 Drum | 0x25 | 2 | Multi-note confirmed for 0x25 |
+| T3 | 0x1F Wavetable | 0x2D | 3 | NEW: Wavetable uses 0x2D (chord) |
+| T5 | 0x03 Drum | 0x2D | 1 | Drum on non-default slot uses 0x2D |
+| T7 | 0x16 Axis | 0x20 | 1 | Confirmed Axis type |
+
+**Key finding: 0x2D follows engine, not slot**. Both Wavetable (T3) and Drum (T5, changed from Dissolve) produce 0x2D. In unnamed 93, T5 had Dissolve engine and produced 0x21 — now with Drum engine it produces 0x2D. The device WRITES engine-specific types; the discrepancy with unnamed 93's T2 (Drum→0x21) may be a T2-specific exception or a first-vs-changed-engine distinction.
+
+### Multi-Note 0x25 Confirmation (T1)
+T1 produced a single `0x25` event with count=2 containing both notes:
+- Note 1: tick=0 (step 1), C4 (0x3C), velocity=100 (0x64), gate=480t explicit
+- Note 2: tick=1920 (step 5), D4 (0x3E), velocity=100 (0x64), gate=480t explicit
+
+This confirms multi-note 0x25 events are valid and matches our builder's approach.
+
+### Chord Encoding Discovery (Major New Finding — T3)
+
+T3 produced event type `0x2D` with count=3 for a C4+E4+G4 chord:
+
+```
+2d 03 00 00 04 e0 01 00 00 00 43 64 00 00
+               └─ flag 0x04!  └─ G4 (67)
+00 04 e0 01 00 40 64 00 00
+   └─ flag 0x04  └─ E4 (64)
+00 04 e0 01 00 3c 64 00 00
+   └─ flag 0x04  └─ C4 (60)
+```
+
+**Flag byte 0x04 = chord continuation**: When multiple notes share the same tick, notes after the first use flag 0x04. When flag=0x04, **no tick field is emitted** — the note inherits the tick from the previous note. This is a compact encoding for chords.
+
+**Chord note ordering**: Notes stored **HIGH-TO-LOW** (G4→E4→C4), despite being sent as C4→E4→G4 via MIDI.
+
+**Separator bytes**:
+- 3 bytes (`00 00 00`) before notes at new ticks
+- 2 bytes (`00 00`) before continuation notes (flag 0x04) and after last note
+
+### Two Distinct Chord Encodings (Cross-Reference with unnamed 80)
+
+Grid-entered chords (unnamed 80) and MIDI-recorded chords (unnamed 94) use **different** encodings:
+
+| Feature | Grid-entered (unnamed 80) | MIDI-recorded (unnamed 94) |
+|---------|--------------------------|---------------------------|
+| Flag byte | 0x00 for all notes | 0x04 for continuation notes |
+| Tick field | Full tick_u32 repeated per chord note | Omitted for continuation notes |
+| Note ordering | Low-to-high (C4→F4→G4→A4) | High-to-low (G4→E4→C4) |
+| Separator before continuation | 3 bytes (00 00 00) | 2 bytes (00 00) |
+| Event type | 0x25 | 0x2D |
+
+Both formats are device-generated and accepted by firmware. The grid format is more verbose (repeats tick for each note); the MIDI format is compact (uses flag 0x04 to skip tick).
+
+**Note**: unnamed 80 step-9 E4 has tick=3841 instead of expected 3840 — anomaly unexplained.
+
+### Velocity and Gate Fidelity
+- **Velocity maps 1:1**: Sent vel=50 to T5, got 0x32 (50) in file. Perfect fidelity.
+- **Tick encoding verified**: Step 9 = tick 3840 (8 × 480), perfectly encoded on T7.
+- **Gate encoding verified**: 4-step hold = 1920 ticks (4 × 480), perfectly encoded on T7.
+- All MIDI-recorded notes get **explicit gate** (not the 0xF0 default marker).
+
+### Builder Impact
+Our `build_event()` emits chord notes with `flag=0x02` and tick=0, which differs from both the MIDI format (flag=0x04, no tick field) and grid format (flag=0x00, repeated tick_u32). Device verification of our chord encoding format is still needed.

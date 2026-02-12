@@ -230,6 +230,54 @@ def make_pitchbend_sweep() -> TestPlan:
     )
 
 
+def make_selective_multi_note() -> TestPlan:
+    """Non-contiguous tracks with engine changes and varied content.
+
+    Purpose (8 unknowns in one test):
+      1. Multi-note 0x25 on T1 — does device write count>1 in one event, or separate events?
+      2. Chord encoding via MIDI — how are simultaneous notes serialized?
+      3. Does 0x2D follow Wavetable engine? (unnamed 85/86 showed 0x2D on T3/Wavetable grid-entered)
+      4. Does Drum engine on non-Drum slot (T5) produce 0x2D? (unnamed 91: T4→Drum used 0x2D)
+      5. Velocity fidelity — does MIDI velocity 50 map 1:1?
+      6. Non-contiguous activation — preamble behavior with gaps (T5 anomaly diagnostic)
+      7. Non-step-1 tick encoding — absolute tick for step 9
+      8. Gate length from MIDI hold — 4-step hold on T7
+
+    Requires:
+      - MIDI channels 1, 3, 5, 7 mapped to tracks 1, 3, 5, 7 on device
+      - T3 engine changed to Wavetable (from Prism)
+      - T5 engine changed to Drum (from Dissolve)
+      - T1 and T7 left at defaults (Drum boop and Axis)
+
+    Track plan:
+      T1 (ch1, Drum default):     C4 step 1 + D4 step 5  — multi-note 0x25 control
+      T3 (ch3, → Wavetable):      C4+E4+G4 chord step 1  — chord + 0x2D test
+      T5 (ch5, → Drum):           C4 step 1 at vel 50     — 0x2D? + preamble + velocity
+      T7 (ch7, Axis default):     E4 step 9, 4-step hold  — tick/gate control (0x20)
+    """
+    events = [
+        # T1 (Drum default): two notes at different steps
+        NoteEvent(channel=0, step=1, note=60, velocity=100, duration_steps=1.0),
+        NoteEvent(channel=0, step=5, note=62, velocity=100, duration_steps=1.0),
+        # T3 (→ Wavetable): C major triad at step 1
+        NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=1.0),
+        NoteEvent(channel=2, step=1, note=64, velocity=100, duration_steps=1.0),
+        NoteEvent(channel=2, step=1, note=67, velocity=100, duration_steps=1.0),
+        # T5 (→ Drum): single note, low velocity
+        NoteEvent(channel=4, step=1, note=60, velocity=50, duration_steps=1.0),
+        # T7 (Axis default): single note at step 9 with 4-step gate
+        NoteEvent(channel=6, step=9, note=64, velocity=100, duration_steps=4.0),
+    ]
+    return TestPlan(
+        name="selective_multi_note",
+        description="Non-contiguous tracks (T1/T3/T5/T7) with engine changes: "
+                    "T3→Wavetable, T5→Drum, T1+T7 default. "
+                    "Tests multi-note, chord, 0x2D, velocity, preamble gaps, tick/gate.",
+        events=events,
+        bars=1,
+    )
+
+
 EXPERIMENTS: Dict[str, TestPlan] = {}
 _single_plans = make_single_note_per_track()
 for _p in _single_plans:
@@ -241,6 +289,7 @@ EXPERIMENTS["chromatic_scale"] = make_chromatic_scale()
 EXPERIMENTS["chord_test"] = make_chord_test()
 EXPERIMENTS["track2_test"] = make_track2_test()
 EXPERIMENTS["pitchbend_sweep"] = make_pitchbend_sweep()
+EXPERIMENTS["selective_multi_note"] = make_selective_multi_note()
 
 
 # ---------------------------------------------------------------------------

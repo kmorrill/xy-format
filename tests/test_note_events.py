@@ -287,6 +287,79 @@ class TestAppendNotesToTrack:
         for i in range(4, 16):
             assert result.tracks[i].preamble == project.tracks[i].preamble
 
+    def test_t4_insert_before_tail(self):
+        """T4 (Pluck/EPiano engine) inserts event before 47-byte tail, not at end.
+
+        Verified by matching unnamed 93 specimen byte-for-byte.
+        """
+        template = TEMPLATE.read_bytes()
+        project = XYProject.from_bytes(template)
+        specimen = XYProject.from_bytes(
+            (CORPUS / "unnamed 93.xy").read_bytes()
+        )
+
+        # Reproduce the unnamed 93 T4 event: C4, vel 100, explicit gate 480 ticks
+        result = append_notes_to_track(
+            project, track_index=4,
+            notes=[Note(step=1, note=60, velocity=100, gate_ticks=480)],
+            native=True,
+        )
+
+        # T4 body must match unnamed 93 specimen exactly
+        assert result.tracks[3].body == specimen.tracks[3].body
+
+    def test_t4_tail_marker_cleared(self):
+        """After event insertion, T4 tail marker bit 5 is cleared (0x28 -> 0x08)."""
+        template = TEMPLATE.read_bytes()
+        project = XYProject.from_bytes(template)
+
+        result = append_notes_to_track(
+            project, track_index=4,
+            notes=[Note(step=1, note=60, velocity=100)],
+        )
+
+        body = result.tracks[3].body
+        # Tail is last 47 bytes; first byte should have bit 5 cleared
+        assert body[-47] == 0x08
+
+    def test_track5_preamble_exempt(self):
+        """Track 5 (0-based idx 4) must NOT get 0x64 — unnamed 93 exception.
+
+        When T4 is activated, T5 keeps its original preamble (0x2E in corpus).
+        Setting T5 to 0x64 causes num_patterns crash (serialize_latest.cpp:90).
+        """
+        template = TEMPLATE.read_bytes()
+        project = XYProject.from_bytes(template)
+        original_t5_preamble = project.tracks[4].preamble
+
+        # Activate only T4
+        result = append_notes_to_track(
+            project, track_index=4, notes=[Note(step=1, note=60, velocity=100)]
+        )
+        # T5 must keep its original preamble
+        assert result.tracks[4].preamble == original_t5_preamble
+
+    def test_track5_exempt_in_chain(self):
+        """T5 keeps preamble even when T1-T4 are all activated (unnamed 93 pattern)."""
+        template = TEMPLATE.read_bytes()
+        project = XYProject.from_bytes(template)
+        original_t5_preamble = project.tracks[4].preamble
+
+        result = append_notes_to_tracks(project, {
+            1: [Note(step=1, note=48, velocity=100)],
+            2: [Note(step=1, note=56, velocity=100)],
+            3: [Note(step=1, note=60, velocity=100)],
+            4: [Note(step=1, note=64, velocity=100)],
+        })
+
+        # T2, T3, T4 get 0x64 (after an activated track)
+        assert result.tracks[1].preamble[0] == 0x64
+        assert result.tracks[2].preamble[0] == 0x64
+        assert result.tracks[3].preamble[0] == 0x64
+
+        # T5 must NOT get 0x64 — exempt per unnamed 93
+        assert result.tracks[4].preamble == original_t5_preamble
+
 
 # ── event_type_for_track tests ──────────────────────────────────────
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate a two-track drum pattern .xy file.
 
-Uses the pure-append 0x21 recipe on Track 1 (kick/snare) and Track 2
-(hats/percussion) of the default "unnamed 1.xy" template.
+Uses the pure-append recipe on Track 1 (kick/snare, 0x25) and Track 2
+(hats/percussion, 0x21) of the default "unnamed 1.xy" template.
 
 Drum kit mapping (24 keys, C3=48 through B4=71):
   Track 1 "boop" kit / Track 2 "phase" kit share the same layout:

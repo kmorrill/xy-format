@@ -1,19 +1,21 @@
 """Build sequential note events for OP-XY track blocks.
 
-Five event types share identical per-note encoding, differing only in the
-type byte.  Track 1 always uses 0x25; Tracks 2-16 use engine-dependent types:
+Six event types share identical per-note encoding, differing only in the
+type byte.  The correct type depends on track slot and engine:
 
   0x25 — Track 1 only (device-verified; 0x21 on T1 crashes)
-  0x21 — Drum/Prism/Dissolve engines on Tracks 2+ (safe universal fallback)
-  0x2d — firmware-native for some track/engine combos (T3 Wavetable, T4 Drum)
-  0x20 — Axis/Multisampler engines (Tracks 7-8 default)
-  0x1f — EPiano engine
-  0x1e — Hardsync engine
+  0x21 — Drum/Prism/Dissolve engines (device-verified on T2, T3, T5)
+  0x1f — Pluck/EPiano engine (device-verified on T4; 0x21 on T4 crashes)
+  0x20 — Axis/Multisampler engines (device-verified on T7)
+  0x1e — Hardsync engine (T6 native, untested for authoring)
+  0x2d — observed on some tracks; crashes on device
 
-Discovered via unnamed 93 MIDI harness experiment (all 8 tracks recorded
-simultaneously).  0x21 is accepted as a universal fallback on all non-T1 slots.
-
-For authoring: Track 1 -> 0x25, all others -> 0x21 (safe universal).
+Default mapping (device-verified where noted):
+  T1  0x25  (Drum boop)       T5  0x21  (Dissolve)
+  T2  0x21  (Drum phase)      T6  0x1E  (Hardsync, untested)
+  T3  0x21  (Prism)           T7  0x20  (Axis)
+  T4  0x1F  (Pluck/EPiano)    T8  0x20  (Multisampler, untested)
+  T9-16: 0x21 (auxiliary tracks, untested)
 
 Record layout (per note inside one event, default gate):
   First note  (tick==0) : 12 bytes

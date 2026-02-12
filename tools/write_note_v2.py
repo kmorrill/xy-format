@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Advanced writer for reproducing complex OP-XY note triggers.
+"""DEPRECATED — uses wrong note encoding (different field layouts per type,
+wrong byte order for gates, raw offset manipulation).
 
-Supports:
-- Multiple Event Types: 0x25 (Grid), 0x21 (Live), 0x2d (Synth Grid).
-- Arbitrary Tracks (1-16).
-- Engine ID Modification.
-- Full Parameter Control: Ticks, Gate, Note, Velocity.
+Use xy.project_builder.append_notes_to_track() instead, which correctly
+encodes notes via xy.note_events.build_event().  All event types share
+identical per-note encoding — only the type byte differs.
+
+Original description: writer for reproducing complex OP-XY note triggers.
 """
 
 import sys
