@@ -51,8 +51,10 @@ def append_notes_to_track(
     project: XYProject,
     track_index: int,
     notes: List[Note],
+    *,
+    native: bool = False,
 ) -> XYProject:
-    """Return a new XYProject with 0x21 notes appended to the given track.
+    """Return a new XYProject with notes appended to the given track.
 
     This is the single-track convenience wrapper.  For modifying multiple
     tracks, use :func:`append_notes_to_tracks` instead — it correctly
@@ -66,15 +68,19 @@ def append_notes_to_track(
         1-based track number (1-16).
     notes : list[Note]
         Notes to append.
+    native : bool
+        If True, use firmware-native event types per track slot.
     """
-    return append_notes_to_tracks(project, {track_index: notes})
+    return append_notes_to_tracks(project, {track_index: notes}, native=native)
 
 
 def append_notes_to_tracks(
     project: XYProject,
     track_notes: Dict[int, List[Note]],
+    *,
+    native: bool = False,
 ) -> XYProject:
-    """Return a new XYProject with 0x21 notes appended to multiple tracks.
+    """Return a new XYProject with notes appended to multiple tracks.
 
     Handles the preamble update rule correctly: the 0x64 sentinel is placed
     on every track immediately following an activated track, even if that
@@ -86,6 +92,9 @@ def append_notes_to_tracks(
         The source project (not mutated).
     track_notes : dict[int, list[Note]]
         Mapping of 1-based track index to list of notes.
+    native : bool
+        If True, use firmware-native event types per track slot.
+        If False (default), use 0x25 for T1 and 0x21 for all others.
     """
     if not track_notes:
         raise ValueError("need at least one track with notes")
@@ -105,7 +114,7 @@ def append_notes_to_tracks(
 
         target = tracks[idx]
         new_body = _activate_body(target.body)
-        etype = event_type_for_track(track_index)
+        etype = event_type_for_track(track_index, native=native)
         event_blob = build_event(notes, event_type=etype)
         new_body.extend(event_blob)
 
@@ -116,10 +125,11 @@ def append_notes_to_tracks(
         )
 
     # --- Step 2: set preamble 0x64 on the track after each activated track ---
-    # Corpus evidence (unnamed 93, 8 adjacent activated tracks): every track
-    # immediately following an activated track gets 0x64, even if that track
-    # is itself activated.  The first activated track in a contiguous group
-    # keeps its original preamble.
+    # Corpus evidence (unnamed 93, 8 activated tracks): every track immediately
+    # following an activated track gets 0x64, even if itself activated.
+    # Exception: Track 5 in unnamed 93 keeps original 0x2E despite T4 being
+    # activated — reason unknown. Current code ignores this exception;
+    # device-verified working for 1-2 track activations.
     preamble_targets = set()  # 0-based indices that need preamble update
     for idx in modified_indices:
         nxt = idx + 1

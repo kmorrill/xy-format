@@ -71,7 +71,7 @@ This document lists all changes made to OP-XY project files relative to their de
 - **unnamed_87** — Live-recorded single C4 on track three (Prism) landing around step ten with a short hold (~0.7 step) while leaving all other tracks untouched
 - **unnamed_91** — Track four engine changed from Pluck to Drum, single hit placed on step one (note 83, velocity 100). Uses 0x2d grid event type. No preamble 0x64 sentinel on track five (unlike note-only edits)
 - **unnamed_92** — Three notes on track three with different gate lengths: step 1 (2 steps), step 5 (4 steps), step 11 (6 steps). Uses 0x21 sequential event with explicit gate encoding
-- **unnamed_93** — MIDI harness capture: single C4 (note 60) on step 1 sent via MIDI to all 8 instrument tracks simultaneously. All 8 tracks activated (type 05→07). Reveals engine-dependent event types: T1(Drum)=0x25, T2(Drum)=0x21, T3(Prism)=0x21, T4(EPiano)=0x1F, T5(Dissolve)=0x21, T6(Hardsync)=0x1E, T7(Axis)=0x20, T8(Multisampler)=0x20. Gate recorded as explicit 480 ticks. Preamble 0x64 set on T2-T8 (every track after an activated track)
+- **unnamed_93** — MIDI harness capture: single C4 (note 60) on step 1 sent via MIDI to all 8 instrument tracks simultaneously. All 8 tracks activated (type 05→07). Reveals engine-dependent event types: T1(Drum)=0x25, T2(Drum)=0x21, T3(Prism)=0x21, T4(EPiano)=0x1F, T5(Dissolve)=0x21, T6(Hardsync)=0x1E, T7(Axis)=0x20, T8(Multisampler)=0x20. Gate recorded as explicit 480 ticks. Preamble 0x64 set on T2-T4, T6-T9 (T5 keeps original 0x2E — reason unknown)
 
 
 ## Songs and Arrangement

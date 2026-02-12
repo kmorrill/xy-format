@@ -1,10 +1,10 @@
-"""Tests for the 0x21 note event builder and project_builder append recipe."""
+"""Tests for the note event builder and project_builder append recipe."""
 
 import pytest
 from pathlib import Path
 
 from xy.container import XYProject
-from xy.note_events import Note, build_0x21_event, STEP_TICKS
+from xy.note_events import Note, build_0x21_event, build_event, event_type_for_track, STEP_TICKS
 from xy.project_builder import append_notes_to_track, append_notes_to_tracks, _activate_body
 
 CORPUS = Path("src/one-off-changes-from-default")
@@ -286,3 +286,156 @@ class TestAppendNotesToTrack:
         # Track 5+ unchanged
         for i in range(4, 16):
             assert result.tracks[i].preamble == project.tracks[i].preamble
+
+
+# ── event_type_for_track tests ──────────────────────────────────────
+
+
+class TestEventTypeForTrack:
+    """Verify event type selection for each track slot."""
+
+    def test_track1_always_0x25(self):
+        assert event_type_for_track(1) == 0x25
+        assert event_type_for_track(1, native=True) == 0x25
+
+    def test_universal_fallback(self):
+        """Without native=True, all non-T1 tracks return 0x21."""
+        for t in range(2, 17):
+            assert event_type_for_track(t) == 0x21
+
+    def test_native_types(self):
+        """With native=True, tracks return firmware-native event types."""
+        expected = {
+            1: 0x25, 2: 0x21, 3: 0x21, 4: 0x1F,
+            5: 0x21, 6: 0x1E, 7: 0x20, 8: 0x20,
+        }
+        for track, etype in expected.items():
+            assert event_type_for_track(track, native=True) == etype
+
+    def test_tracks_9_16_native_fallback(self):
+        """Tracks 9-16 have no native mapping, fall back to 0x21."""
+        for t in range(9, 17):
+            assert event_type_for_track(t, native=True) == 0x21
+
+    def test_out_of_range(self):
+        with pytest.raises(ValueError):
+            event_type_for_track(0)
+        with pytest.raises(ValueError):
+            event_type_for_track(17)
+
+
+# ── build_event with various event types ────────────────────────────
+
+
+class TestBuildEventTypes:
+    """Verify build_event produces correct type bytes for all accepted types."""
+
+    def test_all_accepted_types(self):
+        """Each accepted event type produces the correct header byte."""
+        for etype in (0x1E, 0x1F, 0x20, 0x21, 0x25, 0x2D):
+            blob = build_event([Note(step=1, note=60, velocity=100)], event_type=etype)
+            assert blob[0] == etype
+            assert blob[1] == 1  # count
+
+    def test_0x1f_single_note(self):
+        """0x1F event (EPiano) with one note has same structure as 0x21."""
+        blob_1f = build_event([Note(step=1, note=64, velocity=90)], event_type=0x1F)
+        blob_21 = build_event([Note(step=1, note=64, velocity=90)], event_type=0x21)
+        # Only the type byte differs
+        assert blob_1f[0] == 0x1F
+        assert blob_21[0] == 0x21
+        assert blob_1f[1:] == blob_21[1:]
+
+    def test_0x20_single_note(self):
+        """0x20 event (Axis) with one note has same structure as 0x21."""
+        blob_20 = build_event([Note(step=1, note=55, velocity=80)], event_type=0x20)
+        blob_21 = build_event([Note(step=1, note=55, velocity=80)], event_type=0x21)
+        assert blob_20[0] == 0x20
+        assert blob_20[1:] == blob_21[1:]
+
+    def test_rejected_type(self):
+        with pytest.raises(ValueError):
+            build_event([Note(step=1, note=60, velocity=100)], event_type=0x99)
+
+
+# ── chord encoding (multiple notes at same tick) ────────────────────
+
+
+class TestChordEncoding:
+    """Verify encoding of multiple notes at the same step (chords)."""
+
+    def test_two_notes_at_tick_zero(self):
+        """Two notes at step 1 — both get 2-byte tick encoding."""
+        notes = [
+            Note(step=1, note=60, velocity=100),
+            Note(step=1, note=64, velocity=100),
+        ]
+        blob = build_event(notes, event_type=0x20)
+        assert blob[0] == 0x20
+        assert blob[1] == 2  # count
+        # First note (non-last): tick=0 u16(2) + flag(1) + gate(4) + note(1) + vel(1) + pad(3) = 12B
+        assert blob[2:4] == b"\x00\x00"  # tick=0 u16
+        assert blob[4] == 0x02  # flag for tick=0
+        assert blob[9] == 60
+        # Second note starts at offset 2+12=14 (last): tick=0 u16(2) + flag(1) + gate(4) + note(1) + vel(1) + pad(2) = 11B
+        assert blob[14:16] == b"\x00\x00"  # tick=0 u16
+        assert blob[16] == 0x02  # flag for tick=0
+        assert blob[21] == 64
+
+    def test_three_note_chord(self):
+        """Three notes at the same step — Am triad."""
+        notes = [
+            Note(step=1, note=57, velocity=90),  # A3
+            Note(step=1, note=60, velocity=90),  # C4
+            Note(step=1, note=64, velocity=90),  # E4
+        ]
+        blob = build_event(notes, event_type=0x20)
+        assert blob[0] == 0x20
+        assert blob[1] == 3
+        # All three notes have tick=0 -> 2-byte encoding + flag=0x02
+        # Note 1: 2+1+4+1+1+3 = 12 bytes (non-last)
+        # Note 2: 2+1+4+1+1+3 = 12 bytes (non-last)
+        # Note 3: 2+1+4+1+1+2 = 11 bytes (last)
+        # Total: 2 (header) + 12 + 12 + 11 = 37
+        assert len(blob) == 37
+        # Verify note bytes
+        assert blob[9] == 57   # A3
+        assert blob[21] == 60  # C4
+        assert blob[33] == 64  # E4
+
+    def test_chord_with_gate(self):
+        """Three-note chord with explicit gates."""
+        gate = 1920  # quarter note
+        notes = [
+            Note(step=1, note=57, velocity=90, gate_ticks=gate),
+            Note(step=1, note=60, velocity=90, gate_ticks=gate),
+            Note(step=1, note=64, velocity=90, gate_ticks=gate),
+        ]
+        blob = build_event(notes, event_type=0x20)
+        assert blob[0] == 0x20
+        assert blob[1] == 3
+        # With explicit gate, each note is 1 byte longer (5-byte gate vs 4)
+        # Note 1: 2+1+5+1+1+3 = 13 bytes (non-last)
+        # Note 2: 2+1+5+1+1+3 = 13 bytes (non-last)
+        # Note 3: 2+1+5+1+1+2 = 12 bytes (last)
+        # Total: 2 (header) + 13 + 13 + 12 = 40
+        assert len(blob) == 40
+
+    def test_chord_plus_melody(self):
+        """Chord at step 1 followed by single note at step 5."""
+        notes = [
+            Note(step=1, note=57, velocity=90),   # A3 (chord)
+            Note(step=1, note=60, velocity=90),   # C4 (chord)
+            Note(step=1, note=64, velocity=90),   # E4 (chord)
+            Note(step=5, note=53, velocity=80),   # F3 (melody)
+        ]
+        blob = build_event(notes, event_type=0x20)
+        assert blob[0] == 0x20
+        assert blob[1] == 4
+        # Notes 1-3 at tick=0 (2-byte encoding), note 4 at tick=1920 (4-byte encoding)
+        # Note 1: 2+1+4+1+1+3 = 12
+        # Note 2: 2+1+4+1+1+3 = 12
+        # Note 3: 2+1+4+1+1+3 = 12
+        # Note 4: 4+1+4+1+1+2 = 13 (last, tick>0)
+        # Total: 2 + 12 + 12 + 12 + 13 = 51
+        assert len(blob) == 51

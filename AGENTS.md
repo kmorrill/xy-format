@@ -470,7 +470,7 @@ Every crash dump from loading custom-generated `.xy` files on the OP-XY is docum
 - **Key difference from working file**: `ode_to_joy_v2.xy` only modified Track 3 (small body, 419B baseline). `drum_pattern.xy` modifies Track 1 AND Track 2 (large drum bodies, ~1800B each). This is the first time two adjacent tracks were both activated.
 - **Line number difference**: This crash is at line **90**, vs line **30** for Crash #1. Same assertion text (`num_patterns > 0`) but different location in the deserialization code — suggests the firmware hits this check once per track or per block, and the crash occurs at a later track than Crash #1 did.
 - **Root cause (SOLVED)**: The `0x64` preamble sentinel was MISSING on Track 2. The initial incorrect rule said "activated tracks keep original preamble; 0x64 only on first unmodified track after the group." This was wrong for adjacent activated tracks.
-- **Correct rule** (proven by `unnamed 93.xy`, 8 adjacent activated tracks T1-T8): Every track immediately following an activated track gets 0x64 preamble byte 0, even if that track is itself activated. The first activated track in a chain keeps its original preamble.
+- **Correct rule** (proven by `unnamed 93.xy`, 8 activated tracks T1-T8): Every track immediately following an activated track gets 0x64 preamble byte 0, even if that track is itself activated. The first activated track in a chain keeps its original preamble. **Exception**: Track 5 in unnamed 93 keeps its original `0x2E` preamble despite T4 being activated — reason unknown.
 - **Fix**: `append_notes_to_tracks()` sets 0x64 on `idx+1` for every activated track idx, not just the first unmodified one. For T1+T2: T1 keeps 0xD6 (original), T2 gets 0x64, T3 gets 0x64. **Device-verified working.**
 
 ## 2025-02-11 -- 0x21 Sequential Note Event Format
@@ -595,18 +595,20 @@ The MIDI harness experiment (unnamed 93) sent identical C4 notes via MIDI to all
 
 **Per-note encoding is identical across ALL event types** — only the type byte differs.
 
-### Selection Rules (Empirical)
+### Selection Rules (Empirical — updated 2025-02-11)
 
-The event type is NOT a simple function of engine ID alone — Track 1 Drum (0x03) uses 0x25 while Track 2 Drum (0x03) uses 0x21. Two factors are at play:
+The event type depends on **track slot position**, not engine ID:
 
-1. **Track 1 is special**: always uses 0x25, regardless of engine. 0x21 on Track 1 crashes.
-2. **Engine determines type for Tracks 2+**: the firmware selects event type based on the engine loaded on that track slot.
+1. **Track 1 is hardcoded for 0x25**: changing engine_id byte to Prism (0x12) does NOT make 0x21 work (test_B). 0x2D also crashes (test_C). Only 0x25 is accepted.
+2. **Tracks 2+ accept 0x21 universally**: verified on T2 (Drum), T3 (Prism), T5 (Dissolve).
+3. **0x25 is T1-only**: 0x25 on T3 crashes (test_A).
+4. **0x2D multi-note crashes**: 0x2D with count>1 crashes on T1 (test_C) and T2 (test_D). Device-written 0x2D files (unnamed 85, 86, 91) all had count=1 — 0x2D may only be valid for single-note events.
 
-Engine-to-event-type mapping (for Tracks 2-8):
+Engine-to-event-type mapping observed in MIDI harness (what the device WRITES — not all tested for authoring):
 
-| Engine ID | Engine Name | Event Type |
+| Engine ID | Engine Name | Event Type (device-written) |
 |-----------|-------------|------------|
-| 0x03 | Drum | 0x21 |
+| 0x03 | Drum | 0x21 (T2), 0x2D (T3-4 after engine change) |
 | 0x12 | Prism | 0x21 |
 | 0x14 | Dissolve | 0x21 |
 | 0x07 | EPiano | 0x1F |
@@ -617,16 +619,18 @@ Engine-to-event-type mapping (for Tracks 2-8):
 **Untested engines**: Sampler (0x02), Organ (0x06), MIDI (0x1D), Wavetable (0x1F), Simple (0x20).
 
 ### Practical Authoring Rule (Device-Verified)
-- **Track 1 → 0x25** (0x21 crashes — Crash #4)
+- **Track 1 → 0x25** (only type that works; 0x21 and 0x2D both crash)
 - **All other tracks → 0x21** (safe universal fallback, verified on T2, T3, T5)
-- For native fidelity, use the engine-specific type from the table above.
+- Engine-native types (0x1E, 0x1F, 0x20) remain untested for authoring.
+- 0x2D may only be safe for single-note (count=1) events.
 
 ### Previous Hypotheses (Resolved)
 
-Three competing hypotheses were proposed before the MIDI harness experiment:
-1. ~~Track index~~ — PARTIALLY CORRECT: Track 1 IS special (0x25 only), but the rest depend on engine.
+Three competing hypotheses were proposed before testing:
+1. ~~Track index~~ — CORRECT for authoring: Track 1 is hardcoded for 0x25 (test_B: 0x21 crashes even with Prism engine on T1). T2+ accept 0x21 universally regardless of engine.
 2. ~~Body structure~~ — DISPROVED: T2 and T1 both have Drum engine with 24 sample paths, but use different event types (0x21 vs 0x25).
-3. ~~Collision avoidance~~ — DISPROVED: the mapping is engine-based, not byte-collision-based.
+3. ~~Collision avoidance~~ — DISPROVED.
+4. ~~Engine determines type~~ — DISPROVED for authoring: the MIDI harness showed the device WRITES different types per engine, but for authoring the firmware only cares about track slot position. Changing engine_id byte alone does not change accepted event types (test_B).
 
 ### Device-Verified Test Results
 - 0x25 on Track 1: WORKS (unnamed 2, 3, 52, 80, 81; output/velocity_ramp_0x25.xy)
@@ -634,6 +638,10 @@ Three competing hypotheses were proposed before the MIDI harness experiment:
 - 0x21 on Track 2: WORKS (output/drum_pattern.xy, unnamed 93)
 - 0x21 on Track 3: WORKS (output/ode_to_joy_v2.xy, gate_test.xy, ode_to_joy_full.xy)
 - 0x25 on Track 2: CRASHES (device-verified)
+- 0x25 on Track 3 (Prism): CRASHES — 0x25 is Track-1-only (test_A)
+- 0x21 on Track 1 (engine changed to Prism 0x12): CRASHES — slot-based, not engine (test_B)
+- 0x2D on Track 1 (Drum): CRASHES (test_C)
+- 0x2D on Track 2 (Drum): CRASHES (test_D)
 
 ### Corpus Evidence Summary
 - Track 1: 0x25 (5 files: unnamed 2, 3, 52, 80, 81)
@@ -648,14 +656,15 @@ Three competing hypotheses were proposed before the MIDI harness experiment:
 **Corrected engine_id bug**: An earlier analysis claimed "all activated tracks share engine 0x03" — this was wrong. The `container.py` `engine_id` property was reading `body[3]`, which is always 0x03 (part of the track block signature `00 00 01 03 ff 00 fc 00`). The correct engine ID locations are: type-05 → `body[0x0D]`, type-07 → `body[0x0B]`.
 
 ### Remaining Tests
-1. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Wavetable (0x1F), Simple (0x20) → complete the engine-to-event-type lookup table
-2. Try native event types (0x1E, 0x1F, 0x20) for authoring on their respective tracks → verify firmware accepts our writes with engine-native types
+1. MIDI harness with untested engines: Sampler (0x02), Organ (0x06), MIDI (0x1D), Wavetable (0x1F), Simple (0x20) → complete the engine-to-event-type lookup table (observational only — what the device writes)
+2. Try native event types (0x1E, 0x1F, 0x20) for authoring on their respective tracks → verify firmware accepts engine-native types, or whether 0x21 is the ONLY accepted type for T2+
+3. Try 0x2D with single-note (count=1) events → device-written 0x2D files all had count=1; multi-note 0x2D crashes
 
 ### Note on 0x2D
 The byte `0x2D` appears in two different contexts — don't confuse them:
 1. **Structural 0x2D**: in Track 1 drum body at pos 376 (grid preset data region), NOT an event
 2. **Event 0x2D**: real note events on some tracks (unnamed 85, 86, 91). Per-note encoding is identical to all other types.
-3. **Relationship to 0x21**: unnamed 91 shows Track 4 using 0x2D after engine change to Drum — but unnamed 93 shows Track 4 (EPiano, original engine) using 0x1F. This suggests 0x2D may be the Drum engine's native type for Tracks 3-6, while 0x21 is the universal fallback.
+3. **Relationship to 0x21**: unnamed 91 shows Track 4 using 0x2D after engine change to Drum — but unnamed 93 shows Track 4 (EPiano, original engine) using 0x1F. The device WRITES different types per engine, but for authoring, 0x21 is the safe universal choice for T2+ (0x2D multi-note crashes per tests C & D).
 
 ### 0x2D Event Format (DECODED — unnamed 91)
 ```
@@ -726,12 +735,35 @@ Built `tools/midi_harness.py` using `mido`/`python-rtmidi` to send controlled MI
 - **All 8 instrument tracks activated**: type byte flipped 0x05 → 0x07 on all 8
 - **Pre-track region**: grew by 7 bytes (MIDI channel configuration data)
 - **Gate encoding**: all notes use explicit gate (480 ticks = 1 step), NOT the F0 default marker — MIDI-recorded notes always get explicit gate
+- **Event blob**: all 8 events are byte-identical (14 bytes) except the type byte: `XX 01 00 00 02 E0 01 00 00 00 3C 64 00 00`
 
 ### Event Type Discovery (Major Finding)
 See "Event Type Selection" section above. The key result: **five distinct event types** (0x1E, 0x1F, 0x20, 0x21, 0x25) with engine-dependent selection. This was the first experiment to activate all 8 tracks simultaneously, giving us complete coverage of the default engine set.
 
+### Event Insertion Strategies (Deep Decode Finding)
+Two distinct strategies observed for how events are placed in track bodies:
+
+1. **Pure-append** (6 of 8 tracks: T1, T3, T5, T6, T7, T8): Event bytes appear at the very end of the track body, after the patch name null terminators. Zero interior byte changes. This is the simple case our writer handles.
+
+2. **Mid-body modifications** (2 of 8 tracks):
+   - **Track 2 (Drum phase)**: 5-byte insertion in sample metadata at data offset ~0x0150. Bytes `02 22 56 00 00` inserted, shifting the entire sample path table by 5 bytes. The event itself is still appended at the end. Likely firmware updating an internal sample-table pointer or counter.
+   - **Track 4 (EPiano/Pluck)**: Event inserted **before** a 47-byte tail pointer section, not at the end. The tail data shifts forward by 14 bytes (event size). First byte of the tail changes from 0x28 to 0x08 (delta -0x20). This tail section may contain patch-related pointer data that must follow a specific structure.
+
+**Implication for authoring**: Pure-append works for most engines. Drum tracks with sample paths and EPiano tracks may require more careful insertion logic if firmware expects specific layout.
+
+### Pre-track MIDI Config Structure (Deep Decode Finding)
+When MIDI channels are assigned to tracks, the pre-track header grows:
+- Byte 0x23 (entry size): 12 → 13 bytes per entry
+- 4 entries × 13 = 52 bytes total (was 4 × 12 = 48, net +4 per entry but only some entries grow)
+- Total pre-track growth: +7 bytes
+- Channel assignments `01 02 03 04 05 06 07` embedded in the config entries
+- Handle table values at 0x58-0x7B are identical, just shifted by 7 bytes
+
 ### Preamble 0x64 Behavior in Multi-Track Recording
-- T1: keeps original preamble (first activated track in chain)
-- T2-T8: all get 0x64 preamble byte 0 (every track after an activated track)
+- T1: keeps original preamble 0xD6 (first activated track in chain)
+- T2-T4: all get 0x64
+- **T5: keeps original 0x2E** — anomaly, reason unknown (Dissolve engine or 5th slot special?)
+- T6-T8: all get 0x64
 - T9: also gets 0x64 (first unmodified track after the activated chain)
-- This confirmed the corrected preamble rule and resolved Crash #3 / Crash #5 root cause.
+- T10-T16: unchanged
+- The T5 exception breaks the simple "every track after an activated track gets 0x64" rule. Both T1 and T5 keep their original preambles. Our writer ignores this exception; device-verified working for 1-2 track activations.
