@@ -55,6 +55,71 @@
 - Expect a hierarchical binary layout: project header → track bank → scenes → songs → global settings. Many sections are fixed-count tables with compact entries (makes diffing easier).
 - Strings probably stored as ASCII/UTF-8 with limited character set (alphanumeric plus `-`, `#`, space).
 
+## OP-XY Documented Limits (Official Specs)
+
+Sources: [teenage.engineering/products/op-xy](https://teenage.engineering/products/op-xy), [TE guides](https://teenage.engineering/guides/op-xy/), Sound On Sound review, OP Forums.
+
+### Sequencer
+
+| Limit | Value | Notes |
+|-------|-------|-------|
+| Steps per pattern | 64 (4 pages × 16) | 4 bars maximum |
+| Bars per pattern | 4 | Community has requested 8; TE says limited by 120-note cap |
+| Notes per pattern | **120** | Hard cap; per-pattern, not per-track. Confirmed by multiple sources |
+| Sequencer resolution | 1920 PPQN | = 480 ticks per 16th note (matches our STEP_TICKS) |
+| Track scale options | ×1/2, ×1, ×2, ×3, ×4, ×6, ×8, ×16 | Max effective = 64 bars (4 bars × scale 16) |
+| Step component types | 14 | All stackable on a single step |
+| Variations per component | 10 | — |
+
+### Polyphony
+
+| Limit | Value | Notes |
+|-------|-------|-------|
+| Total voices | **24** | Dynamically allocated across all tracks |
+| Per-track max | **8** | Hard cap regardless of available voices |
+| Voice modes | Poly, Mono, Legato | Selectable per track |
+
+### Tracks, Patterns, and Songs
+
+| Limit | Value | Notes |
+|-------|-------|-------|
+| Instrument tracks | 8 | T1-T8 |
+| Auxiliary tracks | 8 | T9-T16 (external MIDI/CV/FX) |
+| Patterns per track | **9** | Indexed in pattern directory |
+| Scenes | **99** total | Snapshot pattern assignment + mix state |
+| Scenes per song | **96** | — |
+| Songs per project | **14** | TE guide says 14; some sources say 9 or 10 (may vary by firmware) |
+| Projects | 10,000+ | Limited by 8 GB internal storage |
+
+### Synthesis and Sampling
+
+| Limit | Value | Notes |
+|-------|-------|-------|
+| Synth engines | 8 | Drum, EPiano, Prism, Hardsync, Dissolve, Axis, Multisampler, Wavetable |
+| Drum sampler slots | 24 | One-shot samples per kit (MIDI 48-71 = C3-B4) |
+| Max sample length | 20 seconds | 16-bit / 44.1 kHz WAV/AIFF |
+| FX slots per track | 2 | Sequenceable |
+| FX types | 6 | Reverb, delay, chorus, distortion, lofi, phaser |
+| Punch-in FX | 24 | — |
+| Groove presets | 10 | — |
+
+### Hardware
+
+| Spec | Value |
+|------|-------|
+| Processing | Dual Blackfin + triple-core DSP co-processor + 2 MCUs |
+| Storage | 8 GB internal |
+| RAM | 512 MB |
+| Display | 480 × 222 px IPS TFT (grayscale) |
+| Battery | 4000 mAh, ~16 hours |
+
+### Implications for Format Work
+
+- **120-note cap**: Our 48-note unnamed 101 event is 40% of max. A 120-note event would be ~1700 bytes (rough estimate). This is the ceiling for stress-testing the event parser.
+- **9 patterns per track**: The handle table at 0x58-0x7B has 9 entries — this matches exactly. Each handle entry maps to one pattern slot.
+- **8-voice polyphony**: Chord events with flag 0x04 should support up to 8 simultaneous notes per track. We've tested 3; 8 is the hard limit.
+- **24 total voices**: With 8 tracks playing 3-note chords = 24 voices, the system is at capacity. Beyond this, voice stealing occurs.
+
 ## Example Corpus Notes
 - `unnamed 1.xy` is the pristine baseline.
 - Each `unnamed N.xy` adds a single, documented tweak (tempo change, step component toggle, filter adjustments, etc.). File sizes hover around 9.3 KB except sequence-heavy samples (`unnamed 6`, `unnamed 7`, `unnamed 3`) that are larger—good markers for structural inflation.
@@ -868,7 +933,7 @@ Grid-entered chords (unnamed 80) and MIDI-recorded chords (unnamed 94) use **dif
 
 Both formats are device-generated and accepted by firmware. The grid format is more verbose (repeats tick for each note); the MIDI format is compact (uses flag 0x04 to skip tick).
 
-**Note**: unnamed 80 step-9 E4 has tick=3841 instead of expected 3840 — anomaly unexplained.
+**Note**: unnamed 80 step-9 E4 was originally parsed as tick=3841 (expected 3840). This was a **parsing error** caused by reading `01 0F` as a 4-byte u32 LE value (0x0F01 = 3841). The correct interpretation uses variable-length tick encoding: escape byte (0x01) + tick_hi (0x0F) = tick 0x0F00 = 3840 exactly. See "Variable-Length Tick Encoding" under unnamed 101.
 
 ### Velocity and Gate Fidelity
 - **Velocity maps 1:1**: Sent vel=50 to T5, got 0x32 (50) in file. Perfect fidelity.
@@ -912,25 +977,441 @@ Verified across unnamed 1 (1 bar), 17 (2 bars), 18 (3 bars), 19 (4 bars), and 10
 - `container.py` now exposes `TrackBlock.bar_count` property
 - `project_builder.py` auto-sets bar count from the maximum step in the note list
 
-### Structural Findings
-- **File size**: 10,410 bytes (baseline 9,499, +911)
-- **T1**: type 07, body +681 bytes (48 drum notes), bar_count=4
-- **T3**: type 07, body +230 bytes (16 bass notes), bar_count=4
-- **T2, T4**: preamble byte 0 changed to 0x64 (follows activated tracks)
-- **T5-T16**: unchanged
+### Structural Findings (Byte-Level)
 
-### Multi-Bar Note Encoding
-Notes beyond bar 1 use the same encoding — just larger tick values. No structural change needed for multi-bar events; the event blob simply contains notes with ticks > 7680 (16 steps × 480 ticks).
+| Track | Preamble (base→test) | Body Size | Type | Bars | Change |
+|-------|----------------------|-----------|------|------|--------|
+| T1 | `d60110f0`→`d60140f0` | 1832→2513 (+681) | 05→07 | 1→4 | 48 drum notes added |
+| T2 | `8a0110f0`→`640110f0` | 1792 (unchanged) | 05 | 1 | Preamble byte 0 only |
+| T3 | `860110f0`→`860140f0` | 419→649 (+230) | 05→07 | 1→4 | 16 bass notes added |
+| T4 | `860110f0`→`640110f0` | 490 (unchanged) | 05 | 1 | Preamble byte 0 only |
+| T5-T16 | unchanged | unchanged | 05 | 1 | — |
 
-- T1: 48 notes, single 0x25 event with count=48
-- T3: 16 notes, single 0x21 event with count=16
-- Simultaneous drum hits at same tick use flag 0x04 chord continuation (same as unnamed 94)
-- Gate lengths from 480t (1 step) to 1920t (4 steps) all encoded correctly
+- **File size**: 9,499 → 10,410 (+911 bytes)
+- **Pre-track region**: 124 bytes, identical
+- **T2, T4**: preamble byte 0 changed to 0x64 (follows activated tracks; T5 exempt as previously seen)
+- **Type 05→07 on T1, T3**: body[9] changed, 2-byte padding (`08 00`) at body[10:12] removed, all downstream bytes shifted by -2
+- **unnamed 19 comparison** (4-bar, no notes): only T1 changed — preamble bar count 1→4, type 05→07, body shrinks by 2 bytes (padding removal only, no notes added). Confirms the type conversion is triggered by bar count change, not by note insertion.
 
-### Tick +1 Anomaly (MIDI Timing Drift)
-Both tracks show a consistent +1 tick offset at every 8th-step boundary:
-- Step 9 = tick 3841 (expected 3840)
-- Step 17 = tick 7681 (expected 7680)
-- Pattern continues at every half-bar boundary
+### Variable-Length Tick Encoding (MAJOR DISCOVERY)
 
-Same artifact seen in unnamed 80 (grid-entered). This is a MIDI capture timing issue (possibly clock jitter accumulation), not a format requirement. Our builder should emit exact tick values (step-1) × 480.
+The device firmware uses a **compact, variable-length tick encoding** — NOT the 4-byte u32 LE format we assumed. A flag/separator byte determines the tick field width:
+
+```
+Per-note record layout:
+
+FIRST NOTE (flag=0x02, tick always 0):
+  [00 00] [02] [gate...] [00 00 00] [note] [vel] [00 00]
+  tick: 2-byte u16 LE (always 0x0000)
+  No pad between flag and gate
+
+CHORD CONTINUATION (flag=0x04, same tick as previous note):
+  [04] [gate...] [note] [vel] [00 00]
+  No tick field at all (inherits previous tick)
+
+NORMAL NOTE, tick_lo != 0x00 (flag=0x00):
+  [00] [tick_lo] [tick_hi] [00 00 00] [gate...] [00 00 00] [note] [vel] [00 00]
+  0x00 = separator, tick = u16 LE in next 2 bytes
+
+NORMAL NOTE, tick_lo == 0x00 (flag=0x01, escape):
+  [01] [tick_hi] [00 00 00] [gate...] [00 00 00] [note] [vel] [00 00]
+  0x01 = escape (tick_lo implicitly 0x00), saves 1 byte
+  tick = tick_hi << 8
+```
+
+**Why the escape**: `0x00` is reserved as the inter-note separator, so when a tick's low byte would naturally be `0x00` (happens every 256 ticks, i.e. every 8th step for grid-quantized notes at 480 ticks/step), the format uses `0x01` as an escape byte and encodes only the high byte. This avoids ambiguity with the separator and saves 1 byte.
+
+**Flag byte summary**:
+
+| Flag | Meaning | Tick Field | Occurs When |
+|------|---------|------------|-------------|
+| `0x00` | Separator + 2-byte tick | `[tick_lo] [tick_hi]` (u16 LE) | `tick & 0xFF != 0` |
+| `0x01` | Escape + 1-byte tick | `[tick_hi]` (lo implied 0) | `tick & 0xFF == 0` and `tick > 0` |
+| `0x02` | First note marker | `[00 00]` (preceding, always 0) | First note only |
+| `0x04` | Chord continuation | (none, inherits prev) | Same tick as previous note |
+
+**Note record sizes** (bytes, including leading separator from previous note):
+
+| Format | Default Gate (F0) | Explicit Gate (E0) |
+|--------|------------------|--------------------|
+| First note (0x02) | 11 | 12 |
+| Chord (0x04) | 9 | 10 |
+| Normal, flag=0x00 | 14 | 15 |
+| Normal, flag=0x01 | 13 | 14 |
+
+Final note followed by 2-byte trail (`00 00`).
+
+### Gate Encoding (Refined)
+
+Two gate formats observed:
+
+| Gate Bytes | Size | Meaning |
+|-----------|------|---------|
+| `F0 00 00 01` | 4 bytes | Default/standard gate (firmware default duration) |
+| `[gate_u16 LE] 00 00 00` | 5 bytes | Explicit gate in ticks (e.g., `E0 01 00 00 00` = 480 ticks = 1 step) |
+
+The gate field in native encoding is **u16 LE** (not u32 LE as in our builder). Observed values: 480 (1 step), 960 (2 steps), 1920 (4 steps). The 3 trailing zero bytes after the u16 gate may be padding or reserved fields.
+
+**Note**: Our builder uses u32 LE explicit gates (`[gate_u32 LE] 00`), which is also accepted by firmware. The native format appears to use u16 LE for the gate value.
+
+### T1 Decode: 48 Notes (0x25 Event)
+
+Event at body offset `0x072B`, 678 bytes total (header `25 30` + 676 data bytes).
+
+Bars 1-3 repeat a steady pattern; bar 4 is a fill with solo snare crescendo.
+
+| # | Tick | Step | Bar.Step | Flag | Gate | Note | Vel |
+|---|------|------|----------|------|------|------|-----|
+| 0 | 0 | 0 | 1.1 | 0x02 | F0 def | G#3 | 70 |
+| 1 | 0 | 0 | 1.1 | 0x04 | E0 480t | C3 | 120 |
+| 2 | 960 | 2 | 1.3 | 0x00 | F0 def | G#3 | 70 |
+| 3 | 1920 | 4 | 1.5 | 0x00 | F0 def | A#3 | 80 |
+| 4 | 1920 | 4 | 1.5 | 0x00 | E0 480t | D3 | 110 |
+| 5 | 2880 | 6 | 1.7 | 0x00 | F0 def | G#3 | 70 |
+| 6 | 3840 | 8 | 1.9 | **0x01** | F0 def | G#3 | 70 |
+| 7 | 3840 | 8 | 1.9 | **0x01** | E0 480t | C3 | 110 |
+| 8-11 | 4800-6720 | 10-14 | 1.11-1.15 | 0x00 | mixed | mixed | — |
+| 12 | 7680 | 16 | 2.1 | **0x01** | F0 def | G#3 | 70 |
+| 13 | 7680 | 16 | 2.1 | **0x01** | E0 480t | C3 | 120 |
+| 14-23 | 8640-14400 | 18-30 | 2.3-2.15 | 0x00/0x01 | mixed | mixed | — |
+| 24 | 15360 | 32 | 3.1 | **0x01** | F0 def | G#3 | 70 |
+| 25 | 15360 | 32 | 3.1 | **0x01** | E0 480t | C3 | 120 |
+| 26-35 | 16320-22080 | 34-46 | 3.3-3.15 | 0x00/0x01 | mixed | mixed | — |
+| 36 | 23040 | 48 | 4.1 | **0x01** | E0 480t | C3 | 120 |
+| 37 | 24000 | 50 | 4.3 | 0x00 | E0 480t | C3 | 100 |
+| 38 | 24960 | 52 | 4.5 | 0x00 | E0 480t | D3 | 110 |
+| 39 | 25920 | 54 | 4.7 | 0x00 | E0 480t | D3 | 100 |
+| 40 | 26880 | 56 | 4.9 | **0x01** | E0 480t | D3 | 105 |
+| 41 | 27360 | 57 | 4.10 | 0x00 | E0 480t | D3 | 100 |
+| 42 | 27840 | 58 | 4.11 | 0x00 | E0 480t | D3 | 110 |
+| 43 | 28320 | 59 | 4.12 | 0x00 | E0 480t | D3 | 105 |
+| 44 | 28800 | 60 | 4.13 | 0x00 | E0 480t | D3 | 115 |
+| 45 | 29280 | 61 | 4.14 | 0x00 | E0 480t | D3 | 110 |
+| 46 | 29760 | 62 | 4.15 | 0x00 | E0 480t | D3 | 120 |
+| 47 | 30240 | 63 | 4.16 | 0x00 | E0 480t | D3 | 127 |
+
+Notes by pitch: G#3 (0x38) = 18, D3 (0x32) = 16, C3 (0x30) = 8, A#3 (0x3A) = 6.
+Gate types: F0 default = 24 notes, E0 explicit = 24 notes.
+Tick encoding: flag=0x00 (34 notes), flag=0x01 (12 notes), flag=0x02 (1), flag=0x04 (1).
+All 48 ticks are exact multiples of 480 — zero drift, zero anomalies.
+
+### T3 Decode: 16 Notes (0x21 Event)
+
+Event at body offset `0x01A1`, 232 bytes total (header `21 10` + 230 data bytes).
+
+C minor bass line across 4 bars, one note every 4 steps with 2-step gates (except bars 2/4 endings).
+
+| # | Tick | Step | Bar.Step | Flag | Gate (ticks) | Note | Vel |
+|---|------|------|----------|------|-------------|------|-----|
+| 1 | 0 | 0 | 1.1 | 0x02 | 960 (2 steps) | C2 | 100 |
+| 2 | 1920 | 4 | 1.5 | 0x00 | 960 | C2 | 95 |
+| 3 | 3840 | 8 | 1.9 | **0x01** | 960 | G2 | 100 |
+| 4 | 5760 | 12 | 1.13 | 0x00 | 960 | F2 | 95 |
+| 5 | 7680 | 16 | 2.1 | **0x01** | 960 | D#2 | 100 |
+| 6 | 9600 | 20 | 2.5 | 0x00 | 960 | D2 | 95 |
+| 7 | 11520 | 24 | 2.9 | **0x01** | 1920 (4 steps) | C2 | 100 |
+| 8 | 15360 | 32 | 3.1 | **0x01** | 480 (1 step) | C2 | 100 |
+| 9 | 16320 | 34 | 3.3 | 0x00 | 480 | C2 | 80 |
+| 10 | 17280 | 36 | 3.5 | 0x00 | 960 | G2 | 100 |
+| 11 | 19200 | 40 | 3.9 | **0x01** | 960 | F2 | 95 |
+| 12 | 21120 | 44 | 3.13 | 0x00 | 960 | D#2 | 100 |
+| 13 | 23040 | 48 | 4.1 | **0x01** | 960 | C2 | 100 |
+| 14 | 24960 | 52 | 4.5 | 0x00 | 960 | D2 | 95 |
+| 15 | 26880 | 56 | 4.9 | **0x01** | 960 | D#2 | 100 |
+| 16 | 28800 | 60 | 4.13 | 0x00 | 1920 (4 steps) | G2 | 110 |
+
+Gate encoding here is u16 LE (not the `F0 00 00 01` default marker). All gates are explicit.
+Flag=0x01 at steps 8, 16, 24, 32, 40, 48, 56 — exactly every 8th step where `tick % 256 == 0`.
+All 16 ticks are exact multiples of 480.
+230 data bytes consumed + 2-byte trailing pad = 232, zero leftover.
+
+### Tick +1 Anomaly — RESOLVED (Was a Parsing Error)
+
+The previously reported "+1 tick at 8-step boundaries" (step 9 = tick 3841, step 17 = tick 7681) was **not a real anomaly**. It was caused by reading the bytes `01 0F` as a 4-byte u32 LE value:
+
+```
+Incorrect parse:  01 0F 00 00 → u32 LE → 0x00000F01 = 3841
+Correct parse:    01 = escape flag (tick_lo is 0x00)
+                  0F = tick_hi
+                  tick = 0x0F << 8 = 0x0F00 = 3840 ✓
+```
+
+Every tick in both the T1 (48-note) and T3 (16-note) events resolves to an exact multiple of 480 under the variable-length encoding. There is no MIDI timing drift, no clock jitter, and no +1 artifact.
+
+### Builder Compatibility
+
+Our `build_event()` uses 4-byte u32 LE ticks and u32 LE explicit gates, which is **different from the native encoding** but is accepted by firmware. Device-verified files (`arrange_full.xy`, etc.) use our verbose format and load/play correctly. Matching the native compact encoding is a future optimization, not a correctness issue.
+
+## Multi-Pattern Storage Model (DECODED — unnamed 102-105)
+
+### Core Mechanism: Block Rotation
+
+The OP-XY stores multiple patterns by **cloning track blocks and inserting them inline**. The file always contains exactly 16 block slots. When patterns are added to a track, clone blocks are inserted immediately after the leader block for that track, pushing all subsequent blocks down. Displaced blocks that fall off the end are concatenated into block 15 as sub-blocks with embedded preambles.
+
+```
+Baseline (1 pattern each):
+  [T1] [T2] [T3] [T4] ... [T14] [T15] [T16]
+
+T1 has 2 patterns (unnamed 102/103):
+  [T1p1] [T1p2] [T2] [T3] [T4] ... [T14] [T15+T16]
+
+T1 has 3 patterns (unnamed 104):
+  [T1p1] [T1p2] [T1p3] [T2] [T3] ... [T13] [T14+T15+T16]
+
+T1 AND T3 have 2 patterns each (unnamed 105):
+  [T1p1] [T1p2] [T2] [T3p1] [T3p2] [T4] ... [T13] [T14+T15+T16]
+```
+
+### Preamble Word Encoding
+
+The 4-byte preamble `[byte0] [byte1] [byte2] [0xF0]` encodes pattern metadata:
+
+**Leader blocks** (first block of a track group):
+- `byte[0]`: changes from baseline value when patterns added (e.g., T1: `0xD6` → `0xB5`)
+- `byte[1]`: **pattern count** for this track (1=single, 2=two patterns, 3=three)
+- `byte[2]`: bar count (`0x10`=1 bar, `0x40`=4 bars)
+
+**Clone blocks** (additional pattern slots):
+- `byte[0]`: always `0x00` — this is the distinguishing mark of a clone block
+- `byte[1]`: the baseline `byte[0]` of the next track in the original layout
+- `byte[2]`: `0x10` (1 bar default)
+
+**Adjacent-track sentinel**: the block immediately after a clone group gets `byte[0]=0x64` (same rule as note activation, T5 exempt).
+
+| File | Block 0 (leader) | Block 1 (clone/T2) | Pattern count |
+|------|-------------------|---------------------|---------------|
+| baseline | `D6 01 10 F0` | `8A 01 10 F0` (T2) | 1 |
+| unnamed 102 | `B5 02 10 F0` | `00 8A 10 F0` (clone) | 2 |
+| unnamed 103 | `B5 02 10 F0` | `00 64 10 F0` (clone) | 2 |
+| unnamed 104 | `B5 03 10 F0` | `00 64 10 F0` (clone) | 3 |
+
+### Pre-Track Pattern Directory
+
+When patterns > 1, the pre-track region grows:
+
+**Offset 0x56-0x57**: `pattern_max_slot` (u16 LE, 0-based). Value 0=1 pattern, 1=2 patterns, 2=3 patterns.
+
+**Offset 0x58+**: 5-byte pattern descriptor inserted once when going from 1→2+ patterns:
+- Single-track multi-pattern: `00 1D 01 00 00` (5 bytes, pre-track grows by 5)
+- Two-track multi-pattern (unnamed 105): `01 00 00 1B 01 00 00` + 2 extra bytes (pre-track grows by 7)
+
+The handle table shifts rightward by the inserted bytes.
+
+### Type Byte and Notes
+
+| Type | Padding | Meaning |
+|------|---------|---------|
+| `0x05` | 2 bytes (`08 00`) | Default/blank pattern (no notes) |
+| `0x07` | none | Pattern with note event data |
+
+- Blank pattern clones retain type `0x05` (unnamed 104, block 1)
+- Pattern clones with notes get type `0x07` (padding removed, event appended)
+- Leader blocks with notes also get type `0x07`
+
+### Block 15 Overflow (T16 Absorption)
+
+Displaced blocks are concatenated into block 15 with their preambles embedded inline:
+
+```
+Block 15 body = [T(N).body] [T(N+1).preamble] [T(N+1).body] [T(N+2).preamble] [T(N+2).body] ...
+```
+
+Size accounting (verified byte-exact):
+- unnamed 102/103 (1 clone): T15 body (346) + T16 preamble (4) + T16 body (403) = **753 bytes**
+- unnamed 104/105 (2 clones): T14 body (333) + T15 preamble (4) + T15 body (346) + T16 preamble (4) + T16 body (403) = **1,090 bytes**
+
+### Leader Body Changes
+
+When patterns are added, the leader block's body:
+1. Loses exactly **1 trailing `0x00` byte** (1832 → 1831 for T1, 419 → 418 for T3)
+2. Gets type 0x07 if it contains notes (padding removed: net -3 bytes for body with notes)
+3. Body content within shared range is otherwise identical to baseline
+
+### Note Events in Pattern Clones
+
+Notes are appended at the tail of the clone block body, using the same event format as single-pattern tracks:
+
+**unnamed 102** — T1 pattern 2, C4 at step 9 (0x25 event):
+```
+25 01 00 0F 00 00 00 F0 00 00 01 3C 64 00 00
+```
+
+**unnamed 103** — T1 pattern 1, C4 at step 1 / pattern 2, E4 at step 9:
+- Block 0: `25 01 00 00 02 F0 00 00 01 3C 64 00` (C4 step 1)
+- Block 1: `25 01 00 0F 00 00 00 F0 00 00 01 40 64 00 00` (E4 step 9)
+
+**unnamed 105** — T1 pat2 C4 step 1 (0x25) / T3 pat2 E3 step 2 (0x21):
+- Block 1: `25 01 00 00 02 F0 00 00 01 3C 64 00 00` (C4 step 1, drum)
+- Block 4: `21 01 E0 01 00 00 00 F0 00 00 01 34 64 00 00` (E3 step 2, Prism)
+
+### Implications for Authoring
+
+To write a multi-pattern project:
+1. Clone the leader track block (minus 1 trailing zero byte)
+2. Set leader `preamble[1]` = pattern count
+3. Set leader `preamble[0]` = `0xB5` (for T1; other tracks TBD)
+4. Set clone `preamble[0]` = `0x00`
+5. Set clone `preamble[1]` = baseline `preamble[0]` of next track
+6. Insert clone blocks immediately after leader, push all subsequent blocks down
+7. Concatenate displaced blocks into block 15 with embedded preambles
+8. Update pre-track `[0x56]` = pattern_max_slot
+9. Insert 5-byte descriptor at `0x58` (+ 2 bytes per additional track with patterns)
+10. Activate clone bodies (type 05→07, remove padding) and append note events
+
+**NOT YET DEVICE-TESTED** — structural analysis only from unnamed 102-105.
+
+## Multi-Bar Authoring (DEVICE-VERIFIED WORKING)
+
+### First Working 5-Track, 4-Bar Arrangement
+
+`output/arrange_full.xy`: 129 notes across 5 tracks, 4 bars, key of A minor (Am | F | Dm | E). **CONFIRMED WORKING ON DEVICE.**
+
+| Track | Engine | Event Type | Notes | Description |
+|-------|--------|-----------|-------|-------------|
+| T1 | Drum (0x03) | 0x25 | 30 | Kick+snare groove, fill bar 4 |
+| T2 | Drum (0x03) | 0x21 | 36 | 8th-note hats, 16ths in fill |
+| T3 | Prism (0x12) | 0x21 | 19 | Root-fifth bass movement |
+| T4 | EPiano (0x07) | 0x1F | 20 | Singable melody with arc |
+| T7 | Axis (0x16) | 0x20 | 24 | Sustained pad triads (chords) |
+
+Individual track files also verified: `arrange_drums.xy`, `arrange_bass.xy`, `arrange_melody.xy`, `arrange_chords.xy`.
+
+### Two Key Discoveries Required for Multi-Bar
+
+#### 1. Pattern Length Field (preamble[2])
+
+The track preamble byte at position 2 controls how many bars the sequencer plays. Without setting this, notes beyond step 16 are silently ignored (the sequencer only loops 1 bar).
+
+```
+Default: preamble[2] = 0x10 (1 bar, 16 steps)
+         preamble[2] = 0x20 (2 bars, 32 steps)
+         preamble[2] = 0x30 (3 bars, 48 steps)
+         preamble[2] = 0x40 (4 bars, 64 steps)
+
+Formula: preamble[2] = ceil(max_step / 16) * 16
+```
+
+**Verification path**: unnamed 17/18/19 (bar-length-only changes) confirmed the byte position. unnamed 101 (4-bar drum+bass created on device) confirmed byte-for-byte match with our generated files. The `project_builder` now auto-calculates this from the maximum step in the note list.
+
+**Diagnostic history**: Initial 4-bar files had preamble[2]=0x10 (default). T3 bass loaded but only played 1 bar. T1 drums crashed because the firmware validates notes against the declared bar count for 0x25 events.
+
+#### 2. Firmware Bug: note==velocity Crash
+
+**The firmware crashes when any note's MIDI note byte equals its velocity byte.**
+
+```
+note=50, vel=50  (0x32 0x32) → CRASH
+note=65, vel=65  (0x41 0x41) → CRASH
+note=50, vel=51  (0x32 0x33) → works
+note=48, vel=50  (0x30 0x32) → works
+```
+
+Confirmed with isolated tests: even a single note with note==velocity at step 1 crashes the device. The crash is independent of bar count, note count, step position, or event type (tested on 0x25).
+
+**Fix**: `build_event()` nudges velocity by +1 when it would equal the note number (or -1 if at 127). A 1-unit velocity change is musically imperceptible.
+
+**Diagnostic history**: This bug was particularly hard to isolate because it masqueraded as a bar-count or note-count issue. The arrangement happened to have SNARE(50) at velocity 50 in bar 2, so it looked like multi-bar patterns were broken. The isolation process:
+1. All 2-bar arrangement files crashed → hypothesized tick range issue
+2. Single notes at any step worked → not the tick range
+3. 20 consecutive notes at steps 1-20 worked → not the note count
+4. Same steps with uniform note/velocity worked → narrowed to note content
+5. Mixed notes with uniform velocity worked → not MIDI note mixing
+6. Uniform notes with varied velocity worked → not velocity variation alone
+7. Incrementally adding notes found crash at note[10] (SNARE=50, vel=50) → found the collision
+
+### Complete Multi-Bar Authoring Recipe
+
+To write a multi-bar pattern to a track:
+
+1. **Activate body**: Flip type byte 0x05→0x07, remove 2-byte padding at body[10:12]
+2. **Set bar count**: Set preamble[2] = `ceil(max_step / 16) * 16`
+3. **Build event**: Encode notes with `build_event()` (auto-avoids note==velocity)
+4. **Insert event**:
+   - Most tracks: append event blob at end of body
+   - T4 (EPiano/Pluck, engine 0x07): insert before 47-byte tail, clear bit 5 of marker
+5. **Update preamble sentinels**: Set preamble[0]=0x64 on the track after each activated track (except T5 which is exempt)
+
+All of this is handled by `append_notes_to_tracks()` in `project_builder.py`.
+
+## Multi-Pattern Storage (unnamed 6, 7 — Deep Binary Diff)
+
+### Method
+Binary diff of unnamed 1 (1 pattern, baseline), unnamed 6 (2 patterns), unnamed 7 (3 patterns). All three files have only blank patterns added to Track 1 on the device — no notes recorded.
+
+### Storage Model: Track Block Rotation
+
+The OP-XY stores multiple patterns by **inserting new track blocks at the T1 position** and rotating all existing blocks down:
+
+```
+unnamed 1 (1 pattern):   T1  T2  T3  T4  T5  ... T14 T15 T16
+unnamed 6 (2 patterns):  T1' T1  T2  T3  T4  ... T13 T14 [T15+T16]
+unnamed 7 (3 patterns):  T1' T1' T1  T2  T3  ... T12 T13 [T14+T15+T16]
+```
+
+- Each new blank pattern inserts a clone of T1 (minus 1 trailing `0x00` byte: 1831 vs 1832 bytes)
+- All existing blocks shift down by 1 position
+- Blocks that fall off the end (T15, T14, ...) are concatenated into T16 as overflow
+
+**CONFIRMED byte-perfect**: unnamed6 T3 body == unnamed1 T2 body, unnamed7 T5 body == unnamed1 T3 body, etc. — every rotated body is an exact match.
+
+### T16 Overflow Mechanism
+
+T16 absorbs evicted blocks with their preambles preserved:
+
+```
+unnamed6 T16 = [unnamed1_T15.body] + [unnamed1_T16.preamble] + [unnamed1_T16.body]
+               346 bytes              4 bytes (9b 01 10 f0)    403 bytes = 753 total
+
+unnamed7 T16 = [unnamed1_T14.body] + [unnamed1_T15.preamble] + [unnamed1_T15.body]
+             + [unnamed1_T16.preamble] + [unnamed1_T16.body]
+               333 + 4 + 346 + 4 + 403 = 1090 total
+```
+
+**CONFIRMED byte-perfect** for both unnamed6 and unnamed7. The evicted blocks retain internal track signatures, so T16's body contains multiple `00 00 01 03 ff 00 fc 00` signatures (2 in unnamed6, 3 in unnamed7).
+
+### Pre-Track Region Changes
+
+| Offset | Field | unnamed 1 | unnamed 6 | unnamed 7 |
+|--------|-------|-----------|-----------|-----------|
+| 0x56-0x57 | pattern_max_slot (u16 LE) | 0x0000 (1 pat) | 0x0001 (2 pat) | 0x0002 (3 pat) |
+| 0x58-0x5C | pattern descriptor | not present | `00 1d 01 00 00` | `00 1d 01 00 00` |
+
+- Pre-track region grows by 5 bytes (0x7C → 0x81) when going from 1 to 2+ patterns
+- The 5-byte descriptor `00 1d 01 00 00` is inserted once and stays unchanged for 3 patterns
+- `pattern_max_slot` = total_patterns - 1 (0-indexed count of extra patterns)
+
+### Preamble Behavior
+
+| Track | unnamed 1 | unnamed 6 | unnamed 7 | Notes |
+|-------|-----------|-----------|-----------|-------|
+| T1 | `d6 01 10 f0` | `b5 02 10 f0` | `b5 03 10 f0` | byte0 → 0xb5, byte1 = pattern count |
+| T2 | `8a 01 10 f0` | `00 8a 10 f0` | `00 8a 10 f0` | byte0=0x00 marker, byte1=orig T2 byte0 |
+| T3 | `86 01 10 f0` | `8a 01 10 f0` | `00 8a 10 f0` | rotated from T2 (unnamed6), marker (unnamed7) |
+| T4+ | (original) | (shifted by 1) | (shifted by 2) | preambles rotate with bodies |
+| T16 | `9b 01 10 f0` | `9b 01 10 f0` | `9b 01 10 f0` | unchanged (absorbs overflow) |
+
+**Preamble rules for multi-pattern**:
+1. **T1**: byte0 changes to 0xb5, byte1 = total pattern count (1, 2, 3, ...)
+2. **Displaced blocks at T2 position** get a modified preamble: `[0x00] [original_T2_byte0] [0x10] [0xF0]`
+3. **T3-T15**: preambles rotate down with their bodies, no modification
+4. **T16**: preamble unchanged
+
+### Type and Engine IDs
+
+All rotated blocks retain their original type bytes and engine IDs. The new blank pattern block at T1 has:
+- type_byte = 0x05 (same as original T1)
+- engine_id = 0x03 (Drum, same as original T1)
+- body size = 1831 (original T1 was 1832 — 1 byte shorter, trailing `0x00` removed)
+
+### Implications for Multi-Pattern Authoring
+
+To add pattern 2 to an existing project:
+1. Increment `pre_track[0x56:0x58]` (u16 LE pattern_max_slot)
+2. If first time adding patterns: insert 5 bytes `00 1d 01 00 00` at offset 0x58
+3. Create a new T1-like block (clone T1 body minus trailing byte)
+4. Insert at T1 position, shifting all blocks down
+5. Set T1 preamble: `[0xb5] [pattern_count] [bar_steps] [0xF0]`
+6. Set displaced-T1 preamble at T2: `[0x00] [original_T2_byte0] [0x10] [0xF0]`
+7. T16 body = evicted T15 body + T16 preamble + original T16 body
+
+**NOT YET DEVICE-TESTED for authoring** — this analysis is from reading corpus files only.
