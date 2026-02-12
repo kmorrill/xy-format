@@ -7,6 +7,28 @@
 ## Reference Materials
 - `docs/OP–XY Project File Format Breakdown.docx`: detailed manual-derived expectations for every subsystem of the project file. Converted plaintext lives at `docs/OP-XY_project_breakdown.txt` for quick grepping.
 - `src/one-off-changes-from-default/`: corpus of minimally edited project files plus `op-xy_project_change_log.md` describing the exact UI action taken for each file.
+- `tools/corpus_lab.py`: SQLite-backed corpus index/query tool for cross-file questions.
+  - Database path: `output/corpus_lab.sqlite` (repo-root absolute default).
+  - Indexes file-level fields: `path`, `source`, `size`, `sha1`, `pre_track_len`, `pre56_hex`, `ff_table_start`, `descriptor_var_hex`, `logical_entries`, parse status/error.
+  - Indexes logical-entry fields (track/pattern layer): `track`, `pattern`, `pattern_count`, clone/leader/last flags, `preamble` bytes (`pre0..pre3`), `body_len`, `type_byte`, `engine_id`, `active`, `prev_active`, plus detected tail-event fields (`event_type`, `event_count`, `event_start`).
+  - Supports test outcome logging: `status` (`pass|crash|untested`), optional `error_class`, note, timestamp.
+  - Core commands:
+    - `python tools/corpus_lab.py index`
+    - `python tools/corpus_lab.py sql "SELECT name,size,logical_entries FROM files ORDER BY size DESC LIMIT 20"`
+    - `python tools/corpus_lab.py report clone-pre1`
+    - `python tools/corpus_lab.py report topology --where "f.source='oneoff'"`
+    - `python tools/corpus_lab.py record output/k04_song_safefix2_12347.xy pass --note "device OK"`
+    - `python tools/corpus_lab.py results --where "f.name LIKE 'k0%'"`
+    - `python tools/corpus_lab.py report result-summary`
+    - `python tools/corpus_lab.py report signal-clone-pre1`
+- `tools/corpus_compare.py`: structural two-file compare using indexed logical entries.
+  - `python tools/corpus_compare.py k03_song_safefix_12347.xy k04_song_safefix2_12347.xy`
+  - Reports file-level deltas and exact `(track,pattern)` field differences (e.g., `pre1 0x64->0x2E`).
+
+## Device Test File Naming
+- Keep generated test filenames short so they are easy to scan on-device.
+- When proposing multiple files to test, make the intended test sequence match **alphabetical filename order**.
+- Prefer sortable prefixes (`a_`, `b_`, `c_` or `01_`, `02_`, `03_`) so device listing order and requested test order stay aligned.
 
 ## Device & File Expectations (from the breakdown doc)
 ### Storage Model
@@ -158,10 +180,57 @@ Sources: [teenage.engineering/products/op-xy](https://teenage.engineering/produc
 - `xy.project_builder.build_multi_pattern_project()` now supports descriptor strategies:
   - `strict` (default): only device-verified descriptor sets (`T1` and `T1+T3`).
   - `heuristic_v1` (experimental): allows broader track sets anchored on `T1`; derived from `unnamed 102–105` descriptor bytes.
+- **Status update after `j01`-`j05` captures**:
+  - `heuristic_v1` is no longer considered safe for non-`T1` topologies; multiple generated files crash while device-authored equivalents load.
+  - New device-authored captures confirm pre-track descriptor insertion is **not fixed at `0x58`** and varies by topology/state (`0x56`, `0x57`, or `0x58` in current corpus).
+  - The old assumption "`pattern_max_slot` is always `u16 LE` at `0x56`" only holds for the earlier `T1`-centric captures (`unnamed 6/7/102/103/104/105/105b`).
 - Added `tools/write_multi_track_two_pattern.py` to generate two-pattern stress projects across multiple tracks with deterministic notes per track/pattern.
 - Recommended workflow for current confidence:
   - Use `--strategy strict --tracks 1,3` for known-good device behavior.
-  - Use `--strategy heuristic_v1 --tracks 1,2,3,4` (or similar) to probe whether descriptor understanding generalizes beyond captured sets.
+  - Treat `heuristic_v1` outputs as exploratory only unless matched against a device-authored scaffold of the same topology.
+
+### `j06` / `j07` Scaffold Findings (2026-02-12, high confidence)
+- New scaffold captures:
+  - `j06_all16_p9_blank.xy` (from `unnamed 94.xy`)
+  - `j07_all16_p9_sparsemap.xy` (from `unnamed 95.xy`)
+- Both files share the same pre-track descriptor variant:
+  - Insert relative to `unnamed 1` at base `0x56`: `08 08 06 00 00 16 01`
+  - Pre-track length: `131` bytes
+  - This confirms descriptor stability across blank vs sparse-note content in the same topology.
+- Decomposing block 16 by embedded track signatures yields **80 logical pattern entries**.
+  - Grouping by leader `preamble[1]` yields:
+    - Tracks 1-8: `9` patterns each
+    - Tracks 9-16: `1` pattern each in the currently decoded block-rotation layer
+  - Inference: pattern expansion for tracks 9-16 may be stored differently (or not present) in this capture; do not assume 16×9 block-rotation entries.
+- `j07` sparse-map confirms deterministic track/pattern addressing for tracks 1-8:
+  - T1: P1 step 1, P9 step 9
+  - T2: P2 step 2, P9 step 10
+  - T3: P1 step 3, P9 step 11
+  - T4: P2 step 4, P9 step 12
+  - T5: P1 step 5, P9 step 13
+  - T6: P2 step 6, P9 step 14
+  - T7: P1 step 7, P9 step 15
+  - T8: P2 step 8, P9 step 16
+- Reliability principles for writing (no heuristics):
+  - For this topology, treat pre-track descriptor bytes as authoritative scaffold data; do not synthesize/recompute them.
+  - Parse to logical entries first (including overflow inside block 16), then map by leader pattern counts.
+  - Mutate only target pattern bodies/preambles and preserve all unrelated descriptor/overflow structure byte-for-byte.
+  - Apply established preamble propagation semantics (`0x64` chain behavior, including known exemptions) only where activation requires it.
+- Critical body-write rule (derived from `j06 -> j07` exact diffs):
+  - Do **not** activate/append directly into a non-last pattern's stored body (those are one-byte-trimmed forms).
+  - For any pattern where `pattern < pattern_count`:
+    1. Start from that track's full-body donor (the last pattern block).
+    2. Activate + inject the event in full-body space.
+    3. Trim one byte from the tail of the resulting body.
+  - For last patterns (`pattern == pattern_count`), inject directly in full-body form (no post-trim).
+  - This rule reproduces device-authored `j07` event alignment exactly, including:
+    - non-tail engines: `... 00 00 [event...]` placement (vs incorrect direct `... 00 [event...] 00`)
+    - EPiano tail marker handling (`0x28 -> 0x08`) at the correct offset after insertion.
+- Clone preamble byte[1] propagation refinement (`j06 -> j07`, `k03 -> k04`):
+  - Old rule "`clone byte[1] = 0x64 whenever previous block is activated`" is incomplete.
+  - Corrected rule: when previous block is activated, fold clone `byte[1]` to `0x64` **only** for the high-bit family (`0x8A/0x86/0x85/0x83` observed). Keep low-byte families (notably `0x2E` in Track-4 chains) unchanged.
+  - Evidence: regenerating `j07` from `j06` differed by exactly one byte (`Track 4, Pattern 3 preamble byte[1]: 0x2E` vs `0x64`). Fixing this produced byte-identical output.
+- Added helper: `tools/analyze_pretrack_descriptors.py` dumps descriptor inserts, FF-table start, and pattern-count-bearing block preambles for any capture set.
 
 ### `unnamed 105b.xy` (new multi-pattern datapoint)
 - `unnamed 105b.xy` adds a single note trig on **Track 3, Pattern 1** on top of the existing `unnamed 105` setup.
@@ -285,7 +354,18 @@ Sources: [teenage.engineering/products/op-xy](https://teenage.engineering/produc
   - Pitch-bend payload anchor: the 8 B record at `block+0x0F88` (absolute `0x1008`) stores `[u16 dest, u16 amount, u16 guard, u16 guard]`. Defaults serialize as `dest=0x0000` (synth1) with `amount=0x001A`. In `unnamed 83.xy` switching to ADSR1 writes `dest=0x1ADF`; in `unnamed 84.xy` targeting filter3 writes `dest=0xDF00` while keeping the amount/guards unchanged. That gives us a working map of `0x0000 → synth1`, `0x1ADF → ADSR1`, `0xDF00 → filter3`.
   - Amount encoding: both the coarse/fine words swing with the UI values (e.g. modwheel `-50` pushed the pair to `0xFF27/0xFFE8`, aftertouch `+50` yields `0x1ADF/0x0000`, pitch‑bend `+25` writes `0x0000/0x0BE5`, velocity `-25` stores `0xFFFF/0x3F00`). They clearly form a signed fixed-point format, but we still need another sweep that steps the encoder through known increments to pin down the exact scale factor.
   - The slot descriptor at `block+0x0FF0` also flips: the raw blob mutates to `3d0a000002ffff017fffff017f0031ae`, which likely carries the new directory length plus pointers into the payload list. None of the higher tracks react when we touch the mod settings, confirming this table is confined to Track 1.
-- **Parameter automation lane** (`unnamed 35.xy`): Track 3 macro 1 automation drops two new slabs into the block. A lane header appears at `block+0x0028` (`00 00 FF 08`) followed by four 16 B records and a `0x0000 7FFF` terminator. Each record starts with `value | (0x50 << 16)` — the capture shows values `0x7F`, `0x6F`, `0x42`, `0x7A` (UI 127→111→66→122) — and the remaining dwords keep a `0x50` byte that matches knob slot 1 while encoding timeline/tangent data (fields like `0x50A3`, `0xFF50/0x005F`, `0x6B84` still need decoding, but they scale like step ticks). Just downstream, the step-component directory at `block+0x01E0` replaces the `0x00FF/0xFF00` filler with sixteen `struct {u16 rel_ptr; u8 comp; u8 target;}` entries set to `0x0000, 0x0105`, i.e. component type `0x05` (“parameter lane”) targeting encoder 1. The header words `0x00FF, 0xFF00, 0x0000, 0x01EC` bracket the table and likely link those steps back to the lane blob. This automation payload lengthens Track 3 by `0x7F` bytes, which is why Track 4’s block now starts at `0x10D6`.
+- **P-lock (parameter lock) encoding** (`unnamed 35.xy`, `unnamed 115.xy`): Each track body contains a p-lock region immediately after the engine config tail bytes `40 1F 00 00 0C 40 1F 00 00`. The region holds **48 entries** arranged as **3 lanes of 16 steps** each. The exact start offset varies by engine and type byte (find the config tail to locate it reliably).
+  - **Entry format** (variable-length):
+    - Empty: `FF 00 00` (3 bytes) -- step uses default value
+    - Value: `[param_id] [val_lo] [val_hi] 00 00` (5 bytes) -- step has p-locked value
+  - **Parameter ID byte**: The first non-empty entry in a lane carries the actual parameter ID. All subsequent entries in the same lane use `0x50` as a continuation marker.
+  - **Value encoding**: u16 LE in bytes 1-2, range 0-32767 mapping linearly to 0-100%.
+  - **Known parameter IDs**: `0x7C` = filter cutoff (unnamed 115, 14 steps ramping 1.2%-97.5%), `0x08` = macro 1 / synth param 1 (unnamed 35, 14 steps with varied values). `0x50` = continuation marker (not a real parameter).
+  - **Trailing empties**: After the 48 lane entries, 0-8 additional `FF 00 00` empties pad before the sentinel byte. Baseline files have 7 trailing empties; files with p-lock values have fewer (5-6).
+  - **Sentinel byte**: Single byte after trailing empties. Baseline Prism T3 = `0xDE`; filter cutoff p-lock = `0xCE`; macro 1 p-lock = `0xEC`; Drum T1/T2 baseline = `0xDF`. The sentinel appears to encode which parameters (if any) have been modified but the exact encoding rule is undetermined.
+  - **Step-component directory** (present only when p-locks exist): 16 x 4-byte records immediately after the sentinel. Each record encodes `[u8 unk] [u8 unk] [u8 unk] [u8 component_type]`. For parameter lanes: `01 00 00 05` (component type `0x05`). The 16th step uses `01 00 00 FF` if that step has no p-lock. Baseline files (no p-locks) omit this directory entirely.
+  - **Post-directory region**: After the step-component directory, additional metadata appears: `00 00 FF 00 00 FF 00 00 82 01 00 00` followed by more empties and the 2-byte footer `7A 14` immediately before the 196-byte synth parameter block. Baseline files skip directly from sentinel to `7A 14`.
+  - **P-lock start offset by track** (baseline type-05): T1/T2/T3 = `body[0x26]`, T4 = `body[0x23]`, T5-T8 = `body[0x27]`. For type-07 bodies, subtract 2 from the type-05 offset. Universal method: search for the `40 1F 00 00 0C 40 1F 00 00` tail and start immediately after.
 - **Pitch-bend performance capture** (`unnamed 39.xy`): Live wheel moves on Track 3 inject a `0x21/0x01` meta-event at `block+0x01CF` (absolute `0x1051`). The 18-byte header now stores start ticks in the high 24 bits of `0x1E03_0000`, gate ticks via the usual `(control >> 8)` path, and—critically—two little-endian counters `fieldA=0x22`, `fieldB=0x2D` for the automation buffers that follow. Immediately after the header, two keyframe tables replace the usual `0xFF00` filler: `fieldA` entries beginning at `block+0x01CF` and `fieldB` more entries starting around `block+0x0226`. Each 32-bit word packs `pitch_hi16 | tick_lo16`; decode ticks as an unsigned 16-bit timeline (add `0x10000` whenever the low half wraps) and interpret the signed high half as the normalized bend amount (0 = center, ±0x7FFF ≈ full throw). Files without pitch bend leave this region untouched, so the meta-event plus non-zero keyframes are a clean detection signal. This automation pathway does *not* touch the parameter-lane header or the step-component directory, confirming that performance bend capture is serialized separately from knob automation even though it occupies the same track-block automation slab.
 - **Sample engine deltas** (vs Axis):
   - Drum (`unnamed 34c.xy`) flips the engine ID to `0x03` and restores the baseline lattice; the entire string region at `0x1040` zeroes out like Axis. Diff spans `0x008d–0x1f78`, last change landing at `0x1f78`, confirming the sampler payload sits wholly inside Track 1’s block.
@@ -359,6 +439,31 @@ The pre-track region between the header and the first track block contains a pat
 **Handle table**: 12 entries of 3 bytes each (`FF 00 00` = unused). In the baseline, the table occupies 0x58-0x7B (36 bytes). When pattern descriptors are inserted, the entire handle table shifts rightward by the descriptor size (e.g., 0x5D-0x80 for a 5-byte descriptor).
 
 **Pre-track total size**: baseline = 0x7C (124 bytes); 2+ patterns single track = 0x81 (129 bytes); 2 tracks with patterns = 0x83 (131 bytes).
+
+### Pre-Track Descriptor Variants (`j01`-`j07`, 2026-02-12)
+
+New device-authored captures show that the descriptor region is more flexible than the fixed-`0x58` model above:
+
+- The 36-byte `FF 00 00` handle table is still present and contiguous at the end of pre-track.
+- The descriptor insert start can shift (`0x56`, `0x57`, or `0x58` in current captures).
+- Working files exist where bytes `0x56-0x57` are not a clean little-endian `pattern_max_slot`, so readers/writers must not hardcode that field globally.
+
+Observed inserts relative to `unnamed 1` pre-track:
+
+| File | Insert pos | Insert bytes | Notes |
+|------|------------|--------------|-------|
+| `unnamed 6/102/103/105b` | `0x56` | `01 00 00 1d 01` | T1, 2 patterns |
+| `unnamed 7/104` | `0x56` | `02 00 00 1d 01` | T1, 3 patterns |
+| `unnamed 105` | `0x56` | `01 00 01 00 00 1b 01` | T1+T3, 2 patterns |
+| `j03_t4_p2_p1note` | `0x58` | `1e 01 00 00` | T4-only, 2 patterns, note in pattern 1 |
+| `j04_t4_p2_p2note` | `0x58` | `01 01 00 00 1a 01 00 00` | T4-only, 2 patterns, note in pattern 2 |
+| `j05_t2_p3_blank` | `0x57` | `02 00 00 1c 01 00` | T2-only, 3 patterns, all blank |
+| `j01_5trk_p9_blank` | `0x56` | `08 08 02 00 00 00 08 00 00 17 01` | T1/T2/T3/T4/T7, 9 patterns blank |
+| `j02_5trk_p9_sparse` | `0x57` | `02 04 01 00 00 00 03 00 00 17 01 00` | Same topology as `j01`, sparse notes |
+| `j06_all16_p9_blank` | `0x56` | `08 08 06 00 00 16 01` | 80 logical entries in block-rotation decode; tracks 1-8 at 9 patterns, tracks 9-16 at 1 |
+| `j07_all16_p9_sparsemap` | `0x56` | `08 08 06 00 00 16 01` | Same descriptor as `j06`; sparse note map confirms stable addressing |
+
+Practical implication: descriptor serialization must be topology-aware (and likely state-aware), not a single fixed insertion formula.
 
 ### Note Event Storage
 
@@ -502,6 +607,55 @@ Note: Portamento and Bend share type_id 0x06 — distinguished by which bitmask 
 - Byte-perfect corpus matches: Hold=unnamed 61, Bend=unnamed 72, Pulse=unnamed 59. All 3 match every byte of the full file.
 - Untested: RampDown, Random, Velocity, Tonality, Jump, Parameter, Conditional (encoding follows same pattern, expected to work).
 
+**Multi-Step Component Encoding** (unnamed 118 + 119, full 16-step decode):
+
+The single-step model above (3-byte header + 5-byte param) applies to isolated components at one step.
+When components are present on ALL 16 steps, the encoding changes fundamentally to a **contiguous
+variable-length block stream** replacing the sentinel table:
+
+*Sentinel Structure* (both unnamed 118 and 119):
+- 11 sentinels (`FF 00 00`) before data region at body07 0x90-0xB0
+- Component data starts at 0xB1
+- 7 sentinels after data region
+- Allocation marker = 0x06 at the end
+
+*unnamed 118* (Hold on all 16 steps, 128 bytes = 16 x 8B):
+- Step 1: `e4 02 00 00 00 04 00 00` (hdr=0xE4, type=Hold=0x02)
+- Steps 2-16: ALL identical `0a 02 00 00 00 04 00 00` (hdr=0x0A = repeat marker)
+- Single-type context: all repeats are uniform 8-byte blocks with byte[2]=0x00
+
+*unnamed 119* (different type on each step, 130 bytes variable-length):
+Full parse of all 16 blocks:
+```
+Step  Type           Bank  Size  Hdr   Mask  Byte2  Byte4  Param  Extra
+----  -------------  ----  ----  ----  ----  -----  -----  -----  -----
+  1   Pulse          B1     6B   0xE4  0x01  0x00          0x04
+  2   Hold           B1     8B   0x0B  0x02  0x00   0x00   0x04
+  3   Multiply       B1     8B   0x0A  0x04  0x00   0x01   0x02
+  4   Velocity       B1     8B   0x09  0x08  0x00   0x02   0x05
+  5   RampUp         B1     8B   0x08  0x10  0x00   0x03   0x04
+  6   RampDown       B1     8B   0x07  0x20  0x00   0x04   0x04
+  7   Random         B1     8B   0x06  0x40  0x00   0x05   0x04
+  8   Portamento     B1     8B   0x05  0x80  0x00   0x06   0x04
+  9   Bend           B2     8B   0x05  0x01  0x00   0x06   0x01
+ 10   Tonality       B2     8B   0x04  0x02  0x00   0x07   0x04
+ 11   Jump           B2    10B   0x03  0x04  0x00   0x07   0x04   04 00
+ 12   Parameter      B2     9B   0x02  0x08  0x00   0x08   0x04   02
+ 13   Conditional    B2    10B   0x01  0x10  0x00   0x09   0x02   02 00
+ 14   Type14(0x20)   B2     4B   0x00  0x20  0x00
+ 15   Pulse(repeat)  --     9B   0x0A  0x02  0x02   0x01   0x00   04
+ 16   Hold(repeat)   --    10B   0x0A  0x02  0x02   0x00   0x00   00 04
+```
+
+*Key patterns discovered*:
+1. **Header byte**: Step 1 always 0xE4. Steps 2-14: decreasing from 0x0B to 0x00 as each new type is introduced. Porto(B1) and Bend(B2) share hdr=0x05. Repeat blocks use hdr=0x0A.
+2. **hdr + byte[4] invariant**: Equals 0x0B for all bank-1 types and the first 2 bank-2 types (Bend, Tonality). Drops to 0x0A for Jump/Parameter/Conditional.
+3. **All blocks end with `00 00`** — this is the structural invariant that enables parsing variable-length blocks.
+4. **Block sizes**: 6B (Pulse special), 8B (standard), 9B (Parameter), 10B (Jump, Conditional), 4B (Type14 terminal).
+5. **Bank-2 types 11-13 have extra bytes** after the standard param byte — likely type-specific sub-parameters (jump target, parameter selector, condition type).
+6. **Type14 is the 14th component**: mask=0x20 in bank 2. Resolves the bit 0x20 ambiguity — this IS a distinct type (not Trigger). Its 4-byte minimal encoding (hdr=0x00, mask, 00, 00) suggests it may be a simple toggle with no parameter.
+7. **Repeat blocks** (hdr=0x0A) have byte[2]=0x02 when bank-2 types are present in the same component chain (vs 0x00 in unnamed 118 which has only bank-1 types). They are variable-length (8B, 9B, 10B observed).
+
 **Other observations**:
 - Step bitmap at body07 offset ~0x2400 flips step lane to `0x0000` for every component activation, matching the "touched" state observed with note trigs.
 - Track 3 Multiply capture (unnamed 78) confirms the same slot table structure on non-drum tracks. Header `63 04 00` with param `00 01 02 00 00` (type=Multiply, param=0x02=divide-by-2).
@@ -585,9 +739,12 @@ Note: Portamento and Bend share type_id 0x06 — distinguished by which bitmask 
 - Step state table: which byte order (`0x00FF` vs `0xFF00`) corresponds to "active trig", "edited empty", and "pristine", and how do we derive the correct ordering when writing patterns from scratch?
 - ~~How does the mask header's low byte map to the actual step index (e.g., `0x63/0x64` for step 9)?~~ **ANSWERED**: Header byte = `[(0xE - step_0_indexed) << 4] | bank_nibble`. Nibble 3 = bank-1 entry, nibble 4 = bank-2 entry. See "Step Component Encoding" section.
 - ~~Derive the exact mapping from UI values to the stored words for each component.~~ **MOSTLY ANSWERED**: Standard param format is `00 TYPE_ID PARAM 00 00`. Full type_id table decoded (12 components). Pulse/Velocity use non-standard 3-byte format. Multi-component (Trigger/ALL) uses 17-byte compact table -- per-byte mapping still TBD.
-- What determines the slot position for each step number? Only 2 data points (step_0=0 at slot 5, step_0=8 at slot 6).
+- ~~What determines the slot position for each step number?~~ **PARTIALLY ANSWERED**: In multi-step mode (unnamed 118/119), the single-step slot table is replaced by a contiguous variable-length block stream starting at body07 0xB1. The 3-byte header + 5-byte param model is replaced by variable-length blocks (4-10 bytes). The slot position question applies only to single-step mode.
 - Why does step_0=0 use nibble=4 for bank-1 components (step 1 Pulse)?
 - Can step components be authored without triggering the ~1300-byte slab reorganization that accompanies component activation?
+- ~~What is the 14th component type (bit 0x20 in bank 2)?~~ **ANSWERED via unnamed 119**: It IS a distinct 14th type (mask=0x20, bank 2). It encodes as a minimal 4-byte block `00 20 00 00` when hdr reaches 0x00 (terminal). The UI name is unknown but it exists as a real component type separate from Trigger and Conditional.
+- How do multi-step repeat blocks encode the specific component type being repeated? In unnamed 119, both repeat blocks (steps 15-16) have byte[1]=0x02, but represent different types (Pulse and Hold). The type may be encoded in byte[4] (0x01 for Pulse repeat, 0x00 for Hold repeat).
+- What determines variable block sizes for bank-2 types? Jump and Conditional get 10B, Parameter gets 9B, Type14 gets 4B. The extra bytes likely encode type-specific sub-parameters but the mapping is not yet confirmed.
 
 ## Next Steps
 1. **DONE: Byte-perfect round-trip parser** — `xy/container.py` (XYProject) verified across 88 corpus files.
@@ -1386,6 +1543,8 @@ Three experiments staged in `tools/midi_harness.py`, ready for device testing:
 
 ## Multi-Pattern Storage Model (DECODED — unnamed 102-105)
 
+Addendum (2026-02-12): `j06_all16_p9_blank` / `j07_all16_p9_sparsemap` follow the same block-rotation + overflow mechanism, but at much larger scale (80 logical entries in currently decoded rotation space). The core mechanism below remains valid; do not assume the early `unnamed 102-105` pre-track descriptor formulas generalize to every topology.
+
 ### Core Mechanism: Block Rotation
 
 The OP-XY stores multiple patterns by **cloning track blocks and inserting them inline**. The file always contains exactly 16 block slots. When patterns are added to a track, clone blocks are inserted immediately after the leader block for that track, pushing all subsequent blocks down. Displaced blocks that fall off the end are concatenated into block 15 as sub-blocks with embedded preambles.
@@ -1415,7 +1574,7 @@ The 4-byte preamble `[byte0] [byte1] [byte2] [0xF0]` encodes pattern metadata:
 
 **Clone blocks** (additional pattern slots):
 - `byte[0]`: always `0x00` -- distinguishing mark of a clone block
-- `byte[1]`: `0x64` if preceding block is activated (type 0x07); otherwise the baseline `byte[0]` of the next track in the original layout. Validated 9/9 across all multi-pattern corpus files.
+- `byte[1]`: if preceding block is activated (type 0x07), fold to `0x64` only for the high-bit clone family (`0x8A/0x86/0x85/0x83` observed). Keep low-byte families (notably `0x2E`, Track-4 chain) unchanged; otherwise use the baseline `byte[0]` of the next track in the original layout.
 - `byte[2]`: `0x10` (1 bar default)
 
 **Adjacent-track sentinel**: the block immediately after a clone group gets `byte[0]=0x64` (same rule as note activation, T5 exempt).
@@ -1431,6 +1590,8 @@ The 4-byte preamble `[byte0] [byte1] [byte2] [0xF0]` encodes pattern metadata:
 | unnamed 105 | `B5 02 10 F0` | `00 64 10 F0` (clone) | 2 (T1+T3 each have 2 patterns) |
 
 ### Pre-Track Pattern Directory
+
+> Legacy note: the rules in this subsection were derived from the early T1/T1+T3 corpus and are still valid for those captures, but `j01`-`j05` prove the descriptor area is not globally fixed at `0x58` and `0x56-0x57` is not always a stable LE `pattern_max_slot` field.
 
 When patterns > 1, the pre-track region grows:
 
@@ -1503,7 +1664,7 @@ To write a multi-pattern project:
 9. Insert 5-byte descriptor at `0x58` (+ 2 bytes per additional track with patterns)
 10. Activate clone bodies (type 05→07, remove padding) and append note events
 
-**NOT YET DEVICE-TESTED** — structural analysis only from unnamed 102-105.
+This recipe is valid for the legacy `unnamed 102-105` family only. For broader/non-`T1` topologies, use device-authored scaffolds (`j01`-`j05`) and treat descriptor bytes as topology-specific until the generalized encoding is decoded.
 
 ## Multi-Bar Authoring (DEVICE-VERIFIED WORKING)
 

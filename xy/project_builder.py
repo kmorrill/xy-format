@@ -156,23 +156,26 @@ def add_step_components(
 
     new_body = _activate_body(target.body)
 
-    # Insert components sorted by step descending so earlier insertions
-    # don't shift the offsets of later ones.
-    total_insert = 0
+    # Determine engine ID for engine-aware offsets.
+    engine_id = target.engine_id
+
+    # Replace 3-byte slot entries with component data.  Process in
+    # step-descending order so earlier slots aren't shifted by later inserts.
+    total_net_growth = 0
     for comp in sorted(components, key=lambda c: -c.step):
-        insert_offset = slot_body07_offset(comp.step)
+        replace_offset = slot_body07_offset(comp.step, engine_id)
         data = build_component_data(comp)
-        new_body[insert_offset:insert_offset] = data
-        total_insert += len(data)
+        # Overwrite the 3-byte slot entry; insert any remaining bytes.
+        new_body[replace_offset:replace_offset + 3] = data
+        total_net_growth += len(data) - 3
 
     # Update the allocation marker byte.
-    # The marker (XX 40 00 00) shifts right by the total insertion size.
-    # The value XX is recomputed based on the component formula.
+    # The marker shifts right by the total net growth.
     if len(components) == 1:
         comp = components[0]
-        alloc_offset = alloc_marker_body07_offset(comp.step, total_insert)
+        alloc_offset = alloc_marker_body07_offset(total_net_growth, engine_id)
         if alloc_offset < len(new_body):
-            new_body[alloc_offset] = compute_alloc_byte(comp)
+            new_body[alloc_offset] = compute_alloc_byte(comp, engine_id)
 
     tracks[idx] = TrackBlock(
         index=target.index,

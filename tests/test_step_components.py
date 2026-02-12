@@ -23,58 +23,102 @@ def baseline():
 
 
 class TestBuildComponentData:
-    """Test the raw byte encoding for each component type."""
+    """Test raw byte encoding for each verified component type."""
 
-    def test_hold_step9(self):
-        data = build_component_data(StepComponent(9, ComponentType.HOLD, 0x01))
-        # Header: 0x63 (step_0=8, nibble=3), bank1=0x02, bank2=0x00
-        # Param: 00 00 01 00 00 (type_id=0x00, param=0x01)
-        assert data == bytes([0x63, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00])
+    def test_pulse_step1(self):
+        data = build_component_data(StepComponent(1, ComponentType.PULSE, 0x01))
+        # Header: E4 (step_byte), 01 (bitmask), 00; Payload: 01 00 00; No sentinel
+        assert data == bytes([0xE4, 0x01, 0x00, 0x01, 0x00, 0x00])
+        assert len(data) == 6
+
+    def test_multiply_step1(self):
+        data = build_component_data(StepComponent(1, ComponentType.MULTIPLY, 0x00))
+        # Header: E4, 01 (shared bit with Pulse), 00; Payload: 00; No sentinel
+        assert data == bytes([0xE4, 0x01, 0x00, 0x00])
+        assert len(data) == 4
+
+    def test_pulse_step9(self):
+        data = build_component_data(StepComponent(9, ComponentType.PULSE, 0x01))
+        # Header: 63, 01, 00; Payload: 01 00 00; Sentinel: FF 00 00
+        assert data == bytes([0x63, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0x00, 0x00])
+        assert len(data) == 9
 
     def test_multiply_step9(self):
-        data = build_component_data(StepComponent(9, ComponentType.MULTIPLY, 0x04))
-        assert data == bytes([0x63, 0x04, 0x00, 0x00, 0x01, 0x04, 0x00, 0x00])
+        data = build_component_data(StepComponent(9, ComponentType.MULTIPLY, 0x00))
+        # Header: 63, 01, 00; Payload: 00; Sentinel: FF 00 00
+        assert data == bytes([0x63, 0x01, 0x00, 0x00, 0xFF, 0x00, 0x00])
+        assert len(data) == 7
 
-    def test_bend_step9_bank2(self):
-        data = build_component_data(StepComponent(9, ComponentType.BEND, 0x01))
-        # nibble=4 for bank-2 at step 9, B1=0x01 (Bend bit), B2=0x00
-        assert data == bytes([0x64, 0x01, 0x00, 0x00, 0x06, 0x01, 0x00, 0x00])
+    def test_velocity_step9(self):
+        data = build_component_data(StepComponent(9, ComponentType.VELOCITY, 0x01))
+        # Header: 63, 02, 00; Payload: 00 00 01 00 00; Sentinel: FF 00 00
+        assert data == bytes([0x63, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
+                              0xFF, 0x00, 0x00])
+        assert len(data) == 11
 
-    def test_pulse_step9_nonstandard(self):
-        data = build_component_data(StepComponent(9, ComponentType.PULSE, 0x01))
-        # 3-byte non-standard param: 01 00 00
-        assert data == bytes([0x63, 0x01, 0x00, 0x01, 0x00, 0x00])
-        assert len(data) == 6  # header(3) + param(3)
+    def test_bend_step9(self):
+        data = build_component_data(StepComponent(9, ComponentType.BEND, 0x00))
+        # Header: 63, 08, 00; Payload: 00; Sentinel: FF 00 00
+        assert data == bytes([0x63, 0x08, 0x00, 0x00, 0xFF, 0x00, 0x00])
+        assert len(data) == 7
 
-    def test_hold_step1_nibble4(self):
-        data = build_component_data(StepComponent(1, ComponentType.HOLD, 0x01))
-        # step_0=0 → header_byte = (0xE << 4) | 4 = 0xE4, nibble=4 → B1=bit, B2=0
-        assert data[0] == 0xE4
-        assert data[1] == 0x02  # Hold bit
-        assert data[2] == 0x00
+    def test_tonality_step9(self):
+        data = build_component_data(StepComponent(9, ComponentType.TONALITY, 0x08))
+        # Header: 63, 10, 00; Payload: 00 03 08 00 00; Sentinel: FF 00 00
+        assert data == bytes([0x63, 0x10, 0x00, 0x00, 0x03, 0x08, 0x00, 0x00,
+                              0xFF, 0x00, 0x00])
+        assert len(data) == 11
+
+    def test_jump_step9(self):
+        data = build_component_data(StepComponent(9, ComponentType.JUMP, 0x02))
+        assert data == bytes([0x63, 0x20, 0x00, 0x00, 0x04, 0x02, 0x00, 0x00,
+                              0xFF, 0x00, 0x00])
+
+    def test_parameter_step9(self):
+        data = build_component_data(StepComponent(9, ComponentType.PARAMETER, 0x03))
+        assert data == bytes([0x63, 0x40, 0x00, 0x00, 0x05, 0x03, 0x00, 0x00,
+                              0xFF, 0x00, 0x00])
 
     def test_conditional_step9(self):
-        data = build_component_data(StepComponent(9, ComponentType.CONDITIONAL, 0x02))
-        assert data == bytes([0x64, 0x10, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x00])
+        data = build_component_data(StepComponent(9, ComponentType.CONDITIONAL, 0x07))
+        assert data == bytes([0x63, 0x80, 0x00, 0x00, 0x06, 0x07, 0x00, 0x00,
+                              0xFF, 0x00, 0x00])
 
-    def test_standard_param_size(self):
-        """Standard components produce 8 bytes (3 header + 5 param)."""
-        for ct in [ComponentType.HOLD, ComponentType.MULTIPLY, ComponentType.RAMP_UP,
-                   ComponentType.RAMP_DOWN, ComponentType.RANDOM, ComponentType.PORTAMENTO,
-                   ComponentType.BEND, ComponentType.TONALITY, ComponentType.JUMP,
-                   ComponentType.PARAMETER, ComponentType.CONDITIONAL]:
-            data = build_component_data(StepComponent(9, ct, 0x00))
-            assert len(data) == 8, f"{ct.name} should be 8 bytes, got {len(data)}"
+    def test_unsupported_hold_raises(self):
+        with pytest.raises(ValueError, match="not supported for serialization"):
+            build_component_data(StepComponent(9, ComponentType.HOLD, 0x01))
 
-    def test_nonstandard_param_size(self):
-        """Pulse and Velocity produce 6 bytes (3 header + 3 param)."""
-        for ct in [ComponentType.PULSE, ComponentType.VELOCITY]:
-            data = build_component_data(StepComponent(9, ct, 0x00))
-            assert len(data) == 6, f"{ct.name} should be 6 bytes, got {len(data)}"
+    def test_unsupported_ramp_up_raises(self):
+        with pytest.raises(ValueError, match="not supported for serialization"):
+            build_component_data(StepComponent(9, ComponentType.RAMP_UP, 0x01))
+
+    def test_velocity_step1_raises(self):
+        """Velocity on step 1 is not supported (no body change in corpus)."""
+        with pytest.raises(ValueError, match="not supported on step 1"):
+            build_component_data(StepComponent(1, ComponentType.VELOCITY, 0x01))
 
     def test_unsupported_step_raises(self):
-        with pytest.raises(ValueError, match="not yet supported"):
-            build_component_data(StepComponent(5, ComponentType.HOLD, 0x01))
+        with pytest.raises(ValueError, match="not supported"):
+            build_component_data(StepComponent(5, ComponentType.PULSE, 0x01))
+
+    def test_net_growth_step1(self):
+        """Step 1: net body growth = data_size - 3."""
+        pulse = build_component_data(StepComponent(1, ComponentType.PULSE, 0x01))
+        assert len(pulse) - 3 == 3  # net +3
+
+        mult = build_component_data(StepComponent(1, ComponentType.MULTIPLY, 0x00))
+        assert len(mult) - 3 == 1   # net +1
+
+    def test_net_growth_step9(self):
+        """Step 9: net body growth = data_size - 3 (includes sentinel)."""
+        pulse = build_component_data(StepComponent(9, ComponentType.PULSE, 0x01))
+        assert len(pulse) - 3 == 6  # net +6
+
+        mult = build_component_data(StepComponent(9, ComponentType.MULTIPLY, 0x00))
+        assert len(mult) - 3 == 4   # net +4
+
+        vel = build_component_data(StepComponent(9, ComponentType.VELOCITY, 0x01))
+        assert len(vel) - 3 == 8    # net +8
 
 
 # ── slot_body07_offset ────────────────────────────────────────────────
@@ -98,35 +142,33 @@ class TestSlotOffset:
 
 class TestAllocByte:
 
-    @pytest.mark.parametrize("comp_type,expected", [
-        (ComponentType.PULSE,      0x77),
-        (ComponentType.HOLD,       0x76),
-        (ComponentType.MULTIPLY,   0x75),
-        (ComponentType.RAMP_UP,    0x73),
-        (ComponentType.RAMP_DOWN,  0x72),
-        (ComponentType.RANDOM,     0x71),
-        (ComponentType.PORTAMENTO, 0x70),
-        (ComponentType.BEND,       0x6F),
-        (ComponentType.TONALITY,   0x6E),
-        (ComponentType.JUMP,       0x6D),
-        (ComponentType.PARAMETER,  0x6C),
-        (ComponentType.CONDITIONAL,0x6B),
+    @pytest.mark.parametrize("comp_type,param,expected", [
+        (ComponentType.PULSE,       0x01, 0x77),  # (7<<4)|(7-0) = 0x77
+        (ComponentType.MULTIPLY,    0x00, 0x79),  # (7<<4)|9     = 0x79
+        (ComponentType.VELOCITY,    0x01, 0x76),  # (7<<4)|(7-1) = 0x76
+        (ComponentType.BEND,        0x00, 0x79),  # (7<<4)|9     = 0x79
+        (ComponentType.TONALITY,    0x08, 0x73),  # (7<<4)|(7-4) = 0x73
+        (ComponentType.JUMP,        0x02, 0x72),  # (7<<4)|(7-5) = 0x72
+        (ComponentType.PARAMETER,   0x03, 0x71),  # (7<<4)|(7-6) = 0x71
+        (ComponentType.CONDITIONAL, 0x07, 0x70),  # (7<<4)|(7-7) = 0x70
     ])
-    def test_step9_alloc(self, comp_type, expected):
-        comp = StepComponent(9, comp_type, 0x00)
+    def test_step9_alloc(self, comp_type, param, expected):
+        comp = StepComponent(9, comp_type, param)
         assert compute_alloc_byte(comp) == expected
 
-    def test_step1_pulse(self):
+    def test_step1_pulse_alloc(self):
         comp = StepComponent(1, ComponentType.PULSE, 0x01)
-        assert compute_alloc_byte(comp) == 0xF7
+        assert compute_alloc_byte(comp) == 0xF7  # (0xF<<4)|(7-0)
 
-    def test_alloc_marker_offset_standard(self):
-        # Standard 8-byte insertion shifts marker from 0xC9 to 0xD1
-        assert alloc_marker_body07_offset(9, 8) == 0xC9 + 8
+    def test_step1_multiply_alloc(self):
+        comp = StepComponent(1, ComponentType.MULTIPLY, 0x00)
+        assert compute_alloc_byte(comp) == 0xF9  # (0xF<<4)|9
 
-    def test_alloc_marker_offset_pulse(self):
-        # Pulse 6-byte insertion shifts marker from 0xC9 to 0xCF
-        assert alloc_marker_body07_offset(9, 6) == 0xC9 + 6
+    def test_alloc_marker_offset(self):
+        # Net growth shifts marker from baseline 0xC9
+        assert alloc_marker_body07_offset(3) == 0xC9 + 3   # step 1 Pulse
+        assert alloc_marker_body07_offset(6) == 0xC9 + 6   # step 9 Pulse
+        assert alloc_marker_body07_offset(8) == 0xC9 + 8   # step 9 Velocity
 
 
 # ── Full round-trip against corpus specimens ──────────────────────────
@@ -134,72 +176,73 @@ class TestAllocByte:
 
 class TestCorpusMatch:
 
-    def test_hold_s9_byte_perfect(self, baseline):
+    def test_pulse_s1_byte_perfect(self, baseline):
+        """Pulse step 1 should match corpus unnamed 8."""
         proj = add_step_components(baseline, 1, [
-            StepComponent(9, ComponentType.HOLD, 0x01),
+            StepComponent(1, ComponentType.PULSE, 0x01),
         ])
-        specimen = (CORPUS / "unnamed 61.xy").read_bytes()
+        specimen = (CORPUS / "unnamed 8.xy").read_bytes()
         assert proj.to_bytes() == specimen
 
-    def test_bend_s9_byte_perfect(self, baseline):
+    def test_multiply_s1_byte_perfect(self, baseline):
+        """Multiply step 1 should match corpus unnamed 9."""
         proj = add_step_components(baseline, 1, [
-            StepComponent(9, ComponentType.BEND, 0x01),
+            StepComponent(1, ComponentType.MULTIPLY, 0x00),
         ])
-        specimen = (CORPUS / "unnamed 72.xy").read_bytes()
+        specimen = (CORPUS / "unnamed 9.xy").read_bytes()
         assert proj.to_bytes() == specimen
 
     def test_pulse_s9_byte_perfect(self, baseline):
+        """Pulse step 9 should match corpus unnamed 59."""
         proj = add_step_components(baseline, 1, [
             StepComponent(9, ComponentType.PULSE, 0x01),
         ])
         specimen = (CORPUS / "unnamed 59.xy").read_bytes()
         assert proj.to_bytes() == specimen
 
-    def test_no_preamble_change_on_t2(self, baseline):
-        """Component-only activation must NOT set 0x64 on next track."""
+    def test_multiply_s9_byte_perfect(self, baseline):
+        """Multiply step 9 should match corpus unnamed 60."""
         proj = add_step_components(baseline, 1, [
-            StepComponent(9, ComponentType.HOLD, 0x01),
+            StepComponent(9, ComponentType.MULTIPLY, 0x00),
         ])
-        # Track 2 preamble should keep its original value
-        assert proj.tracks[1].preamble == baseline.tracks[1].preamble
+        specimen = (CORPUS / "unnamed 60.xy").read_bytes()
+        assert proj.to_bytes() == specimen
 
-    def test_body_size_standard(self, baseline):
-        """Standard component adds 8 bytes to body."""
-        base_body_size = len(baseline.tracks[0].body) - 2  # minus padding
+    def test_velocity_s9_byte_perfect(self, baseline):
+        """Velocity step 9 should match corpus unnamed 61."""
         proj = add_step_components(baseline, 1, [
-            StepComponent(9, ComponentType.HOLD, 0x01),
+            StepComponent(9, ComponentType.VELOCITY, 0x01),
         ])
-        assert len(proj.tracks[0].body) == base_body_size + 8
+        specimen = (CORPUS / "unnamed 61.xy").read_bytes()
+        assert proj.to_bytes() == specimen
 
-    def test_body_size_pulse(self, baseline):
-        """Pulse component adds 6 bytes to body."""
-        base_body_size = len(baseline.tracks[0].body) - 2
+    def test_body_growth_step1_pulse(self, baseline):
+        """Step 1 Pulse: net +3 bytes."""
+        base_size = len(baseline.tracks[0].body) - 2  # minus type-05 padding
+        proj = add_step_components(baseline, 1, [
+            StepComponent(1, ComponentType.PULSE, 0x01),
+        ])
+        assert len(proj.tracks[0].body) == base_size + 3
+
+    def test_body_growth_step1_multiply(self, baseline):
+        """Step 1 Multiply: net +1 byte."""
+        base_size = len(baseline.tracks[0].body) - 2
+        proj = add_step_components(baseline, 1, [
+            StepComponent(1, ComponentType.MULTIPLY, 0x00),
+        ])
+        assert len(proj.tracks[0].body) == base_size + 1
+
+    def test_body_growth_step9_pulse(self, baseline):
+        """Step 9 Pulse: net +6 bytes."""
+        base_size = len(baseline.tracks[0].body) - 2
         proj = add_step_components(baseline, 1, [
             StepComponent(9, ComponentType.PULSE, 0x01),
         ])
-        assert len(proj.tracks[0].body) == base_body_size + 6
+        assert len(proj.tracks[0].body) == base_size + 6
 
-
-# ── Additional verification against corpus alloc bytes ────────────────
-
-
-class TestCorpusAllocBytes:
-    """Verify alloc byte formula against every standard corpus specimen."""
-
-    @pytest.mark.parametrize("filename,comp_type,expected_alloc", [
-        ("unnamed 59.xy", ComponentType.PULSE,      0x77),
-        ("unnamed 61.xy", ComponentType.HOLD,       0x76),
-        ("unnamed 66.xy", ComponentType.MULTIPLY,   0x75),
-        ("unnamed 68.xy", ComponentType.RAMP_UP,    0x73),
-        ("unnamed 69.xy", ComponentType.RAMP_DOWN,  0x72),
-        ("unnamed 70.xy", ComponentType.RANDOM,     0x71),
-        ("unnamed 71.xy", ComponentType.PORTAMENTO, 0x70),
-        ("unnamed 72.xy", ComponentType.BEND,       0x6F),
-        ("unnamed 73.xy", ComponentType.TONALITY,   0x6E),
-        ("unnamed 74.xy", ComponentType.JUMP,       0x6D),
-        ("unnamed 75.xy", ComponentType.PARAMETER,  0x6C),
-        ("unnamed 76.xy", ComponentType.CONDITIONAL,0x6B),
-    ])
-    def test_alloc_matches_formula(self, filename, comp_type, expected_alloc):
-        comp = StepComponent(9, comp_type, 0x00)
-        assert compute_alloc_byte(comp) == expected_alloc
+    def test_no_preamble_change_on_t2(self, baseline):
+        """Component-only activation must NOT set 0x64 on next track."""
+        proj = add_step_components(baseline, 1, [
+            StepComponent(9, ComponentType.PULSE, 0x01),
+        ])
+        assert proj.tracks[1].preamble == baseline.tracks[1].preamble
