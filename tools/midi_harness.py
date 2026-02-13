@@ -834,6 +834,303 @@ def make_near_chord() -> TestPlan:
     )
 
 
+# ---------------------------------------------------------------------------
+# CC → p-lock parameter ID mapping experiments
+# ---------------------------------------------------------------------------
+# These use hold-record mode (no clock sync) to sweep one CC per track.
+# Each experiment maps 8 CCs across tracks 1-8 (or 9-16 for aux).
+# The p-lock table in each track body reveals the param_id byte for that CC.
+
+def _make_cc_map_plan(name: str, description: str, cc_assignments: List[Tuple[int, int]],
+                      bars: int = 1) -> TestPlan:
+    """Build a CC mapping experiment.
+
+    Args:
+        cc_assignments: list of (channel_1based, cc_number) pairs
+
+    NOTE: CC-only, no notes! Hold-record mode captures CCs as p-locks,
+    but sending notes triggers clock-synced recording which suppresses
+    CC capture (confirmed: notes + CCs → CCs ignored on device).
+    """
+    cc_events = []
+    for ch_1, cc in cc_assignments:
+        for step in range(1, 17):
+            val = min(int(((step - 1) / 15) * 127), 127)
+            cc_events.append(CCEvent(channel=ch_1 - 1, step=step, cc=cc, value=val))
+    return TestPlan(
+        name=name,
+        description=description,
+        events=[],
+        cc_events=cc_events,
+        bars=bars,
+    )
+
+
+def make_cc_map_1a() -> TestPlan:
+    """Tracks 1-8: Param 1-4 + Amp ADSR."""
+    return _make_cc_map_plan(
+        "cc_map_1a",
+        "CC mapping T1-T8: T1=CC12(Param1) T2=CC13(Param2) T3=CC14(Param3) "
+        "T4=CC15(Param4) T5=CC20(AmpA) T6=CC21(AmpD) T7=CC22(AmpS) T8=CC23(AmpR)",
+        [(1, 12), (2, 13), (3, 14), (4, 15), (5, 20), (6, 21), (7, 22), (8, 23)],
+    )
+
+
+def make_cc_map_1b() -> TestPlan:
+    """Tracks 1-8: Filter ADSR + poly/porto/PB/engVol."""
+    return _make_cc_map_plan(
+        "cc_map_1b",
+        "CC mapping T1-T8: T1=CC24(FiltA) T2=CC25(FiltD) T3=CC26(FiltS) "
+        "T4=CC27(FiltR) T5=CC28(poly) T6=CC29(porto) T7=CC30(PB) T8=CC31(EngVol)",
+        [(1, 24), (2, 25), (3, 26), (4, 27), (5, 28), (6, 29), (7, 30), (8, 31)],
+    )
+
+
+def make_cc_map_1c() -> TestPlan:
+    """Tracks 1-8: Filter cutoff/reso/env/keytrack + sends."""
+    return _make_cc_map_plan(
+        "cc_map_1c",
+        "CC mapping T1-T8: T1=CC32(cutoff) T2=CC33(reso) T3=CC34(env) "
+        "T4=CC35(keytrack) T5=CC36(ext) T6=CC37(tape) T7=CC38(fxi) T8=CC39(fxii)",
+        [(1, 32), (2, 33), (3, 34), (4, 35), (5, 36), (6, 37), (7, 38), (8, 39)],
+    )
+
+
+def make_cc_map_1d() -> TestPlan:
+    """Tracks 1-8: LFO + mixer (vol/mute/pan).
+
+    CC9 (mute) uses 0/127 toggle every 4 steps instead of a ramp,
+    since mute is binary and mid-range values are meaningless.
+    """
+    cc_events = []
+    # T1=CC40, T2=CC41, T3=CC7, T5=CC10 — standard ramps
+    for ch_1, cc in [(1, 40), (2, 41), (3, 7), (5, 10)]:
+        for step in range(1, 17):
+            val = min(int(((step - 1) / 15) * 127), 127)
+            cc_events.append(CCEvent(channel=ch_1 - 1, step=step, cc=cc, value=val))
+    # T4=CC9 (mute) — toggle 0/127 every 4 steps
+    for step in range(1, 17):
+        val = 0 if ((step - 1) // 4) % 2 == 0 else 127
+        cc_events.append(CCEvent(channel=3, step=step, cc=9, value=val))
+    return TestPlan(
+        name="cc_map_1d",
+        description="CC mapping T1-T8: T1=CC40(LFOdest) T2=CC41(LFOparam) T3=CC7(vol) "
+                    "T4=CC9(mute,toggle 0/127 every 4 steps) T5=CC10(pan)",
+        events=[],
+        cc_events=cc_events,
+        bars=1,
+    )
+
+
+def make_cc_map_2a() -> TestPlan:
+    """Aux tracks: mixer CCs on Brain/Punch-in + CC12 on functional aux tracks.
+
+    T9 Brain gets CC7 (Volume), T10 Punch-in gets CC10 (Pan) — these
+    compare against T3=CC7 and T5=CC10 from cc_map_1d to check if aux
+    mixer encoding matches synth tracks.
+    Skips T12 (CV Out) — CC12 has no function.
+    """
+    return _make_cc_map_plan(
+        "cc_map_2a",
+        "CC mapping aux: T9=CC7(Vol) T10=CC10(Pan) T11=CC12(Chan) T12=CC40(LFO) "
+        "T13=CC12(Input) T14=CC12(xSpeed) T15=CC12(param1) T16=CC12(param1)",
+        [(9, 7), (10, 10), (11, 12), (12, 40), (13, 12), (14, 12), (15, 12), (16, 12)],
+    )
+
+
+def make_cc_map_2b() -> TestPlan:
+    """Tracks 9-16: CC13-15 on separate aux tracks."""
+    return _make_cc_map_plan(
+        "cc_map_2b",
+        "CC mapping T9-T16: T13=CC13(Drive) T14=CC13(TapeSpeed) T15=CC13(param2) "
+        "T16=CC13(param2) T9=CC14 T10=CC14 T11=CC14(Prog) T12=CC14",
+        [(13, 13), (14, 13), (15, 13), (16, 13), (9, 14), (10, 14), (11, 14), (12, 14)],
+    )
+
+
+def make_cc_map_2c() -> TestPlan:
+    """Tracks 9-16: HP/LP cutoff + sends."""
+    return _make_cc_map_plan(
+        "cc_map_2c",
+        "CC mapping T9-T16 filters/sends: T13=CC32(HPcut) T14=CC32(HPcut) "
+        "T15=CC32(HPcut) T16=CC32(HPcut) T13=CC35(LPcut) ... wait, one CC per track. "
+        "T9=CC32 T10=CC32 T11=CC32 T12=CC32 T13=CC32(HPcut) T14=CC35(LPcut) "
+        "T15=CC37(tape) T16=CC38(fxi)",
+        [(9, 32), (10, 32), (11, 32), (12, 32), (13, 32), (14, 35), (15, 37), (16, 38)],
+    )
+
+
+def make_cc_map_2d() -> TestPlan:
+    """Tracks 9-16: more aux-specific CCs."""
+    return _make_cc_map_plan(
+        "cc_map_2d",
+        "CC mapping T9-T16: T13=CC35(LPcut) T14=CC38(fxi) T15=CC39(fxii) "
+        "T16=CC35(LPcut) T9=CC40(LFO) T10=CC40(LFO) T11=CC15 T12=CC15",
+        [(13, 35), (14, 38), (15, 39), (16, 35), (9, 40), (10, 40), (11, 15), (12, 15)],
+    )
+
+
+def make_cc_map_multi() -> TestPlan:
+    """Multiple CCs on the SAME track to learn multi-lane p-lock encoding.
+
+    Purpose: the p-lock table has 3 lanes x 16 steps (48 entries).
+    We know one CC fills one lane. Sending 3 CCs should fill all 3 lanes
+    and reveal the lane ordering, param_id placement, and how the sentinel
+    byte changes for multi-param p-locks.
+
+    Uses T3 (Prism) for consistency with unnamed 35/115/120 specimens.
+    Sends CC32 (filter cutoff), CC12 (Param 1), and CC14 (Param 3)
+    simultaneously, each with a different value ramp so they're distinguishable:
+      CC32: 0→127 (full up-ramp)
+      CC12: 127→0 (full down-ramp, reversed)
+      CC14: constant 64 (flat line at 50%)
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    cc_events = []
+    for step in range(1, 17):
+        frac = (step - 1) / 15
+        # CC32 cutoff: 0→127
+        cc_events.append(CCEvent(channel=2, step=step, cc=32,
+                                 value=min(int(frac * 127), 127)))
+        # CC12 param1: 127→0 (reversed)
+        cc_events.append(CCEvent(channel=2, step=step, cc=12,
+                                 value=max(127 - int(frac * 127), 0)))
+        # CC14 param3: constant 64
+        cc_events.append(CCEvent(channel=2, step=step, cc=14, value=64))
+    return TestPlan(
+        name="cc_map_multi",
+        description="Multi-CC on T3: CC32(cutoff) 0→127 + CC12(Param1) 127→0 + "
+                    "CC14(Param3) constant 64. Tests multi-lane p-lock encoding.",
+        events=[],
+        cc_events=cc_events,
+        bars=1,
+    )
+
+
+def make_cc_with_pb_cutoff() -> TestPlan:
+    """Sustained note + PB ramp + CC32 (filter cutoff) ramp simultaneously.
+
+    Purpose: test whether CC automation "rides along" when sent alongside
+    a performance controller (pitchbend) that IS recorded. If so, the CC
+    data should appear somewhere in the .xy file — either in the keyframe
+    automation sections or in the p-lock slot table.
+
+    Compare against: unnamed 108 (PB only) to isolate any new bytes.
+    Requires: MIDI channel 3 → Track 3.
+    """
+    pb_events = []
+    cc_events = []
+    for s in range(16):
+        frac = s / 15
+        # PB: center → max (same as pitchbend_sweep for direct comparison)
+        pb_events.append(PitchBendEvent(channel=2, step=s + 1,
+                                        value=min(8192 + int(frac * 8191), 16383)))
+        # CC32 (filter cutoff): 0 → 127
+        cc_events.append(CCEvent(channel=2, step=s + 1, cc=32,
+                                 value=min(int(frac * 127), 127)))
+    return TestPlan(
+        name="cc_with_pb_cutoff",
+        description="Sustained C4 on T3 + simultaneous PB ramp (center→max) and "
+                    "CC32 (filter cutoff) ramp (0→127). Tests if CC rides along "
+                    "with recorded PB automation.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        pitchbend_events=pb_events,
+        cc_events=cc_events,
+        bars=1,
+    )
+
+
+def make_cc_with_pb_param1() -> TestPlan:
+    """Sustained note + PB ramp + CC12 (Param 1) ramp simultaneously.
+
+    Purpose: same as cc_with_pb_cutoff but using CC12 (synth param 1)
+    instead of CC32. Tests a different parameter to see if the behavior
+    varies by CC number.
+
+    Compare against: unnamed 108 (PB only).
+    Requires: MIDI channel 3 → Track 3.
+    """
+    pb_events = []
+    cc_events = []
+    for s in range(16):
+        frac = s / 15
+        pb_events.append(PitchBendEvent(channel=2, step=s + 1,
+                                        value=min(8192 + int(frac * 8191), 16383)))
+        cc_events.append(CCEvent(channel=2, step=s + 1, cc=12,
+                                 value=min(int(frac * 127), 127)))
+    return TestPlan(
+        name="cc_with_pb_param1",
+        description="Sustained C4 on T3 + simultaneous PB ramp and CC12 (Param 1) "
+                    "ramp (0→127). Tests if synth param CC rides along with PB.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        pitchbend_events=pb_events,
+        cc_events=cc_events,
+        bars=1,
+    )
+
+
+def make_cc_with_at_cutoff() -> TestPlan:
+    """Sustained note + AT ramp + CC32 (filter cutoff) ramp simultaneously.
+
+    Purpose: same piggybacking test but using aftertouch instead of PB
+    as the "carrier" performance controller. If CC rides along with AT
+    but not PB (or vice versa), that reveals which path triggers storage.
+
+    Compare against: unnamed 107 (AT only).
+    Requires: MIDI channel 3 → Track 3.
+    """
+    at_events = []
+    cc_events = []
+    for s in range(16):
+        frac = s / 15
+        at_events.append(AftertouchEvent(channel=2, step=s + 1,
+                                         value=min(int(frac * 127), 127)))
+        cc_events.append(CCEvent(channel=2, step=s + 1, cc=32,
+                                 value=min(int(frac * 127), 127)))
+    return TestPlan(
+        name="cc_with_at_cutoff",
+        description="Sustained C4 on T3 + simultaneous AT ramp (0→127) and "
+                    "CC32 (filter cutoff) ramp (0→127). Tests if CC rides along "
+                    "with recorded AT automation.",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        aftertouch_events=at_events,
+        cc_events=cc_events,
+        bars=1,
+    )
+
+
+def make_pb_control() -> TestPlan:
+    """PB-only control — identical to cc_with_pb_cutoff but WITHOUT the CCs.
+
+    Purpose: exact control for cc_with_pb_cutoff. Same PB ramp, same note,
+    no CCs. Byte-diff the two .xy files to isolate any CC-related changes.
+
+    Requires: MIDI channel 3 → Track 3.
+    """
+    pb_events = []
+    for s in range(16):
+        frac = s / 15
+        pb_events.append(PitchBendEvent(channel=2, step=s + 1,
+                                        value=min(8192 + int(frac * 8191), 16383)))
+    return TestPlan(
+        name="pb_control",
+        description="Sustained C4 on T3 + PB ramp (center→max). "
+                    "Control for cc_with_pb experiments (no CCs sent).",
+        events=[
+            NoteEvent(channel=2, step=1, note=60, velocity=100, duration_steps=16.0),
+        ],
+        pitchbend_events=pb_events,
+        bars=1,
+    )
+
+
 EXPERIMENTS: Dict[str, TestPlan] = {}
 _single_plans = make_single_note_per_track()
 for _p in _single_plans:
@@ -864,6 +1161,21 @@ EXPERIMENTS["velocity_levels"] = make_velocity_levels()
 EXPERIMENTS["disc01_sequential"] = make_disc01_sequential()
 EXPERIMENTS["chord_variants"] = make_chord_variants()
 EXPERIMENTS["near_chord"] = make_near_chord()
+# CC → p-lock param ID mapping experiments
+EXPERIMENTS["cc_map_1a"] = make_cc_map_1a()
+EXPERIMENTS["cc_map_1b"] = make_cc_map_1b()
+EXPERIMENTS["cc_map_1c"] = make_cc_map_1c()
+EXPERIMENTS["cc_map_1d"] = make_cc_map_1d()
+EXPERIMENTS["cc_map_2a"] = make_cc_map_2a()
+EXPERIMENTS["cc_map_2b"] = make_cc_map_2b()
+EXPERIMENTS["cc_map_2c"] = make_cc_map_2c()
+EXPERIMENTS["cc_map_2d"] = make_cc_map_2d()
+EXPERIMENTS["cc_map_multi"] = make_cc_map_multi()
+# CC piggybacking experiments (does CC ride along with perf controllers?)
+EXPERIMENTS["cc_with_pb_cutoff"] = make_cc_with_pb_cutoff()
+EXPERIMENTS["cc_with_pb_param1"] = make_cc_with_pb_param1()
+EXPERIMENTS["cc_with_at_cutoff"] = make_cc_with_at_cutoff()
+EXPERIMENTS["pb_control"] = make_pb_control()
 
 
 # ---------------------------------------------------------------------------

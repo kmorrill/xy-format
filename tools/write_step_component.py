@@ -34,7 +34,7 @@ print("  A. comp_A_control.xy     — note only on T1 step 9 (known working)")
 for name, comp_type, param, desc in [
     ("comp_B1_hold",     ComponentType.HOLD,       0x01, "Hold min"),
     ("comp_B2_multiply", ComponentType.MULTIPLY,    0x04, "Multiply div4"),
-    ("comp_B3_bend",     ComponentType.BEND,        0x01, "Bend up/dn"),
+    ("comp_B3_velocity", ComponentType.VELOCITY,    0x00, "Velocity random"),
     ("comp_B4_pulse",    ComponentType.PULSE,        0x01, "Pulse rpt=1"),
     ("comp_B5_rampup",   ComponentType.RAMP_UP,     0x08, "RampUp 4s3o"),
     ("comp_B6_porto",    ComponentType.PORTAMENTO,   0x07, "Porto 70%"),
