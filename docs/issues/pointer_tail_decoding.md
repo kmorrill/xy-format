@@ -31,6 +31,5 @@
 
 ## Related Files / Work
 - Code: `tools/inspect_xy.py` (tail parsing, pointer metadata).
-- Docs: `docs/pointer_tail_notes.md` (structure notes), `AGENTS.md` (mission log).
+- Docs: `docs/pointer_tail_notes.md` (structure notes), `docs/format/events.md` (canonical format summary), `docs/logs/2026-02-13_agents_legacy_snapshot.md` (full historical log).
 - Tests: `tests/test_inspector_outputs.py` currently fail if bogus extra notes appear; they will need extra assertions once decoding lands.
-

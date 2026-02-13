@@ -5,9 +5,10 @@ This repo is our working notebook for reverse-engineering Teenage Engineering’
 ## Mission
 - Document how every byte inside an `.xy` project maps to sequencer data, track engines, sampler metadata, scenes, songs, MIDI routing, and global mix controls.
 - Build tooling that inspects, compares, and (eventually) writes projects so we can automate edits without the hardware.
-- Keep a living log (see `AGENTS.md`) of discoveries, hypotheses, and outstanding questions as the format map grows.
+- Keep stable format facts in `docs/format/*` and chronology/debug history in `docs/logs/*`.
 
 ## Reference Material
+- `docs/index.md` — navigation index for canonical docs, workflows, and logs.
 - `docs/OP-XY_project_breakdown.txt` — plaintext dump of the official format expectations.
 - `src/one-off-changes-from-default/op-xy_project_change_log.md` — UI action log describing what changed in each capture.
 - `src/one-off-changes-from-default/*.xy` — baseline (`unnamed 1.xy`) plus one-change samples for tempo, trigs, engines, automation, etc.
@@ -17,18 +18,20 @@ This repo is our working notebook for reverse-engineering Teenage Engineering’
 - `tests/` — growing regression suite for inspectors and future writer once we can serialize bytes back out.
 - `output/` — scratch space for parsed JSON, hexdump diffs, or notebook artifacts.
 - `xy/` — any working assets or reconstructed projects.
-- `AGENTS.md` — detailed reverse-engineering log; start here for the full narrative, offsets, and hypotheses.
+- `AGENTS.md` — compact operating index + links to canonical docs.
 
 ## How to Get Involved
-1. Read `AGENTS.md` to learn the current state of format knowledge and the immediate decoding targets.
-2. Use the change log to pick a capture. Run `python tools/inspect_xy.py path/to/file.xy` to see how the inspector currently interprets it.
-3. Compare the tool output to the logged UI change and file fresh notes or TODOs whenever the inspector misses data or crashes.
-4. When adding tooling, keep scripts deterministic and small so we can diff outputs across the sample set.
+1. Read `AGENTS.md` for operating rules, then `docs/roadmap.md` for current priorities.
+2. Use `docs/format/*` for canonical format behavior and `docs/logs/*` for discovery history.
+3. Use the change log to pick a capture. Run `python tools/inspect_xy.py path/to/file.xy` to see how the inspector currently interprets it.
+4. Compare tool output to the logged UI change and file notes/TODOs whenever the inspector misses data or crashes.
+5. If you hit a crash, follow `docs/workflows/crash_capture.md` (artifact, metadata, corpus record, follow-up pass file).
+6. When adding tooling, keep scripts deterministic and small so outputs remain corpus-diff friendly.
 
 ## Writer Prototype Status
-- `xy/writer.py` plus the CLI wrapper `tools/write_xy.py` can promote the baseline (`unnamed 1.xy`) into the firmware’s “touched” state and author a single quantized trig on Track 1 by replaying reference slabs captured from `unnamed 53.xy`/`unnamed 81.xy`. Tests under `tests/test_writer_roundtrip.py` guard the exact bytes we currently understand (pointer table rotation, slot descriptor, node/tail/slab contents).
-- The effort is paused because several fundamentals remain unsolved: gate duration is still hard-coded to the 100 % case, the per-step mask slab is copied from a template instead of being derived, and multi-note/tail-linked events are still undecoded by the inspector. Until those gaps close we risk baking incorrect assumptions into the writer, so it stays limited to the happy-path Track 1 trig for now.
-- Current writer outputs crash the device when the project is opened, which confirms we are still missing critical structure (probably checksums, slot linkages, or automation tables) even for the simple cases above. Treat writer-generated files as experimental artifacts only.
+- `xy/writer.py` plus `tools/write_xy.py` (single-trig Track 1 path) remains experimental. This path is still missing key structure for general device-safe authoring and should be treated as crash-prone.
+- `xy/project_builder.py` has a separate constrained known-good profile for validated multi-pattern topologies (notably `T1+T3` scaffold-compatible paths).
+- Keep these two paths conceptually separate when evaluating writer status, tests, and docs.
 
 ## Housekeeping
 - `.gitignore` hides OS junk (`.DS_Store`), Python caches, and virtualenv directories so experimental scripts don’t pollute the repo.

@@ -15,7 +15,7 @@
   ↳ tail[1]: note=0x40 (E4) vel=0x67 (103) flag=0x0000 ptrs={0:lo=0x0164|hi=0xF010|…|target=track+0x10F0}
     ptr[1] -> track+0x10F0: 0x0015 0x0400 0x3479 …
   ```
-- Logged the new inspector behaviour and tail format in `AGENTS.md` (variant taxonomy, pointer byte layout, observed target offsets).
+- Logged the new inspector behaviour and tail format in the format docs (`docs/format/events.md`) and legacy snapshot (`docs/logs/2026-02-13_agents_legacy_snapshot.md`).
 
 ### Key Observations
 - **Tail structure**: `[note | vel] [flag] [lo | hi]*` repeats per voice. `swap_u16(hi)` jumps into the track block; common offsets:
@@ -62,7 +62,7 @@
 3. **Inspector enhancements**
    - Auto-interpret the pointer targets (step token, gate, velocity) and reflect them in the note lines so hybrid/pointer events show exact step/beat/gate values.
 4. **Documentation**
-   - Summarize confirmed pointer structures (per-step table layout, token formula) once derived, then update `AGENTS.md` accordingly.
+   - Summarize confirmed pointer structures (per-step table layout, token formula) once derived, then update `docs/format/events.md` (and keep chronology in `docs/logs/*`).
 
 ## 2024-xx-xx Follow-up
 
