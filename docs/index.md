@@ -14,6 +14,8 @@
 - Structural compare: `docs/tools/corpus_compare.md`
 - Inspector: `docs/tools/inspect_xy.md`
 - Header reader: `docs/tools/read_xy_header.md`
+- JSON spec compiler: `docs/tools/build_xy_from_json.md`
+- External tooling candidates: `docs/tools/external_tooling_candidates.md`
 
 ## Reference
 - OP-XY documented limits: `docs/reference/opxy_limits.md`
@@ -34,11 +36,16 @@
 - Architecture notes: `docs/engineering/architecture.md`
 - Writer alignment (`0x05`/`0x07`): `docs/engineering/writer_alignment_and_type05_type07.md`
 - Track 1 writer prototype: `docs/engineering/writer_track1.md`
+- JSON authoring bridge: `docs/engineering/json_authoring_bridge.md`
+- Complete project JSON target: `docs/engineering/json_project_spec_complete.md`
+- Known-good ranked test plan: `docs/engineering/known_good_test_plan.md`
+- ImHex + ImHex Patterns brief: `docs/engineering/imhex_imhex_patterns_brief.md`
 
 ## Debug and Issues
 - Crash catalog: `docs/debug/crashes.md`
 - Issues index: `docs/issues/index.md`
 - Pointer-tail issue: `docs/issues/pointer_tail_decoding.md`
+- Preamble state-machine issue: `docs/issues/preamble_state_machine.md`
 
 ## Logs
 - Variable-length + writer root cause: `docs/logs/2025-02-11_variable_length_and_writer_root_cause.md`

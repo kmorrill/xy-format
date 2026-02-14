@@ -1,14 +1,24 @@
 """Step component encoding for OP-XY track blocks.
 
 Step components modify note playback behavior on individual steps.
-They are stored in a 13-slot table within the track body at body07 offset 0xA2.
+They are stored in a 13-slot table within the track body, using two
+dedicated slot positions — one per half of the bar.
+
+Slot model (device-verified: steps 1 and 9 work; steps 5 and 13 crash):
+  Single-step mode only supports step 1 and step 9:
+    Slot 5 → step 1   (0 trailing sentinels)
+    Slot 6 → step 9   (1 trailing sentinel)
+  For other steps, the multi-step encoding (unnamed 118/119) is required
+  but not yet implemented.  The step_byte formula is the same across both
+  modes, but single-step mode uses slot replacement while multi-step
+  replaces the entire sentinel table with a contiguous block stream.
 
 Encoding overview (byte-perfect on 16 corpus specimens: unnamed 8/9/59-61/67-77):
 
   The 3-byte slot entry (ff 00 00 at baseline) is REPLACED by the
   component's header bytes.  Any additional payload bytes (and trailing
-  sentinels for step 9+) are INSERTED after the slot position.  Net
-  body growth = total_data_size - 3.
+  sentinels) are INSERTED after the slot position.  Net body growth =
+  total_data_size - 3.
 
   Component data layout:
     Header (3 bytes):  [step_byte] [bitmask] [0x00]
@@ -17,17 +27,16 @@ Encoding overview (byte-perfect on 16 corpus specimens: unnamed 8/9/59-61/67-77)
       3-byte:  [repeat] [0x00] [0x00]         -- Pulse
       5-byte:  [0x00] [type_id] [param] [0x00] [0x00]
                                                -- all other types
-    Trailing sentinels:  (slot_index - 5) x ff 00 00
-      Slot 5 (step 1): 0 sentinels.
-      Slot 6 (step 9): 1 sentinel (3 bytes).
+    Trailing sentinels:  half x ff 00 00
+      Steps 1-8  (half=0): 0 sentinels.
+      Steps 9-16 (half=1): 1 sentinel (3 bytes).
 
   step_byte = ((0xE - step_0) << 4) | nibble
-    Bank 1 (global bits 0-7):
-      nibble = 4 for step 1:  step_byte = 0xE4
-      nibble = 3 for step 9:  step_byte = 0x63
-    Bank 2 (global bits 8-13):
-      nibble = 4 for step 9:  step_byte = 0x64
-      (step 1 bank 2 not verified)
+    nibble = 4 - half + bank
+      half = step_0 // 8  (0 for steps 1-8, 1 for steps 9-16)
+      bank = bitpos // 8  (0 for bank 1 bits 0-7, 1 for bank 2 bits 8-13)
+    Verified:  step 1 bank 0 → 0xE4, step 9 bank 0 → 0x63, step 9 bank 1 → 0x64
+    Predicted: step 5 bank 0 → 0xA4, step 13 bank 1 → 0x24, etc.
 
   14-bit bitmask across two banks:
     Bank 1 (bits 0-7):
@@ -53,9 +62,10 @@ Encoding overview (byte-perfect on 16 corpus specimens: unnamed 8/9/59-61/67-77)
       low_nibble = 7 - global_bitpos  (for 3B and 5B payload; can be negative)
       low_nibble = 9                  (for 1B payload: PulseMax, Velocity)
 
-Supported configurations:
-  Step 1: Pulse, PulseMax  (corpus-verified)
-  Step 9: all 14 types     (corpus-verified: unnamed 59-77)
+Corpus-verified steps: 1 (Pulse, PulseMax) and 9 (all 14 types).
+Device-tested: steps 5 and 13 crash (num_patterns > 0) — single-step
+slot replacement is limited to steps 1 and 9.  Multi-step encoding
+(unnamed 118/119) is needed for arbitrary steps.
 """
 
 from __future__ import annotations
@@ -117,22 +127,8 @@ _COMPONENT_META: dict[ComponentType, _Meta] = {
     ComponentType.TRIGGER:     _Meta(bitpos=13, payload_size=5, type_id=0x0B, default_param=0x09),
 }
 
-# Step 1 only supports Pulse and PulseMax (other step 1 components produce
-# no body changes in corpus specimens unnamed 10-20).
-_STEP1_SUPPORTED = {ComponentType.PULSE, ComponentType.PULSE_MAX}
-
-# Verified slot positions
-_STEP_SLOT: dict[int, int] = {
-    1: 5,   # body07 offset 0xB1
-    9: 6,   # body07 offset 0xB4
-}
-
-SLOT_BASE = 0x00A2  # body07 offset of slot table start (13 slots x 3 bytes) — Drum/Prism
-
-_ALLOC_BASELINE_OFFSET = 0x00C9  # body07 offset of alloc marker in baseline — Drum/Prism
-
 # The 55-slot ff 00 00 table starts at different body07 offsets per engine.
-# Step component slots are at positions 47-48 within this table (relative to start).
+# Step component slots are at table positions 47 (steps 1-8) and 48 (steps 9-16).
 # Table start offset is engine-dependent:
 _TABLE_START: dict[int, int] = {
     0x03: 0x0024,  # Drum (T1, T2 default)
@@ -147,10 +143,27 @@ _DRUM_TABLE_START = 0x0024  # reference engine (all formulas derived from this)
 _STEP_COMP_SLOT_OFFSET = 42  # step comp slots start at table_start + 42*3
 
 
+_VALID_STEPS = {1, 9}  # only steps 1 and 9 work in single-step slot replacement mode
+
+
+def _slot_for_step(step: int) -> int:
+    """Return the slot index (5 or 6) for the given 1-based step.
+
+    Only steps 1 and 9 are supported in single-step mode.  Steps 2-8
+    and 10-16 require the multi-step encoding (not yet implemented).
+    """
+    if step not in _VALID_STEPS:
+        raise ValueError(
+            f"only steps {sorted(_VALID_STEPS)} are supported in single-step "
+            f"mode; got step {step}"
+        )
+    return 5 + (step - 1) // 8
+
+
 @dataclass
 class StepComponent:
     """A step component to attach to a specific step."""
-    step: int               # 1-based step index (1 or 9 only)
+    step: int               # 1-based step index (1-16)
     component: ComponentType
     param: int = 0          # param value (Pulse: repeat count, others: component param)
 
@@ -168,27 +181,16 @@ def build_component_data(comp: StepComponent) -> bytes:
     step_0 = comp.step - 1
     bank = meta.bitpos // 8  # 0 = bank 1, 1 = bank 2
 
-    if comp.step not in _STEP_SLOT:
-        supported = ", ".join(str(s) for s in sorted(_STEP_SLOT))
-        raise ValueError(f"step {comp.step} not supported; only steps {supported}")
-
-    if comp.step == 1 and comp.component not in _STEP1_SUPPORTED:
+    if comp.step not in _VALID_STEPS:
         raise ValueError(
-            f"{comp.component.name} not supported on step 1 "
-            f"(only Pulse and PulseMax verified at step 1)"
+            f"only steps {sorted(_VALID_STEPS)} are supported in single-step "
+            f"mode; got step {comp.step}"
         )
 
     # Header: [step_byte] [bitmask] [0x00]
-    if bank == 0:
-        nibble = 4 if step_0 == 0 else 3
-    else:
-        # Bank 2: nibble = 4 for step 9 (verified); step 1 not verified
-        if step_0 == 0:
-            raise ValueError(
-                f"{comp.component.name} (bank 2) not verified on step 1"
-            )
-        nibble = 4
-    step_byte = ((0xE - step_0) << 4) | nibble
+    half = step_0 // 8  # 0 for steps 1-8, 1 for steps 9-16
+    nibble = 4 - half + bank
+    step_byte = (((0xE - step_0) << 4) | nibble) & 0xFF
     local_bit = meta.bitpos % 8
     bitmask = 1 << local_bit
     header = bytes([step_byte, bitmask, 0x00])
@@ -203,10 +205,9 @@ def build_component_data(comp: StepComponent) -> bytes:
     else:
         raise ValueError(f"unexpected payload_size {meta.payload_size}")
 
-    # Trailing sentinels: (slot_index - 5) x ff 00 00
-    slot_index = _STEP_SLOT[comp.step]
-    num_sentinels = slot_index - 5
-    sentinels = b'\xff\x00\x00' * num_sentinels
+    # Trailing sentinels: half x ff 00 00
+    # Steps 1-8 (half=0): 0 sentinels.  Steps 9-16 (half=1): 1 sentinel.
+    sentinels = b'\xff\x00\x00' * half
 
     return header + payload + sentinels
 
@@ -217,15 +218,17 @@ def slot_body07_offset(step: int, engine_id: int | None = None) -> int:
     Parameters
     ----------
     step : int
-        1-based step number (1 or 9).
+        1-based step number (1-16).
     engine_id : int or None
         Engine ID byte.  ``None`` defaults to Drum (0x03).
     """
-    if step not in _STEP_SLOT:
-        supported = ", ".join(str(s) for s in sorted(_STEP_SLOT))
-        raise ValueError(f"step {step} not supported; only steps {supported}")
+    if step not in _VALID_STEPS:
+        raise ValueError(
+            f"only steps {sorted(_VALID_STEPS)} are supported in single-step "
+            f"mode; got step {step}"
+        )
     table_start = _table_start_for_engine(engine_id)
-    slot_abs = _STEP_COMP_SLOT_OFFSET + _STEP_SLOT[step]
+    slot_abs = _STEP_COMP_SLOT_OFFSET + _slot_for_step(step)
     return table_start + slot_abs * 3
 
 

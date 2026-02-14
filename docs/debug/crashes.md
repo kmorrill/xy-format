@@ -27,3 +27,14 @@
 
 ## Notes
 Full historical crash details, callouts, and screenshots references are preserved in `docs/logs/2026-02-13_agents_legacy_snapshot.md`.
+
+## Automated Regression Coverage
+- Test suite: `tests/test_crash_regressions.py`
+- Coverage mapping:
+  - Crash #1: `test_crash1_alignment_regression_matches_unnamed2`
+  - Crash #2: `test_crash2_multinote_event_regression_matches_unnamed89`
+  - Crash #3:
+    - `test_crash3_preamble_propagation_regression`
+    - `test_crash3_t3_leader_offset_regression_matches_unnamed105b`
+  - Preventive strict-mode guard:
+    - `test_crash_prevention_strict_rejects_unsafe_track_sets`

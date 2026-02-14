@@ -64,11 +64,12 @@ class XYHeader:
             | ((self.groove_type & 0xFF) << 24)
         )
         raw[8:12] = tempo_word.to_bytes(4, "little", signed=False)
-        raw[0x0C] = self.groove_amount & 0xFF
-        raw[0x0D] = self.metronome_level & 0xFF
+        # Write 32-bit fields first; groove bytes are low bytes of field_0x0C.
         raw[12:16] = self.field_0x0C.to_bytes(4, "little", signed=False)
         raw[16:20] = self.field_0x10.to_bytes(4, "little", signed=False)
         raw[20:24] = self.field_0x14.to_bytes(4, "little", signed=False)
+        raw[0x0C] = self.groove_amount & 0xFF
+        raw[0x0D] = self.metronome_level & 0xFF
         return bytes(raw)
 
 

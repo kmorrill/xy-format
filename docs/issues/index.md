@@ -2,6 +2,7 @@
 
 ## Active
 - Pointer-tail and pointer-21 decode gaps: `docs/issues/pointer_tail_decoding.md`
+- Preamble byte[0] state-machine + exception families: `docs/issues/preamble_state_machine.md`
 - Remaining open questions captured in legacy notes: `docs/logs/2026-02-13_agents_legacy_snapshot.md`
 - Crash handling protocol and artifacts: `docs/workflows/crash_capture.md`
 

@@ -116,7 +116,7 @@ class TestBuildComponentData:
         assert data == bytes([0x64, 0x08, 0x00, 0x00, 0x09, 0x04, 0x00, 0x00,
                               0xFF, 0x00, 0x00])
 
-    def test_conditional_step9(self):
+    def test_component_step9(self):
         data = build_component_data(StepComponent(9, ComponentType.CONDITIONAL, 0x02))
         assert data == bytes([0x64, 0x10, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x00,
                               0xFF, 0x00, 0x00])
@@ -128,19 +128,31 @@ class TestBuildComponentData:
 
     # ── Error cases ──
 
-    def test_hold_step1_raises(self):
-        """Hold on step 1 is not supported (only Pulse/PulseMax verified)."""
-        with pytest.raises(ValueError, match="not supported on step 1"):
-            build_component_data(StepComponent(1, ComponentType.HOLD, 0x01))
+    def test_hold_step1(self):
+        """Hold on step 1 uses slot 5, bank 1 nibble=4."""
+        data = build_component_data(StepComponent(1, ComponentType.HOLD, 0x01))
+        assert data[:3] == bytes([0xE4, 0x02, 0x00])  # step_byte, bitmask, 00
+        assert len(data) == 8  # 3 header + 5 payload + 0 sentinels
 
     def test_unsupported_step_raises(self):
-        with pytest.raises(ValueError, match="not supported"):
+        """Steps other than 1 and 9 raise in single-step mode."""
+        with pytest.raises(ValueError, match="only steps"):
             build_component_data(StepComponent(5, ComponentType.PULSE, 0x01))
+        with pytest.raises(ValueError, match="only steps"):
+            build_component_data(StepComponent(13, ComponentType.RANDOM, 0x01))
 
-    def test_bank2_step1_raises(self):
-        """Bank 2 components not supported on step 1."""
-        with pytest.raises(ValueError, match="not supported on step 1"):
-            build_component_data(StepComponent(1, ComponentType.BEND, 0x01))
+    def test_bank2_step1(self):
+        """Bank 2 on step 1 uses nibble=5 (predicted, not corpus-verified)."""
+        data = build_component_data(StepComponent(1, ComponentType.BEND, 0x01))
+        # nibble = 4 - 0 + 1 = 5, step_byte = 0xE5
+        assert data[0] == 0xE5
+        assert data[1] == 0x01  # bitmask for Bend (bit 0 of bank 2)
+
+    def test_step_out_of_range_raises(self):
+        with pytest.raises(ValueError, match="only steps"):
+            build_component_data(StepComponent(0, ComponentType.PULSE, 0x01))
+        with pytest.raises(ValueError, match="only steps"):
+            build_component_data(StepComponent(17, ComponentType.PULSE, 0x01))
 
     # ── Net growth checks ──
 
@@ -184,8 +196,15 @@ class TestSlotOffset:
         assert slot_body07_offset(9) == 0xA2 + 6 * 3  # 0xB4
 
     def test_unsupported_step_raises(self):
-        with pytest.raises(ValueError):
+        """Steps other than 1 and 9 raise."""
+        with pytest.raises(ValueError, match="only steps"):
             slot_body07_offset(5)
+        with pytest.raises(ValueError, match="only steps"):
+            slot_body07_offset(13)
+        with pytest.raises(ValueError, match="only steps"):
+            slot_body07_offset(0)
+        with pytest.raises(ValueError, match="only steps"):
+            slot_body07_offset(17)
 
 
 # ── compute_alloc_byte ────────────────────────────────────────────────
@@ -209,7 +228,7 @@ class TestAllocByte:
         (ComponentType.TONALITY,    0x04, 0x6E),  # (7<<4)+(7-9)  = 0x6E
         (ComponentType.JUMP,        0x04, 0x6D),  # (7<<4)+(7-10) = 0x6D
         (ComponentType.PARAMETER,   0x04, 0x6C),  # (7<<4)+(7-11) = 0x6C
-        (ComponentType.CONDITIONAL, 0x02, 0x6B),  # (7<<4)+(7-12) = 0x6B
+        (ComponentType.CONDITIONAL,   0x02, 0x6B),  # (7<<4)+(7-12) = 0x6B
         (ComponentType.TRIGGER,     0x09, 0x6A),  # (7<<4)+(7-13) = 0x6A
     ])
     def test_step9_alloc(self, comp_type, param, expected):
@@ -351,8 +370,8 @@ class TestCorpusMatch:
         specimen = (CORPUS / "unnamed 75.xy").read_bytes()
         assert proj.to_bytes() == specimen
 
-    def test_conditional_s9_byte_perfect(self, baseline):
-        """Conditional step 9 should match corpus unnamed 76."""
+    def test_component_s9_byte_perfect(self, baseline):
+        """Component step 9 should match corpus unnamed 76."""
         proj = add_step_components(baseline, 1, [
             StepComponent(9, ComponentType.CONDITIONAL, 0x02),
         ])

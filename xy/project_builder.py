@@ -27,10 +27,15 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from .container import TrackBlock, XYProject
 from .note_events import Note, build_event, event_type_for_track
+from .plocks import (
+    list_standard_nonempty_values,
+    rewrite_standard_nonempty_values,
+    rewrite_standard_values_for_param_groups,
+)
 from .step_components import (
     StepComponent, build_component_data, slot_body07_offset,
     compute_alloc_byte, alloc_marker_body07_offset,
@@ -44,6 +49,10 @@ from .step_components import (
 _TAIL_ENGINES = {0x07}
 _TAIL_SIZE = 47
 _TAIL_MARKER_BIT = 0x20  # bit 5: cleared when event is present
+
+# Standard 5-byte p-lock writes become unsafe below 256 (device crash path).
+MIN_SAFE_STANDARD_PLOCK_VALUE = 256
+MAX_SAFE_PLOCK_VALUE = 32767
 
 # Track 1 in multi-pattern mode uses an additional in-body rewrite whenever a
 # pattern block is activated (seen in unnamed 102/103/104/105).  The last
@@ -122,6 +131,197 @@ def _patch_t1_multi_pattern_body(body: bytes) -> bytes:
     )
 
 
+def _validate_track_index(track_index: int) -> int:
+    if track_index < 1 or track_index > 16:
+        raise ValueError(f"track_index must be 1-16, got {track_index}")
+    return track_index - 1
+
+
+def _validate_plock_value_range(
+    values: Sequence[int],
+    *,
+    where: str,
+    min_value: int,
+    max_value: int,
+) -> None:
+    if min_value < 0 or max_value > 0xFFFF or min_value > max_value:
+        raise ValueError(
+            f"invalid p-lock bounds [{min_value}, {max_value}]; expected 0 <= min <= max <= 65535"
+        )
+    for idx, value in enumerate(values):
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError(f"{where}[{idx}] must be an integer")
+        if value < min_value or value > max_value:
+            raise ValueError(
+                f"{where}[{idx}] must be in [{min_value}, {max_value}], got {value}"
+            )
+
+
+def transplant_track(
+    project: XYProject,
+    donor: XYProject,
+    track_index: int,
+    *,
+    copy_preamble: bool = True,
+) -> XYProject:
+    """Copy one track body from a donor project into a target project.
+
+    This is the safe building block used by p-lock demo generation:
+    transplant a known-good donor topology, then rewrite only value bytes.
+    """
+    idx = _validate_track_index(track_index)
+    tracks = list(project.tracks)
+    donor_block = donor.tracks[idx]
+    target_block = tracks[idx]
+    preamble = donor_block.preamble if copy_preamble else target_block.preamble
+    tracks[idx] = TrackBlock(
+        index=target_block.index,
+        preamble=preamble,
+        body=donor_block.body,
+    )
+    return XYProject(pre_track=project.pre_track, tracks=tracks)
+
+
+def rewrite_track_standard_plock_values(
+    project: XYProject,
+    track_index: int,
+    values: Sequence[int],
+    *,
+    require_exact_count: bool = True,
+    min_value: int = MIN_SAFE_STANDARD_PLOCK_VALUE,
+    max_value: int = MAX_SAFE_PLOCK_VALUE,
+) -> XYProject:
+    """Rewrite standard 5-byte p-lock values in encounter order on one track.
+
+    Parameters
+    ----------
+    project : XYProject
+        Source project (not mutated).
+    track_index : int
+        1-based track index (1-16).
+    values : sequence[int]
+        Replacement u16 values in non-empty-slot encounter order.
+    require_exact_count : bool
+        If True, `len(values)` must match the number of non-empty standard
+        p-lock entries on the track.
+    min_value, max_value : int
+        Safe write bounds. Defaults enforce known-safe floor >= 256.
+    """
+    idx = _validate_track_index(track_index)
+    new_values = list(values)
+    if not new_values:
+        raise ValueError("need at least one p-lock value")
+    _validate_plock_value_range(
+        new_values,
+        where="values",
+        min_value=min_value,
+        max_value=max_value,
+    )
+
+    target = project.tracks[idx]
+    try:
+        existing = list_standard_nonempty_values(target.body)
+    except ValueError as exc:
+        raise ValueError(
+            f"track {track_index} does not use standard 5-byte p-lock entries"
+        ) from exc
+
+    if not existing:
+        raise ValueError(
+            f"track {track_index} has no standard p-lock entries to rewrite"
+        )
+
+    if require_exact_count and len(new_values) != len(existing):
+        raise ValueError(
+            f"track {track_index} has {len(existing)} non-empty standard p-lock entries; "
+            f"got {len(new_values)} values"
+        )
+
+    new_body = rewrite_standard_nonempty_values(target.body, new_values)
+    tracks = list(project.tracks)
+    tracks[idx] = TrackBlock(
+        index=target.index,
+        preamble=target.preamble,
+        body=new_body,
+    )
+    return XYProject(pre_track=project.pre_track, tracks=tracks)
+
+
+def rewrite_track_standard_plock_groups(
+    project: XYProject,
+    track_index: int,
+    groups: Sequence[tuple[set[int], Sequence[int]]],
+    *,
+    require_full_consumption: bool = True,
+    min_value: int = MIN_SAFE_STANDARD_PLOCK_VALUE,
+    max_value: int = MAX_SAFE_PLOCK_VALUE,
+) -> tuple[XYProject, list[int]]:
+    """Rewrite standard p-lock values for multiple param-id groups.
+
+    `groups` entries are `(param_id_set, values)`. Values are consumed in
+    encounter order for slots whose param_id is in that group's id set.
+    """
+    idx = _validate_track_index(track_index)
+    if not groups:
+        raise ValueError("need at least one p-lock group")
+
+    normalized: list[tuple[set[int], list[int]]] = []
+    seen_ids: set[int] = set()
+    for gidx, (param_ids, values_seq) in enumerate(groups):
+        where = f"groups[{gidx}]"
+        if not param_ids:
+            raise ValueError(f"{where}.param_ids must not be empty")
+        norm_ids: set[int] = set()
+        for pid in param_ids:
+            if not isinstance(pid, int) or isinstance(pid, bool):
+                raise ValueError(f"{where}.param_ids must contain integers")
+            if pid < 0 or pid > 0xFF:
+                raise ValueError(f"{where}.param_ids contains out-of-range value {pid}")
+            norm_ids.add(pid)
+        overlap = seen_ids.intersection(norm_ids)
+        if overlap:
+            overlap_hex = ", ".join(f"0x{pid:02X}" for pid in sorted(overlap))
+            raise ValueError(f"{where}.param_ids overlap previous groups: {overlap_hex}")
+        seen_ids.update(norm_ids)
+
+        values = list(values_seq)
+        if not values:
+            raise ValueError(f"{where}.values must not be empty")
+        _validate_plock_value_range(
+            values,
+            where=f"{where}.values",
+            min_value=min_value,
+            max_value=max_value,
+        )
+        normalized.append((norm_ids, values))
+
+    target = project.tracks[idx]
+    try:
+        new_body, counts = rewrite_standard_values_for_param_groups(
+            target.body,
+            normalized,
+        )
+    except ValueError as exc:
+        raise ValueError(
+            f"track {track_index} does not use standard 5-byte p-lock entries"
+        ) from exc
+
+    if require_full_consumption:
+        for gidx, (_ids, vals) in enumerate(normalized):
+            if counts[gidx] != len(vals):
+                raise ValueError(
+                    f"groups[{gidx}] consumed {counts[gidx]} of {len(vals)} values"
+                )
+
+    tracks = list(project.tracks)
+    tracks[idx] = TrackBlock(
+        index=target.index,
+        preamble=target.preamble,
+        body=new_body,
+    )
+    return XYProject(pre_track=project.pre_track, tracks=tracks), counts
+
+
 def add_step_components(
     project: XYProject,
     track_index: int,
@@ -133,8 +333,11 @@ def add_step_components(
     the body by the component data size.  The track is activated (type 0x05
     to 0x07) if not already active.
 
-    Currently supports single components on steps 1 and 9 only (the only
-    slot positions verified in the corpus).
+    Supports any step 1-16.  The bar is split into two halves (steps 1-8
+    and 9-16), each with one slot.  At most one component per half is
+    allowed per call.  To add components on both halves, pass both in a
+    single call — do NOT call this function twice on the same track (the
+    second call would use stale slot offsets).
 
     Parameters
     ----------
@@ -143,12 +346,20 @@ def add_step_components(
     track_index : int
         1-based track number (1-16).
     components : list[StepComponent]
-        Components to insert.
+        Components to insert (max 2 — one per half of the bar).
     """
-    if track_index < 1 or track_index > 16:
-        raise ValueError(f"track_index must be 1-16, got {track_index}")
+    _validate_track_index(track_index)
     if not components:
         raise ValueError("need at least one component")
+
+    # Validate: at most one component per step-slot (step 1 and step 9)
+    steps_used: set[int] = set()
+    for comp in components:
+        if comp.step in steps_used:
+            raise ValueError(
+                f"duplicate component on step {comp.step}"
+            )
+        steps_used.add(comp.step)
 
     idx = track_index - 1
     tracks = list(project.tracks)
@@ -238,8 +449,7 @@ def append_notes_to_tracks(
 
     # --- Step 1: activate bodies and append events ---
     for track_index, notes in track_notes.items():
-        if track_index < 1 or track_index > 16:
-            raise ValueError(f"track_index must be 1-16, got {track_index}")
+        _validate_track_index(track_index)
         if not notes:
             raise ValueError(f"need at least one note for track {track_index}")
 
@@ -306,10 +516,23 @@ def append_notes_to_tracks(
 # Pre-track descriptors inserted at offset 0x58 when multiple patterns exist.
 # These encode which tracks have extra patterns.  "strict" mode only allows the
 # combinations we captured on device and verified byte-for-byte.
+#
+# Scheme A (T3+-only, v56=0, v57=0): gap/maxslot pairs terminated by 00 00.
+# Scheme B (T1/T2 involved): per-topology lookup, partially generalised.
+# See docs/format/descriptor_encoding.md for the full encoding reference.
 _STRICT_DESCRIPTORS = {
-    # frozenset of 0-based track indices -> descriptor bytes
-    frozenset({0}): b"\x00\x1D\x01\x00\x00",              # T1 only (5 bytes)
-    frozenset({0, 2}): b"\x01\x00\x00\x1B\x01\x00\x00",   # T1 + T3 (7 bytes)
+    # frozenset of 0-based track indices -> descriptor bytes (inserted at 0x58)
+    # ── T1/T2 involved (Scheme B) ──
+    frozenset({0}):       b"\x00\x1D\x01\x00\x00",                          # T1 only
+    frozenset({0, 1}):    b"\x00\x00\x00\x1C\x01\x00\x00",                  # T1+T2
+    frozenset({0, 2}):    b"\x01\x00\x00\x1B\x01\x00\x00",                  # T1+T3
+    frozenset({0, 3}):    b"\x00\x00\x01\x00\x00\x1A\x01\x00\x00",          # T1+T4
+    frozenset({0, 1, 2}): b"\x01\x00\x00\x1B\x01\x00\x00",                  # T1+T2+T3 (m06)
+    # ── T3+-only (Scheme A) — computed by _scheme_a_descriptor() ──
+    # These are also in the lookup for fast-path / test validation.
+    frozenset({2}):       b"\x00\x01\x00\x00\x1B\x01\x00\x00",              # T3 only
+    frozenset({3}):       b"\x01\x01\x00\x00\x1A\x01\x00\x00",              # T4 only
+    frozenset({6}):       b"\x04\x01\x00\x00\x17\x01\x00\x00",              # T7 only
 }
 
 # 105b compatibility mode (T1+T3, both 2 patterns, T3 leader has notes).
@@ -339,21 +562,57 @@ def _is_105b_mode(
     return (not t1[0]) and bool(t1[1]) and bool(t3[0])
 
 
+def _scheme_a_descriptor(
+    track_set: frozenset[int],
+    pattern_counts: Dict[int, int] | None = None,
+) -> bytes:
+    """Build a Scheme A descriptor for T3+-only multi-pattern sets.
+
+    Scheme A (v56=0, v57=0) uses gap/maxslot pairs:
+      body = [gap₁ slot₁] [gap₂ slot₂] … [00 00] [token] [01] [00 00]
+
+    Where gap = track_1based - 3, slot = pattern_count - 1.
+    See docs/format/descriptor_encoding.md for full reference.
+
+    Parameters
+    ----------
+    track_set : frozenset[int]
+        0-based track indices, all must be >= 2 (T3+).
+    pattern_counts : dict or None
+        Optional {0-based index: pattern_count}.  If None, assumes 2 patterns
+        per track (maxslot=1).
+    """
+    if any(ti < 2 for ti in track_set):
+        raise ValueError(
+            "Scheme A requires T3+ tracks only (0-based index >= 2); "
+            f"got indices {sorted(track_set)}"
+        )
+
+    out = bytearray()
+    for ti in sorted(track_set):
+        track_1based = ti + 1
+        gap = track_1based - 3
+        if pattern_counts and ti in pattern_counts:
+            maxslot = pattern_counts[ti] - 1
+        else:
+            maxslot = 1  # default: 2 patterns
+        out.extend((gap & 0xFF, maxslot & 0xFF))
+
+    # Terminator pair, then token + marker + sentinel
+    last_track_1based = max(ti + 1 for ti in track_set)
+    token = 0x1E - last_track_1based
+    out.extend((0x00, 0x00, token & 0xFF, 0x01, 0x00, 0x00))
+    return bytes(out)
+
+
 def _heuristic_descriptor(track_set: frozenset[int]) -> bytes:
     """Build an experimental descriptor for multi-pattern track sets.
 
-    This is intentionally isolated from strict mode so validated captures keep
-    exact behavior.  The heuristic is derived from these known descriptors:
-      - {T1}:    00 1D 01 00 00
-      - {T1,T3}: 01 00 00 1B 01 00 00
+    DEPRECATED — this heuristic generates per-track token pairs which do NOT
+    match the device's compact range format.  It works by coincidence for
+    T1-only and T1+one-extra-track, but fails for wider sets.
 
-    Rules:
-      - T1 must be present (all observed multi-pattern captures include T1).
-      - Byte 0 = number of extra multi-pattern tracks beyond T1.
-      - If no extra tracks: emit 1D 01.
-      - If extra tracks exist: emit 00 00, then one pair per extra track:
-        [token, 0x01], where token = 0x1E - track_index_1_based.
-      - Append terminator 00 00.
+    Retained for backwards compatibility; prefer 'strict' strategy.
     """
     if 0 not in track_set:
         raise ValueError(
@@ -387,19 +646,40 @@ def _descriptor_for_track_set(
     track_set: frozenset[int],
     *,
     strategy: str,
+    pattern_counts: Dict[int, int] | None = None,
 ) -> bytes:
-    """Return descriptor bytes for the given multi-pattern track set."""
+    """Return descriptor bytes for the given multi-pattern track set.
+
+    Parameters
+    ----------
+    track_set : frozenset[int]
+        0-based track indices that have multiple patterns.
+    strategy : str
+        'strict' = lookup + Scheme A encoder for T3+-only sets.
+        'heuristic_v1' = deprecated per-token heuristic.
+    pattern_counts : dict or None
+        Optional {0-based index: pattern_count} for Scheme A.
+    """
     if strategy == "strict":
-        if track_set not in _STRICT_DESCRIPTORS:
-            supported = ", ".join(
-                "{" + ",".join(f"T{i+1}" for i in s) + "}"
-                for s in _STRICT_DESCRIPTORS
-            )
-            raise ValueError(
-                f"unsupported multi-pattern track set {track_set}; "
-                f"supported in strict mode: {supported}"
-            )
-        return _STRICT_DESCRIPTORS[track_set]
+        # Fast path: exact lookup for device-verified topologies
+        if track_set in _STRICT_DESCRIPTORS:
+            return _STRICT_DESCRIPTORS[track_set]
+
+        # Scheme A encoder: any T3+-only set (fully cracked encoding)
+        if all(ti >= 2 for ti in track_set):
+            return _scheme_a_descriptor(track_set, pattern_counts)
+
+        # Scheme B: no general encoder yet, must be in lookup
+        supported = ", ".join(
+            "{" + ",".join(f"T{i+1}" for i in sorted(s)) + "}"
+            for s in sorted(_STRICT_DESCRIPTORS, key=lambda s: sorted(s))
+        )
+        raise ValueError(
+            f"unsupported multi-pattern track set "
+            f"{{{','.join(f'T{i+1}' for i in sorted(track_set))}}}; "
+            f"supported in strict mode: {supported} "
+            f"(plus any T3+-only combination via Scheme A encoder)"
+        )
 
     if strategy == "heuristic_v1":
         return _heuristic_descriptor(track_set)
@@ -463,10 +743,14 @@ def _build_pre_track(
 ) -> bytes:
     """Update the pre-track region for multi-pattern storage.
 
-    Sets pattern_max_slot at 0x56 and inserts the track descriptor at 0x58.
+    Sets v56 (T1 max_slot) and v57 (T2 max_slot) as independent bytes,
+    then inserts the track descriptor body at 0x58.
     """
-    max_count = max(len(pats) for pats in track_patterns.values())
-    slot_value = max_count - 1  # 0 = 1 pattern, 1 = 2 patterns, etc.
+    # v56 = T1 max_slot, v57 = T2 max_slot (independent per-track bytes)
+    t1_count = len(track_patterns.get(1, [None]))
+    t2_count = len(track_patterns.get(2, [None]))
+    v56 = t1_count - 1  # 0 if T1 has 1 pattern
+    v57 = t2_count - 1  # 0 if T2 has 1 pattern
 
     if _is_105b_mode(track_patterns):
         # Device-authored 105b switches back to the 5-byte T1-style descriptor
@@ -474,14 +758,18 @@ def _build_pre_track(
         descriptor = _T1_ONLY_DESCRIPTOR
     else:
         multi_set = frozenset(ti - 1 for ti in track_patterns)
+        # Build pattern_counts for Scheme A encoder
+        pcounts = {ti - 1: len(pats) for ti, pats in track_patterns.items()}
         descriptor = _descriptor_for_track_set(
             multi_set,
             strategy=descriptor_strategy,
+            pattern_counts=pcounts,
         )
 
     buf = bytearray(original)
-    # Update pattern_max_slot at 0x56
-    buf[0x56:0x58] = slot_value.to_bytes(2, "little")
+    # Set v56 and v57 as independent bytes
+    buf[0x56] = v56 & 0xFF
+    buf[0x57] = v57 & 0xFF
     # Insert descriptor at 0x58 (shifts handle table right)
     buf[0x58:0x58] = descriptor
     return bytes(buf)
@@ -505,8 +793,10 @@ def build_multi_pattern_project(
         Must have at least 2 patterns per track.
     descriptor_strategy : str
         Descriptor encoding strategy for the pre-track insert at 0x58.
-        - "strict": only device-verified sets (T1, T1+T3).
-        - "heuristic_v1": experimental formula for broader sets.
+        - "strict" (recommended): device-verified lookup for T1, T1+T2,
+          T1+T3, T1+T4, T3, T4, T7; plus Scheme A encoder for any
+          T3+-only combination.
+        - "heuristic_v1": deprecated per-token heuristic (do not use).
 
     Returns a new XYProject with the multi-pattern block layout.
     """

@@ -158,6 +158,13 @@ parameter table layout.
 ## Additional Structures
 - Additional metadata bytes may appear before synth parameter slabs.
 - Full byte-level examples live in `docs/logs/2026-02-13_agents_legacy_snapshot.md`.
+- Shared parser helpers live in `xy/plocks.py` (`find_plock_start`, standard table decode, T1/T10 helpers).
+- Shared authoring helpers also live in `xy/plocks.py` (`rewrite_standard_nonempty_values`, `rewrite_standard_values_for_param_groups`).
+- Project-level writer helpers live in `xy/project_builder.py`:
+  - `transplant_track(...)` for donor topology transplant
+  - `rewrite_track_standard_plock_values(...)` for single-lane/non-empty-order rewrites
+  - `rewrite_track_standard_plock_groups(...)` for multi-lane grouped rewrites
+  - default guardrails enforce known-safe standard value floor `>= 256`
 
 ## Open Questions
 - Why does CC32 have param_id 0x7C (grid) vs 0xD0 (MIDI)? Are these different address spaces?

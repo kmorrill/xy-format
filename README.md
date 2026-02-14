@@ -30,23 +30,26 @@ The long-term goal is to make these workflows reliable enough for real music pro
 
 You do not need to understand byte offsets to use the safer workflows.
 
-## What You Can Expect To Work (As of 2026-02-14)
+## What You Can Expect To Work (As of 2026-02-13)
 
 - Open and re-save project files while preserving unknown data.
 - Read key project info reliably (including core note/event data in common cases).
 - Change transport settings like tempo/groove/metronome with high confidence.
 - Build edited `.xy` files from a simple JSON "edit recipe" in constrained modes.
 - Do tested multi-pattern edits for known-safe track combinations:
-  - Track 1 only
-  - Track 2 only
+  - Track 1 only, Track 2 only, Track 3 only, Track 4 only, Track 7 only
   - Track 1 + Track 2
   - Track 1 + Track 3
   - Track 1 + Track 4
   - Track 1 + Track 2 + Track 3
-  - T3+ only families in the currently tested model
+  - Any T3+-only combination via Scheme A encoder (T5, T6, T8, T3+T7, etc.)
+- Clone pattern bodies are byte-identical to leaders except for the note event bytes.
+  This is confirmed across a 9-pattern x 8-track specimen (n110), which means
+  authoring multiple patterns per track is: copy the leader body, change only the
+  note bytes for each clone.
 
 Current automated test status in this repo:
-- `878 passed, 14 skipped` (`pytest -q`)
+- `909 passed, 14 skipped` (`pytest -q`)
 
 ## What Is Risky
 
@@ -59,6 +62,8 @@ Risk here means: file may still load, may load with wrong behavior, or may crash
 
 ## What Is Not Ready Yet
 
+- Arbitrary pattern counts on arbitrary track combinations (descriptor Scheme B
+  is not fully generalized — only known topologies are safe).
 - Fully reliable from-scratch project generation for every OP-XY feature.
 - Reliable scene/song authoring coverage.
 - Reliable sample-path and related asset-directory authoring.
@@ -83,6 +88,7 @@ If your main goal is "make music, not reverse engineer," this workflow is the sa
 - `docs/workflows/crash_capture.md`: what to do if a file crashes on device.
 - `tools/inspect_xy.py`: inspect what a file currently contains.
 - `tools/build_xy_from_json.py`: build a file from a JSON edit recipe.
+- `tools/capture_9pat.py`: interactive MIDI harness for multi-pattern device captures.
 - `src/one-off-changes-from-default/`: the key fixture files used for learning and testing.
 
 ## House Rules

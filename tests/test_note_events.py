@@ -987,14 +987,15 @@ class TestMultiPatternBuilder:
             build_multi_pattern_project(proj, {})
 
     def test_strict_rejects_unknown_track_set(self):
-        """Strict mode only permits device-verified descriptor sets."""
+        """Strict mode rejects Scheme B sets without a device-verified descriptor."""
         proj = self._load_baseline()
+        # T1+T7 is a Scheme B topology we haven't captured yet
         with pytest.raises(ValueError, match="strict mode"):
             build_multi_pattern_project(
                 proj,
                 {
                     1: [None, None],
-                    2: [None, None],
+                    7: [None, None],
                 },
             )
 
@@ -1083,3 +1084,158 @@ class TestMultiPatternBuilder:
         reparsed = XYProject.from_bytes(raw)
         assert len(reparsed.tracks) == 16
         assert reparsed.to_bytes() == raw
+
+    # ── Descriptor encoding tests ─────────────────────────────────────
+
+    def test_scheme_a_encoder_t3(self):
+        """Scheme A encoder produces correct descriptor for T3-only."""
+        from xy.project_builder import _scheme_a_descriptor
+        result = _scheme_a_descriptor(frozenset({2}))
+        assert result == bytes.fromhex("00 01 00 00 1b 01 00 00")
+
+    def test_scheme_a_encoder_t4(self):
+        """Scheme A encoder produces correct descriptor for T4-only."""
+        from xy.project_builder import _scheme_a_descriptor
+        result = _scheme_a_descriptor(frozenset({3}))
+        assert result == bytes.fromhex("01 01 00 00 1a 01 00 00")
+
+    def test_scheme_a_encoder_t7(self):
+        """Scheme A encoder produces correct descriptor for T7-only."""
+        from xy.project_builder import _scheme_a_descriptor
+        result = _scheme_a_descriptor(frozenset({6}))
+        assert result == bytes.fromhex("04 01 00 00 17 01 00 00")
+
+    def test_scheme_a_encoder_multi_track(self):
+        """Scheme A encoder handles multiple T3+ tracks."""
+        from xy.project_builder import _scheme_a_descriptor
+        # T3+T7: two gap/maxslot pairs
+        result = _scheme_a_descriptor(frozenset({2, 6}))
+        assert result == bytes.fromhex("00 01 04 01 00 00 17 01 00 00")
+
+    def test_scheme_a_rejects_t1(self):
+        """Scheme A encoder rejects sets containing T1/T2."""
+        from xy.project_builder import _scheme_a_descriptor
+        with pytest.raises(ValueError, match="T3\\+ tracks only"):
+            _scheme_a_descriptor(frozenset({0, 2}))
+
+    def test_scheme_a_matches_strict_lookup(self):
+        """Scheme A encoder results match all T3+-only strict descriptors."""
+        from xy.project_builder import _scheme_a_descriptor, _STRICT_DESCRIPTORS
+        for track_set, expected in _STRICT_DESCRIPTORS.items():
+            if all(ti >= 2 for ti in track_set):
+                result = _scheme_a_descriptor(track_set)
+                names = ",".join(f"T{i+1}" for i in sorted(track_set))
+                assert result == expected, f"Scheme A mismatch for {{{names}}}"
+
+    def test_v56_v57_independent_t1_t2(self):
+        """T1+T2 sets v56=1, v57=1 independently (not u16 LE)."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            2: [None, None],
+        })
+        assert result.pre_track[0x56] == 0x01  # T1 max_slot
+        assert result.pre_track[0x57] == 0x01  # T2 max_slot
+
+    def test_v56_v57_t3_only(self):
+        """T3-only sets v56=0, v57=0."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            3: [None, None],
+        })
+        assert result.pre_track[0x56] == 0x00
+        assert result.pre_track[0x57] == 0x00
+
+    def test_v56_v57_t1_t4(self):
+        """T1+T4 sets v56=1, v57=0."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            4: [None, None],
+        })
+        assert result.pre_track[0x56] == 0x01
+        assert result.pre_track[0x57] == 0x00
+
+    def test_descriptor_t1_t2_matches_corpus(self):
+        """T1+T2 descriptor matches m05 corpus specimen."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            2: [None, None],
+        })
+        expected_insert = bytes.fromhex("00 00 00 1c 01 00 00")
+        delta = len(result.pre_track) - len(proj.pre_track)
+        actual_insert = result.pre_track[0x58:0x58 + delta]
+        assert actual_insert == expected_insert
+
+    def test_descriptor_t1_t4_matches_corpus(self):
+        """T1+T4 descriptor matches m09 corpus specimen."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            4: [None, None],
+        })
+        expected_insert = bytes.fromhex("00 00 01 00 00 1a 01 00 00")
+        delta = len(result.pre_track) - len(proj.pre_track)
+        actual_insert = result.pre_track[0x58:0x58 + delta]
+        assert actual_insert == expected_insert
+
+    def test_descriptor_t3_only_matches_corpus(self):
+        """T3-only descriptor matches m01 corpus specimen."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            3: [None, None],
+        })
+        expected_insert = bytes.fromhex("00 01 00 00 1b 01 00 00")
+        delta = len(result.pre_track) - len(proj.pre_track)
+        actual_insert = result.pre_track[0x58:0x58 + delta]
+        assert actual_insert == expected_insert
+
+    def test_scheme_a_fallback_for_t5(self):
+        """Strict mode uses Scheme A encoder for T5-only (not in lookup)."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            5: [None, None],
+        })
+        # T5: gap=2, maxslot=1, token=0x19
+        expected_insert = bytes.fromhex("02 01 00 00 19 01 00 00")
+        delta = len(result.pre_track) - len(proj.pre_track)
+        actual_insert = result.pre_track[0x58:0x58 + delta]
+        assert actual_insert == expected_insert
+        assert result.pre_track[0x56] == 0x00
+        assert result.pre_track[0x57] == 0x00
+
+    def test_descriptor_t1_t2_t3_matches_corpus(self):
+        """T1+T2+T3 descriptor matches m06 corpus specimen."""
+        proj = self._load_baseline()
+        result = build_multi_pattern_project(proj, {
+            1: [None, None],
+            2: [None, None],
+            3: [None, None],
+        })
+        expected_insert = bytes.fromhex("01 00 00 1b 01 00 00")
+        delta = len(result.pre_track) - len(proj.pre_track)
+        actual_insert = result.pre_track[0x58:0x58 + delta]
+        assert actual_insert == expected_insert
+        assert result.pre_track[0x56] == 0x01  # T1 max_slot
+        assert result.pre_track[0x57] == 0x01  # T2 max_slot
+
+    def test_new_topologies_roundtrip(self):
+        """All new topology descriptors produce parseable round-trip files."""
+        proj = self._load_baseline()
+        topologies = [
+            {1: [None, None], 2: [None, None]},       # T1+T2
+            {1: [None, None], 4: [None, None]},       # T1+T4
+            {1: [None, None], 2: [None, None], 3: [None, None]},  # T1+T2+T3
+            {3: [None, None]},                          # T3 only
+            {4: [None, None]},                          # T4 only
+            {7: [None, None]},                          # T7 only
+            {5: [None, None]},                          # T5 only (Scheme A)
+            {8: [None, None]},                          # T8 only (Scheme A)
+        ]
+        for tp in topologies:
+            result = build_multi_pattern_project(proj, tp)
+            raw = result.to_bytes()
+            reparsed = XYProject.from_bytes(raw)
+            assert reparsed.to_bytes() == raw, f"round-trip failed for {tp}"
+            assert len(reparsed.tracks) == 16

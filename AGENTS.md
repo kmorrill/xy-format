@@ -12,10 +12,13 @@
 - One-off corpus + UI deltas: `src/one-off-changes-from-default/op-xy_project_change_log.md`
 - Workflow docs: `docs/workflows/`
 - Tool docs: `docs/tools/`
+- Hypothesis test harness: `docs/tools/hypothesis_tests.md`
+- External tooling candidates: `docs/tools/external_tooling_candidates.md`
 - Stable reference limits: `docs/reference/opxy_limits.md`
 - MIDI CC reference: `docs/reference/opxy_midi_cc_map.md`
 - Format reference (canonical): `docs/format/`
 - Engineering implementation notes: `docs/engineering/`
+- ImHex + ImHex Patterns brief: `docs/engineering/imhex_imhex_patterns_brief.md`
 - Crash catalog: `docs/debug/crashes.md`
 - Active issues: `docs/issues/index.md`
 - MIDI CC/p-lock discovery log: `docs/logs/2026-02-13_midi_cc_plock_discovery.md`
@@ -31,6 +34,19 @@
 - Every device crash must be captured with artifact + metadata + follow-up pass file using `docs/workflows/crash_capture.md`.
 - Add or update the corresponding entry in `docs/debug/crashes.md` for every crash and every verified fix.
 - Do not grow this file with chronology; keep this file as index + operating rules.
+
+## Working Assumption: Compositional Serializer
+- Treat firmware save behavior as **baseline scaffold serialization + a small set of feature-driven structural edits**, not full-byte recomputation.
+- For pre-track specifically, assume most files are explained by zero-to-few edit atoms (commonly insert/replace near `0x56-0x58`) until evidence disproves it.
+- Prefer hypotheses that can be expressed as deterministic operation scripts (`insert`, `replace`, rare `delete`) over opaque heuristic byte patching.
+- When a file does not fit the current operation catalog, treat it as a high-value outlier and isolate the minimal structural delta before adding new rules.
+- Keep undecoded regions opaque for round-trip safety; only promote rules to `docs/format/*` after corpus-backed checks (and device validation when possible).
+
+## Hypothesis-Driven Modeling Loop
+1. Start with the compositional assumption and test against corpus before proposing new global structure theories.
+2. Use `python tools/hypothesis_tests.py h7-compositional` to measure whether a proposed pre-track model is explained by repeated structural ops.
+3. Use `python tools/hypothesis_tests.py event-models` / `event-dispatch` to score serializer hypotheses against wild files.
+4. Prefer the smallest model family that explains the largest corpus share; keep unresolved buckets explicit as tracked issues, not silent heuristics.
 
 ## Current Known-Safe Authoring Rules
 - Multi-pattern writing: use scaffold-driven `strict` mode; treat descriptor bytes as topology-specific, not synthesized.
@@ -48,6 +64,7 @@
 - Inspector sweep: `docs/workflows/inspector_sweep.md`
 - Corpus index/query: `docs/tools/corpus_lab.md`
 - Two-file structural diffs: `docs/tools/corpus_compare.md`
+- Hypothesis checks: `docs/tools/hypothesis_tests.md`
 - Inspector usage: `docs/tools/inspect_xy.md`
 - Header reader usage: `docs/tools/read_xy_header.md`
 - Crash capture protocol: `docs/workflows/crash_capture.md`

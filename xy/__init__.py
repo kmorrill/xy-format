@@ -21,3 +21,21 @@ from .structs import (  # noqa: F401
     pattern_max_slot,
     SlotDescriptor,
 )
+from .plocks import (  # noqa: F401
+    CONFIG_TAIL_SIG,
+    CONTINUATION_MARKER,
+    EMPTY_ENTRY,
+    STANDARD_ENTRY_COUNT,
+    StandardSlot,
+    T10Header,
+    count_lane_values,
+    find_plock_start,
+    first_real_param_id,
+    list_standard_nonempty_values,
+    parse_standard_slots,
+    parse_standard_table,
+    parse_t10_header,
+    rewrite_standard_nonempty_values,
+    rewrite_standard_values_for_param_groups,
+    t1_first_param_id,
+)

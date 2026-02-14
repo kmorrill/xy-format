@@ -9,6 +9,7 @@
 - Type byte at `block+0x09` governs `0x05` (padding-present) vs `0x07` (padding-removed) body layout.
 - Engine ID lives in the body (`type-05`: `body[0x0D]`, `type-07`: `body[0x0B]`).
 - Pointer table and activation masks occupy early block space and change when parameters are touched.
+- Preamble `byte[0]` behavior appears mostly state-machine driven with branch-family exceptions; see active issue `docs/issues/preamble_state_machine.md`.
 
 ## Engine Families (Track 1 sweep)
 - Axis/Dissolve/Hardsync: shared pointer-table skeleton with `'  N'` marker when no preset string is present.
