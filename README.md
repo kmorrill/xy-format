@@ -1,39 +1,92 @@
 # OP-XY Project Format Lab
 
-This repo is our working notebook for reverse-engineering Teenage Engineering’s OP-XY project container. We captured a corpus of minimally changed `.xy` files plus the official manual breakdown so we can diff, decode, and eventually round-trip projects off-device.
+This project helps you edit OP-XY `.xy` project files outside the device.
 
-## Mission
-- Document how every byte inside an `.xy` project maps to sequencer data, track engines, sampler metadata, scenes, songs, MIDI routing, and global mix controls.
-- Build tooling that inspects, compares, and (eventually) writes projects so we can automate edits without the hardware.
-- Keep stable format facts in `docs/format/*` and chronology/debug history in `docs/logs/*`.
+The goal is simple: make safe, repeatable edits to real projects without breaking them.
 
-## Reference Material
-- `docs/index.md` — navigation index for canonical docs, workflows, and logs.
-- `docs/OP-XY_project_breakdown.txt` — plaintext dump of the official format expectations.
-- `src/one-off-changes-from-default/op-xy_project_change_log.md` — UI action log describing what changed in each capture.
-- `src/one-off-changes-from-default/*.xy` — baseline (`unnamed 1.xy`) plus one-change samples for tempo, trigs, engines, automation, etc.
+## What This Is
 
-## Repo Layout
-- `tools/` — helper scripts (e.g., `inspect_xy.py`, `read_xy_header.py`) for parsing header, pattern, and track blocks.
-- `tests/` — growing regression suite for inspectors and future writer once we can serialize bytes back out.
-- `output/` — scratch space for parsed JSON, hexdump diffs, or notebook artifacts.
-- `xy/` — any working assets or reconstructed projects.
-- `AGENTS.md` — compact operating index + links to canonical docs.
+Think of this repo as a research + tooling workspace:
+- We collected many real OP-XY project files with one small change each.
+- We compare those files to learn what each part of the format means.
+- We use that knowledge to build tools that can read files and make limited safe edits.
 
-## How to Get Involved
-1. Read `AGENTS.md` for operating rules, then `docs/roadmap.md` for current priorities.
-2. Use `docs/format/*` for canonical format behavior and `docs/logs/*` for discovery history.
-3. Use the change log to pick a capture. Run `python tools/inspect_xy.py path/to/file.xy` to see how the inspector currently interprets it.
-4. Compare tool output to the logged UI change and file notes/TODOs whenever the inspector misses data or crashes.
-5. If you hit a crash, follow `docs/workflows/crash_capture.md` (artifact, metadata, corpus record, follow-up pass file).
-6. When adding tooling, keep scripts deterministic and small so outputs remain corpus-diff friendly.
+## Why Off-Device Editing Is Useful
 
-## Writer Prototype Status
-- `xy/writer.py` plus `tools/write_xy.py` (single-trig Track 1 path) remains experimental. This path is still missing key structure for general device-safe authoring and should be treated as crash-prone.
-- `xy/project_builder.py` has a separate constrained known-good profile for validated multi-pattern topologies (notably `T1+T3` scaffold-compatible paths).
-- Keep these two paths conceptually separate when evaluating writer status, tests, and docs.
+Editing `.xy` files on a computer is interesting because it can unlock workflows
+that are slow or awkward on the hardware alone:
 
-## Housekeeping
-- `.gitignore` hides OS junk (`.DS_Store`), Python caches, and virtualenv directories so experimental scripts don’t pollute the repo.
-- Do **not** delete the captured `.xy` files; they are our canonical fixtures for diff-driven decoding.
-- Prefer ASCII in new docs/code and leave non-default files untouched unless you are extending the decoder with proof from the change log.
+- **MIDI -> OP-XY conversion**: turn MIDI clips into OP-XY-ready project data.
+- **OP-XY -> DAW export**: move patterns back out to Ableton (or other DAWs) for arranging, mixing, or collaboration.
+- **Whole-pattern visibility**: see an entire pattern at once instead of paging through bars on the device.
+- **At-a-glance modulation view**: inspect all parameter locks and step components affecting a pattern in one place.
+
+The long-term goal is to make these workflows reliable enough for real music production, not just reverse-engineering experiments.
+
+## Who This Is For
+
+- Musicians who want to batch-edit projects or generate project variations.
+- Technical users who want to script OP-XY edits instead of clicking everything by hand.
+
+You do not need to understand byte offsets to use the safer workflows.
+
+## What You Can Expect To Work (As of 2026-02-14)
+
+- Open and re-save project files while preserving unknown data.
+- Read key project info reliably (including core note/event data in common cases).
+- Change transport settings like tempo/groove/metronome with high confidence.
+- Build edited `.xy` files from a simple JSON "edit recipe" in constrained modes.
+- Do tested multi-pattern edits for known-safe track combinations:
+  - Track 1 only
+  - Track 2 only
+  - Track 1 + Track 2
+  - Track 1 + Track 3
+  - Track 1 + Track 4
+  - Track 1 + Track 2 + Track 3
+  - T3+ only families in the currently tested model
+
+Current automated test status in this repo:
+- `878 passed, 14 skipped` (`pytest -q`)
+
+## What Is Risky
+
+- Using older "general writer" scripts as if they can safely generate any project.
+- Making multi-pattern edits outside the known-safe combinations above.
+- Assuming every note timing/gate value is fully decoded in all advanced event types.
+- Large edits that combine many changes at once before device-testing.
+
+Risk here means: file may still load, may load with wrong behavior, or may crash on device.
+
+## What Is Not Ready Yet
+
+- Fully reliable from-scratch project generation for every OP-XY feature.
+- Reliable scene/song authoring coverage.
+- Reliable sample-path and related asset-directory authoring.
+- Full firmware package manipulation workflows.
+
+## Recommended Real-World Workflow
+
+1. Start from a real OP-XY project file that is close to what you want.
+2. Make small edits (tempo first, then notes, then multi-pattern if needed).
+3. For multi-pattern edits, keep strict/safe mode enabled.
+4. Inspect the result and diff against the source before device load.
+5. Test on hardware in small steps and log pass/crash outcomes.
+
+If your main goal is "make music, not reverse engineer," this workflow is the safest path.
+
+## Repo Guide (Plain English)
+
+- `docs/index.md`: map of all docs.
+- `docs/roadmap.md`: what we are working on now.
+- `docs/issues/index.md`: current known problems.
+- `docs/format/`: stable format knowledge (deeper technical detail).
+- `docs/workflows/crash_capture.md`: what to do if a file crashes on device.
+- `tools/inspect_xy.py`: inspect what a file currently contains.
+- `tools/build_xy_from_json.py`: build a file from a JSON edit recipe.
+- `src/one-off-changes-from-default/`: the key fixture files used for learning and testing.
+
+## House Rules
+
+- Do not delete fixture `.xy` files in `src/one-off-changes-from-default/`.
+- Keep edits deterministic and easy to diff.
+- Record crashes with artifacts and notes so regressions can be prevented.
