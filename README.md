@@ -4,12 +4,65 @@ This project helps you edit OP-XY `.xy` project files outside the device.
 
 The goal is simple: make safe, repeatable edits to real projects without breaking them.
 
+For the full format story and byte-level mental model, read
+[`docs/human-explainer.md`](docs/human-explainer.md). This README stays high-level.
+
 ## What This Is
 
 Think of this repo as a research + tooling workspace:
 - We collected many real OP-XY project files with one small change each.
 - We compare those files to learn what each part of the format means.
 - We use that knowledge to build tools that can read files and make limited safe edits.
+
+## `.xy` Mental Model (High-Level)
+
+At a practical level, an OP-XY project file is:
+
+1. Header (global settings)
+2. Pre-track descriptor region (topology/index metadata)
+3. Track blocks (per-track/per-pattern payloads)
+
+```text
+[header][pre-track region][track block 1][track block 2]...[track block N]
+```
+
+Track blocks are variable-length serialized units, not fixed-size structs.
+Each block begins with a 4-byte preamble and then a variable body.
+
+### What The Pre-Track Descriptor Is Doing
+
+Think of descriptor bytes as topology metadata for firmware. They mostly describe:
+
+- Which tracks have multiple patterns
+- How many pattern slots are active for those tracks
+- Which descriptor branch/family firmware should use
+
+They do not hold note-by-note musical data.
+
+### Leader vs Clone (Multi-Pattern Tracks)
+
+When a track has multiple patterns:
+
+- Pattern 1 is the leader block
+- Pattern 2+ are clone blocks
+
+Leader and clone are serialization roles. In some corpora they are nearly identical;
+in others they differ in preamble/state/trim behavior. Treat them as related-but-not-always-identical.
+
+### What Lives Inside Block Bodies
+
+Block bodies contain typed, variable-length payload families, including:
+
+- Core track/engine settings
+- Note event payloads
+- Step component payloads
+- P-lock payloads
+- Tail/pointer-like regions (partially decoded)
+
+This is why strict branch-safe authoring and device validation still matter.
+
+For deeper explanations and examples, continue in
+[`docs/human-explainer.md`](docs/human-explainer.md).
 
 ## Why Off-Device Editing Is Useful
 
@@ -43,10 +96,9 @@ You do not need to understand byte offsets to use the safer workflows.
   - Track 1 + Track 4
   - Track 1 + Track 2 + Track 3
   - Any T3+-only combination via Scheme A encoder (T5, T6, T8, T3+T7, etc.)
-- Clone pattern bodies are byte-identical to leaders except for the note event bytes.
-  This is confirmed across a 9-pattern x 8-track specimen (n110), which means
-  authoring multiple patterns per track is: copy the leader body, change only the
-  note bytes for each clone.
+- In the `n110` 9-pattern x 8-track specimen, clone bodies are byte-identical to
+  leaders except note event bytes. Treat this as a validated branch behavior, not
+  a global rule for every topology.
 
 Current automated test status in this repo:
 - `909 passed, 14 skipped` (`pytest -q`)
@@ -82,6 +134,7 @@ If your main goal is "make music, not reverse engineer," this workflow is the sa
 ## Repo Guide (Plain English)
 
 - `docs/index.md`: map of all docs.
+- `docs/human-explainer.md`: full narrative format model for new contributors.
 - `docs/roadmap.md`: what we are working on now.
 - `docs/issues/index.md`: current known problems.
 - `docs/format/`: stable format knowledge (deeper technical detail).

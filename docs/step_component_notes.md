@@ -66,4 +66,122 @@ Key `u16` values touched by each component. Once the header is set, the firmware
 - Component IDs occupy the high byte of `block+0x0B4`. The values march in a sensible order (`0x01` pulse, `0x02` hold, `0x04` multiply, `0x08` velocity, `0x10` ramp/random/conditional families, …) while the low byte carries the step token (`0x63/0x64` for step 9).
 - Config word `block+0x0B8` uses its high byte for span/length data and the low byte for the secondary parameter (e.g. multiply ÷4 ⇒ `0x0401`, multiply ÷2 ⇒ `0x0201`, ramp up 4 steps & 3 oct ⇒ `0x0803`, conditional every 9th ⇒ `0x090B`).
 - Most components share a tail at `block+0x0F0` consisting of `[0x0800, 0x7FFF, 0x0000, 0xE800, 0x5503, 0x0155, 0x0015, 0x0400]`; velocity random swaps in `[0xE800, 0x5503, 0x0155, 0x0015, 0x0400, 0x1FFF, 0x0000, 0xAC00]`. The synth+note capture overrides that tail with `0x0D00/0x0040/0xFF00/…` to link against the `0x21` event.
-- The per-step bitmap at `block+0x050` flips the step‑9 lane to `[0xFF00, 0x0000, 0x00FF]` whenever we touch a step component, matching the “touched” state seen with previous note captures.
+- The per-step bitmap at `block+0x050` flips the step‑9 lane to `[0xFF00, 0x0000, 0x00FF]` whenever we touch a step component, matching the "touched" state seen with previous note captures.
+
+## Multi-step block encoding (`body[0xB1]`)
+
+When all 16 steps have individual step components assigned (instead of a single global component), the track body contains a multi-step block starting at offset `0xB1`.
+
+### Block structure
+
+```
+E4 [rec1] sep[0] [rec2] sep[1] ... sep[13] [rec15] sep[14] [rec16]
+```
+
+- `0xE4` header byte
+- 16 step component records of variable length
+- 15 separator bytes between records (no separator after the last record)
+
+### Record formats
+
+| UI type(s) | type_id | Size | Format |
+| --- | --- | --- | --- |
+| Pulse | (none) | 5B | `[bm] 00 [param] 00 00` |
+| Hold | 0x00 | 7B | `[bm] 00 00 00 [p1] 00 00` |
+| Multiply | 0x01 | 7B | `[bm] 00 00 01 [p1] 00 00` |
+| Velocity | 0x02 | 7B | `[bm] 00 00 02 [p1] 00 00` |
+| Ramp Up | 0x03 | 7B | `[bm] 00 00 03 [p1] 00 00` |
+| Ramp Down | 0x04 | 7B | `[bm] 00 00 04 [p1] 00 00` |
+| Random | 0x05 | 7B | `[bm] 00 00 05 [p1] 00 00` |
+| Portamento, Bend | 0x06 | 7B | `[bm] 00 00 06 [p1] 00 00` |
+| Tonality | 0x07 | 7B | `[bm] 00 00 07 [p1] 00 00` |
+| Jump | 0x07 | 9B | `[bm] 00 00 07 [p1] [p2] 00 00 00` |
+| Parameter | 0x08 | 8B | `[bm] 00 00 08 [p1] [p2] 00 00` |
+| Conditional | 0x09 | 9B | `[bm] 00 00 09 [p1] [p2] 00 00 00` |
+| Trigger (variant A) | 0x0a | 7B | `[bm] 00 00 0a [p1] [p2] 00` |
+| Trigger (variant B) | 0x0a | 8B | `[bm] 00 00 0a [p1] [p2] 00 [p3]` |
+
+- 14 UI types map to 11 type_ids (0x00-0x0A)
+- type_id 0x06 = Portamento and Bend (both 7B)
+- type_id 0x07 = Tonality (7B) and Jump (9B) — size disambiguates
+- type_id 0x0a = two Trigger variants (7B and 8B)
+- `[bm]` = step bitmask (positional, e.g. step 1 = 0x01, step 8 = 0x80)
+
+### Separator formula — runs_adjusted (VERIFIED 45/45 against unnamed 118, 118b, 119)
+
+The original hold/decrement formula matched the two extreme specimens (all-same and all-different) but was **disproven** by unnamed 118b (intermediate case). The correct formula counts **type_id runs in the suffix**:
+
+```
+base = 11 if records[0] is Pulse, else 10
+
+For each separator sep[i] (i = 0..14):
+  left  = records[i]     -- record to the LEFT of separator i
+  right = records[i+1]   -- record to the RIGHT of separator i
+  same  = (left.type_id == right.type_id AND left.size == right.size)
+
+  if same:
+      sep[i] = base                      (if i == 0)
+             = sep[i-1]                   (if i >= 1, HOLD)
+  else:
+      1. Count type_id runs in suffix records[i+1..15]:
+         runs = number of consecutive groups sharing the same type_id
+      2. If records[i+1] starts a multi-element run
+         (i.e. i+2 <= 15 AND records[i+1].type_id == records[i+2].type_id):
+         adjusted = runs - 1
+         else: adjusted = runs
+      3. sep[i] = min(adjusted, base)             (if i == 0)
+               = min(adjusted, max(0, sep[i-1]-1)) (if i >= 1)
+```
+
+**Key rules:**
+- "Same" comparison uses BOTH type_id AND record size (type 0x07 Tonality 7B vs Jump 9B = different)
+- "Runs" counts consecutive groups by type_id only (ignoring size) in the suffix
+- The adjustment subtracts 1 when the first suffix element starts a run of 2+ identical type_ids
+- Separator values are clamped to `[0, base]` and can never increase
+
+**Worked example — unnamed 118b** (Hold x5, Random, Trigger x10):
+```
+types:  [H, H, H, H, H, R, T, T, T, T, T, T, T, T, T, T]
+seps:   10 10 10 10  2  0  0  0  0  0  0  0  0  0  0
+
+  sep[0..3]: H=H -> HOLD at 10
+  sep[4]: H!=R, suffix=[R,T,T,T,T,T,T,T,T,T,T], runs=2,
+          R starts single -> adj=2, min(2, max(0,10-1))=2
+  sep[5]: R!=T, suffix=[T,T,T,T,T,T,T,T,T,T], runs=1,
+          T starts multi -> adj=0, min(0, max(0,2-1))=0
+  sep[6..14]: T=T -> HOLD at 0
+```
+
+**Why the old formula failed:** For unnamed 118b it predicted `[10,10,10,9,8,8,8,8,8,8,8,8,8,8,8]` (simple decrement at each type boundary). The actual values are `[10,10,10,10,2,0,0,0,0,0,0,0,0,0,0]`. The separator encodes suffix complexity, not just local transitions.
+
+**Reference implementation:** `tools/analyze_sep_formulas.py` (`formula_runs_adjusted()`) and `tools/write_delta_tests_v4.py` (`compute_seps_formula()`).
+
+### Delta test results (firmware validation)
+
+Tested by creating single-byte changes from unnamed 118 (all-Hold baseline):
+- **Bitmask change alone**: WORKS (firmware does not validate bitmask)
+- **type_id change alone**: CRASHES (firmware validates type_id against separators)
+- **Separator change alone**: CRASHES (firmware validates separator consistency)
+- **Old hold/decrement formula**: CRASHES on device (predicted wrong seps for 118b pattern)
+- **v4 in-place delta tests** (correct seps, no structural changes): CRASH — missing post-E4 insertion
+- **v5 transplant tests** (118b's full T1 body): ALL LOAD — confirms the issue was structural, not formula
+
+### Post-E4 structural changes (unnamed 118 vs 118b)
+
+The E4 block itself stays 128 bytes (all records 7B). But the firmware also inserts bytes elsewhere in the T1 body when step component types change:
+
+1. **+4 bytes after E4 block** (body ~0x131): `00 04 00 00` inserted between end of E4 block and the `FF 00 00` sentinel table. Purpose unknown — possibly a type-change counter or allocation marker.
+2. **+5 bytes in sample metadata** (body ~0x675): conga/lc sample entry gains `51 3B 00 00 04` and its first metadata byte changes `0x45` -> `0x3D`. Only 1 of 24 sample entries affected.
+3. **+8 bytes in each aux track** (tracks 9-16): each aux body gains 8 bytes with `40 00 00 01` entries. **Not required for loading** — v5b (T1 only) loads fine without aux changes.
+
+Key finding: **T1 body changes alone are sufficient** (v5b). Aux track changes are firmware side-effects, not validation requirements.
+
+### Corpus specimens
+
+| File | Pattern | Seps |
+| --- | --- | --- |
+| `unnamed 118.xy` | Hold x16 | `[10]*15` |
+| `unnamed 118b.xy` | Hold x5, Random, Trigger x10 | `[10,10,10,10,2,0,0,0,0,0,0,0,0,0,0]` |
+| `unnamed 119.xy` | Pulse, Hold, Chance, Ratchet, Roll, Retrig, Random, Glide, Glide, Tonal(7B), Tonal(9B), Param(8B), Cond(9B), Trigger(8B), Trigger(7B), Pulse | `[11,10,9,8,7,6,5,5,4,3,2,1,0,0,0]` |
+
+Other single-component files use the header-word encoding described above.

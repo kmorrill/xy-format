@@ -13,6 +13,25 @@ Displaced blocks are absorbed into trailing overflow packing (notably around blo
   - T1, T8: mix of `0x63`/`0x64` (possibly automation-dependent)
 - `0x64` propagation has family-specific behavior; low-byte chains like `0x2E` can be exempt.
 
+### 2026-02-14 Corrections (`p01`-`p10`)
+- In multi-pattern projects, T1 pre0 is consistently `0xB5` even when T1 itself
+  remains single-pattern (`p04`, `p05`, `p08`).
+- T5 `0x2E` exemption is not absolute; `p03` shows a preset branch where T5
+  becomes `0x64` after T4 note insertion.
+- `T1+T3` collapsed descriptor (`...00 1D 01 00 00`) is confirmed beyond x2
+  (`p09` x3, `p10` x4).
+- T3 leader-active does not imply short descriptor (`p08` stays long-form Scheme A).
+- Single-track x2 leader-active short form (`token=0x1E`) is now confirmed on
+  T2/T4/T5/T6/T7/T8 (`r01`, `j03`, `r03`, `r06`, `r07`, `r09`), while T3
+  leader-active remains long-form (`p08`).
+- T5/T7 note-bearing x2 branches carry `v56=0x40` family markers with extra
+  small pre-track edits before descriptor insertion (`r03`/`r04`, `r07`/`r08`).
+- New x8 captures (`s05`-`s09`) confirm descriptor maxslot scaling beyond x4
+  for T1/T2/T3 and mixed T2+T3 / T1+T7 topologies.
+- `s03`/`s04` confirm `T1x2+T3x2` descriptor selection is stateful:
+  short-form `0x1E` when both leaders are active, collapsed `0x1D` when only
+  T3 leader is active.
+
 ## Descriptor Strategy
 - Two encoding schemes: Scheme A (T3+-only, gap/maxslot pairs, fully cracked)
   and Scheme B (T1/T2 involved, per-topology lookup).

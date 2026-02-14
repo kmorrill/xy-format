@@ -12,10 +12,11 @@
   - `alloc = 0xF7 - step_0 * 0x10 - component_global_index`
 - Wrong allocation bytes are crash-prone.
 
-## Multi-Step Stream Model (unnamed 118/119)
-- Full 16-step component captures use a contiguous variable-length block stream.
-- This replaces the simpler isolated single-step slot assumptions.
-- Block sizes vary by type (observed 4B, 6B, 8B, 9B, 10B).
+## Multi-Step Stream Model (unnamed 118/118b/119)
+- Full 16-step component captures use a contiguous variable-length block stream at `body[0xB1]`.
+- `0xE4` header, 16 variable-length records (5-9B), 15 separator bytes between them.
+- Separator formula: **runs_adjusted** (counts type_id runs in suffix). See `docs/step_component_notes.md`.
+- Verified 45/45 against all three ground-truth specimens.
 - Bank-2 type `0x20` is confirmed as a distinct 14th component type.
 
 ## Authoring Recipe (Current)

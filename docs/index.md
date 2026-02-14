@@ -3,6 +3,7 @@
 ## Start Here
 - Operating guide: `AGENTS.md`
 - Roadmap: `docs/roadmap.md`
+- Human explainer: `docs/human-explainer.md`
 
 ## Workflows
 - Device test naming: `docs/workflows/device_test_naming.md`
@@ -53,3 +54,8 @@
 - Multi-pattern breakthrough: `docs/logs/2026-02-12_multipattern_breakthrough.md`
 - MIDI CC -> p-lock discovery: `docs/logs/2026-02-13_midi_cc_plock_discovery.md`
 - Legacy long-form notebook snapshot: `docs/logs/2026-02-13_agents_legacy_snapshot.md`
+- `p01`-`p10` deep analysis: `docs/logs/2026-02-14_p01_p10_deep_analysis.md`
+- `01`-`08` single-track P2 matrix: `docs/logs/2026-02-14_01_08_single_track_p2_matrix.md`
+- `r01`-`r05` note-branch analysis: `docs/logs/2026-02-14_r01_r05_note_branch_analysis.md`
+- `r06`-`r10` + multipattern corpus consolidation: `docs/logs/2026-02-14_r06_r10_and_multipattern_corpus_consolidation.md`
+- `s04`-`s09` minimal-plan progress: `docs/logs/2026-02-14_s04_s09_minimal_plan_progress.md`
