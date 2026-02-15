@@ -58,6 +58,9 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+# Local source-material imports (do not commit)
+raw/
+
 # Vim / Emacs swap
 *.swp
 *.swo
