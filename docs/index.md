@@ -25,6 +25,7 @@
 ## Format (Canonical)
 - Header: `docs/format/header.md`
 - Pre-track / pattern directory: `docs/format/pretrack_pattern_directory.md`
+- Scenes and songs: `docs/format/scenes_songs.md`
 - Track blocks: `docs/format/track_blocks.md`
 - Events: `docs/format/events.md`
 - Event type selection: `docs/format/event_type_selection.md`

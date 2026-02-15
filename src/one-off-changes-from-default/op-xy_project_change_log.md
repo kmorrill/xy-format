@@ -83,6 +83,16 @@ This document lists all changes made to OP-XY project files relative to their de
 - **unnamed_152** — Scene-mode capture: Scene 2 initialized (default content), no notes or mix edits
 - **unnamed_154** — Combined scene/song capture (`05`): Song 2 initialized/selected and Scene 2 initialized, loop off
 - **unnamed_155** — Looping capture (`07`): Song 2 with three scenes in the song arrangement, loop left on
+- **unnamed_150b** — Mute probe from `unnamed_150`: Scene 1 with Track 1 muted
+- **unnamed_152b** — Mute probe from `unnamed_152`: Scene 2 with Track 1 muted
+- **unnamed_154b** — Mute probe from `unnamed_154`: Scene 2 with Tracks 1 and 8 muted
+- **unnamed_155b** — Mute probe from `unnamed_155`: Song 2 (3 scenes) mute map set as S1=`T1`, S2=`T8`, S3=`T1+T8`
+- **unnamed_150_nl** — Loop probe from `unnamed_150`: user reports Song 1 loop was on in `150`; this capture flips Song 1 loop off
+- **unnamed_150_lp** — Loop probe from `unnamed_150_nl`: Song 1 loop flipped back on
+- **unnamed_151_nl** — Loop probe from `unnamed_151`: Song 3 loop flipped on (user-confirmed intent)
+- **unnamed_151_lp** — Loop probe from `unnamed_151_nl`: Song 3 loop flipped back off
+- **unnamed_154_loop** — Loop probe from `unnamed_154`: Song 2 loop flipped on
+- **unnamed_154_nl** — Loop probe from `unnamed_154_loop`: Song 2 loop flipped back off
 
 ## Mix and Master Adjustments
 - **unnamed_14** — Turned EQ leftmost setting (low range) to zero
