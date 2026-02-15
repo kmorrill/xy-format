@@ -524,10 +524,12 @@ _STRICT_DESCRIPTORS = {
     # frozenset of 0-based track indices -> descriptor bytes (inserted at 0x58)
     # ── T1/T2 involved (Scheme B) ──
     frozenset({0}):       b"\x00\x1D\x01\x00\x00",                          # T1 only
+    frozenset({1}):       b"\x00\x00\x1C\x01\x00\x00",                      # T2-only x3 (j05)
     frozenset({0, 1}):    b"\x00\x00\x00\x1C\x01\x00\x00",                  # T1+T2
     frozenset({0, 2}):    b"\x01\x00\x00\x1B\x01\x00\x00",                  # T1+T3
     frozenset({0, 3}):    b"\x00\x00\x01\x00\x00\x1A\x01\x00\x00",          # T1+T4
     frozenset({0, 1, 2}): b"\x01\x00\x00\x1B\x01\x00\x00",                  # T1+T2+T3 (m06)
+    frozenset({0, 1, 2, 3, 4, 5, 6, 7}): b"\x06\x00\x00\x16\x01\x00\x00",  # all 8 tracks (n110/j06)
     # ── T3+-only (Scheme A) — computed by _scheme_a_descriptor() ──
     # These are also in the lookup for fast-path / test validation.
     frozenset({2}):       b"\x00\x01\x00\x00\x1B\x01\x00\x00",              # T3 only
@@ -560,6 +562,16 @@ def _is_105b_mode(
         return False
     # 105b: T1 leader blank, T1 clone active; T3 leader active.
     return (not t1[0]) and bool(t1[1]) and bool(t3[0])
+
+
+def _is_j05_mode(
+    track_patterns: Dict[int, List[Optional[List[Note]]]],
+) -> bool:
+    """Return True for the observed T2-only 3-pattern blank scaffold branch."""
+    if set(track_patterns) != {2}:
+        return False
+    t2 = track_patterns.get(2, [])
+    return len(t2) == 3 and all(not pat for pat in t2)
 
 
 def _scheme_a_descriptor(
@@ -814,49 +826,42 @@ def build_multi_pattern_project(
     baseline = project.tracks  # 16 original TrackBlocks
     entries = _plan_blocks(track_patterns)
 
-    # ── Build blocks ──────────────────────────────────────────────────
-    # Split into normal slots (0-14) and overflow (15+)
-    if len(entries) > 16:
-        normal_entries = entries[:15]
-        overflow_entries = entries[15:]
-    else:
-        normal_entries = entries
-        overflow_entries = []
+    # ── Build ALL blocks individually ─────────────────────────────────
+    all_blocks: List[TrackBlock] = []
+    for idx, entry in enumerate(entries):
+        block = _build_single_block(baseline, entry, idx, track_patterns)
+        all_blocks.append(block)
 
-    blocks: List[TrackBlock] = []
+    # ── Apply preamble rules across ALL blocks ────────────────────────
+    _apply_preamble_rules(all_blocks, entries, baseline)
 
-    for slot_idx, entry in enumerate(normal_entries):
-        block = _build_single_block(baseline, entry, slot_idx, track_patterns)
-        blocks.append(block)
+    if _is_j05_mode(track_patterns):
+        # j05: Track 1 stays regular (non-multi) but still uses 0xB5 sentinel.
+        pre = bytearray(all_blocks[0].preamble)
+        pre[0] = 0xB5
+        all_blocks[0] = TrackBlock(
+            index=all_blocks[0].index,
+            preamble=bytes(pre),
+            body=all_blocks[0].body,
+        )
 
-    # ── Overflow block (slot 15) ──────────────────────────────────────
-    if overflow_entries:
-        first = overflow_entries[0]
-        first_base = baseline[first.owner]
-        parts = [first_base.body]
-        for oe in overflow_entries[1:]:
-            ob = baseline[oe.owner]
+    # ── Pack: slots 0-14 individual, 15+ into overflow ────────────────
+    if len(all_blocks) > 16:
+        blocks = list(all_blocks[:15])
+        overflow = all_blocks[15:]
+        parts = [overflow[0].body]
+        for ob in overflow[1:]:
             parts.append(ob.preamble)
             parts.append(ob.body)
-        overflow_body = b"".join(parts)
         blocks.append(TrackBlock(
             index=15,
-            preamble=first_base.preamble,
-            body=overflow_body,
+            preamble=overflow[0].preamble,
+            body=b"".join(parts),
         ))
     else:
-        # Slot 15 is the last normal entry
-        pass  # already appended above
+        blocks = all_blocks
 
     assert len(blocks) == 16
-
-    # ── Apply preamble rules ──────────────────────────────────────────
-    # Rebuild the entry list for all 16 slots (normal + overflow stand-in)
-    all_entries = list(normal_entries)
-    if overflow_entries:
-        all_entries.append(overflow_entries[0])  # overflow block's identity
-
-    _apply_preamble_rules(blocks, all_entries, baseline)
 
     if _is_105b_mode(track_patterns):
         _apply_105b_aux_patch(blocks)
@@ -889,19 +894,13 @@ def _build_single_block(
         return TrackBlock(index=slot_idx, preamble=base_preamble, body=base_body)
 
     if entry.is_leader:
-        # Leader: blank leaders are baseline-minus-1.
-        # Leaders with notes use the full body before activation, then drop the
-        # final byte after insertion (matches unnamed 103 Track 1).
         if entry.notes:
             # Non-T1 leaders with notes must follow the same full-body
             # activation path we observed in 105b.  Using the trimmed
             # pre-activation body shifts the appended event by one byte and
             # produces files that crash on device with `num_patterns > 0`.
             body = base_body
-        else:
-            body = base_body[:-1]
 
-        if entry.notes:
             # Activate and append event
             body = bytes(_activate_body(body))
             etype = event_type_for_track(ti_1)
@@ -916,13 +915,17 @@ def _build_single_block(
             else:
                 body = body + event_blob
 
-            if entry.owner == 0:  # Track 1 multi-pattern blob rewrite
+            if entry.owner == 0 and num_patterns <= 3:
+                # Track 1 multi-pattern blob rewrite — only observed in u104
+                # (3-pattern).  n110/j07 (9-pattern) do NOT have this patch;
+                # applying it there adds 5 extra bytes per T1 entry and
+                # crashes the firmware.
                 body = _patch_t1_multi_pattern_body(body)
-                # Firmware leaves leaders one byte shorter at the tail.
-                body = body[:-1]
-            else:
-                # Non-T1 leaders with notes are also one byte shorter.
-                body = body[:-1]
+
+            # Leaders with notes are one byte shorter at the tail.
+            body = body[:-1]
+        else:
+            body = base_body[:-1]
 
         # Preamble: T1 gets byte[0] = 0xB5; others keep original.
         # byte[1] = pattern count.
@@ -953,8 +956,15 @@ def _build_single_block(
         else:
             body = body + event_blob
 
-        if entry.owner == 0:  # Track 1 multi-pattern blob rewrite
+        if entry.owner == 0 and num_patterns <= 3:
+            # Track 1 multi-pattern blob rewrite — only for small pattern
+            # counts (see leader path comment above).
             body = _patch_t1_multi_pattern_body(body)
+
+        # Non-last entries are trimmed by 1 byte (same as leaders).
+        # Verified: n110 non-last clones are 1B shorter than the last clone.
+        if not entry.is_last_in_set:
+            body = body[:-1]
     else:
         # Blank clone
         if entry.is_last_in_set:
@@ -981,26 +991,29 @@ def _apply_preamble_rules(
 ) -> None:
     """Mutate block preambles in-place for the 0x64 and clone byte[1] rules.
 
-    Rules (verified 9/9 across all multi-pattern corpus files):
-      - Clone byte[1] = 0x64 if predecessor is type 0x07
-      - Clone byte[1] = baseline byte[0] of next original track otherwise
+    Rules (verified against n110 8-track × 9-pattern specimen):
       - Non-clone byte[0] = 0x64 if predecessor is type 0x07
-      - Exception: T5 (0-based idx 4) is exempt from the 0x64 rule
+      - Clone byte[1] = 0x64 if predecessor is type 0x07
+      - Exception: T5 (0-based idx 4) is exempt from receiving 0x64.
+        This applies BOTH to non-clone byte[0] (crash #6) AND to clone
+        byte[1] when the clone's next original track is T5 (crash #11).
+        n110: T4 clones have byte[1]=0x2E (=baseline[T5].preamble[0])
+        even when predecessors are activated.
     """
     _PREAMBLE_EXEMPT = {4}  # T5
 
-    for i in range(1, 16):
+    for i in range(1, len(blocks)):
         prev_activated = blocks[i - 1].type_byte == 0x07
         entry = entries[i]
 
         preamble_buf = bytearray(blocks[i].preamble)
 
         if entry.is_clone:
-            if prev_activated:
+            next_ti = entry.owner + 1
+            if prev_activated and next_ti not in _PREAMBLE_EXEMPT:
                 preamble_buf[1] = 0x64
             else:
                 # baseline byte[0] of the next original track after clone's owner
-                next_ti = entry.owner + 1
                 if next_ti < 16:
                     preamble_buf[1] = baseline[next_ti].preamble[0]
                 else:
