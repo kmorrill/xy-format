@@ -96,7 +96,11 @@ class TestReadEventRoundTrip:
         """Every accepted event type round-trips correctly."""
         notes_in = [Note(step=1, note=60, velocity=100), Note(step=5, note=64, velocity=90)]
         for etype in (0x1E, 0x1F, 0x20, 0x21, 0x25, 0x2D):
-            event = build_event(notes_in, event_type=etype)
+            kwargs = {}
+            if etype == 0x2D:
+                # Multi-note 0x2D is guarded as crash-prone; allow explicitly.
+                kwargs["allow_unsafe_2d_multi_note"] = True
+            event = build_event(notes_in, event_type=etype, **kwargs)
             notes_out = read_event(event)
             assert len(notes_out) == 2, f"type 0x{etype:02X}"
             assert notes_out[0].note == 60, f"type 0x{etype:02X}"
@@ -398,6 +402,10 @@ class TestEdgeCases:
         with pytest.raises(ValueError, match="invalid note count"):
             read_event(bytes([0x21, 0x00]))
 
+    def test_count_above_120_raises(self):
+        with pytest.raises(ValueError, match="invalid note count"):
+            read_event(bytes([0x21, 0x79]))
+
     def test_data_too_short_raises(self):
         with pytest.raises(ValueError, match="too short"):
             read_event(bytes([0x21]))
@@ -412,7 +420,35 @@ class TestEdgeCases:
         assert notes_out[0].note == 60
 
     def test_large_note_count(self):
-        """48 notes (max seen in corpus) round-trip correctly."""
+        """120 notes (documented per-pattern ceiling) round-trip correctly."""
+        notes_in = [Note(step=i + 1, note=36 + (i % 40), velocity=100) for i in range(120)]
+        event = build_event(notes_in, event_type=0x25)
+        notes_out = read_event(event)
+        assert len(notes_out) == 120
+        for i, (n_in, n_out) in enumerate(zip(notes_in, notes_out)):
+            assert n_out.step == n_in.step, f"note {i}: step"
+            assert n_out.note == n_in.note, f"note {i}: note"
+
+    def test_find_event_accepts_count_above_64(self):
+        """find_event should detect events with count in the 65..120 range."""
+        notes_in = [Note(step=i + 1, note=48 + (i % 24), velocity=100) for i in range(65)]
+        event = build_event(notes_in, event_type=0x21)
+        body = b"\x00" * 13 + event + b"\xFF"
+        offset = find_event(body, 3)
+        assert offset == 13
+
+    def test_mid_range_note_count_round_trip(self):
+        """65-note events parse correctly (regression for old 64-note ceiling)."""
+        notes_in = [Note(step=i + 1, note=40 + (i % 30), velocity=110) for i in range(65)]
+        event = build_event(notes_in, event_type=0x21)
+        notes_out = read_event(event)
+        assert len(notes_out) == 65
+        for i, (n_in, n_out) in enumerate(zip(notes_in, notes_out)):
+            assert n_out.step == n_in.step, f"note {i}: step"
+            assert n_out.note == n_in.note, f"note {i}: note"
+
+    def test_legacy_48_note_round_trip(self):
+        """Legacy 48-note specimen-style round-trip remains intact."""
         notes_in = [Note(step=i + 1, note=48 + (i % 24), velocity=80) for i in range(48)]
         event = build_event(notes_in, event_type=0x25)
         notes_out = read_event(event)

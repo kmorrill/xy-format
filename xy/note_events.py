@@ -47,6 +47,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 STEP_TICKS = 480
+MAX_EVENT_NOTES = 120
 
 
 DEFAULT_GATE = b"\xF0\x00\x00\x01"
@@ -63,7 +64,12 @@ class Note:
     gate_ticks: int = 0  # 0 = default gate; >0 = explicit gate in ticks (480/step)
 
 
-def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
+def build_event(
+    notes: List[Note],
+    *,
+    event_type: int = 0x21,
+    allow_unsafe_2d_multi_note: bool = False,
+) -> bytes:
     """Encode a list of notes into a single event blob.
 
     Parameters
@@ -72,6 +78,10 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
         Notes to encode. Sorted by tick position automatically.
     event_type : int
         Preset-specific. Use event_type_for_track() for default presets.
+    allow_unsafe_2d_multi_note : bool
+        By default, multi-note 0x2D authoring is blocked because it is a
+        known device-crash path in early captures. Set True only for
+        controlled experiments.
 
     Returns the raw bytes ready to be appended to a track body.
     """
@@ -83,6 +93,16 @@ def build_event(notes: List[Note], *, event_type: int = 0x21) -> bytes:
     # Sort by absolute tick
     sorted_notes = sorted(notes, key=lambda n: (n.step - 1) * STEP_TICKS + n.tick_offset)
     count = len(sorted_notes)
+    if count > MAX_EVENT_NOTES:
+        raise ValueError(
+            f"too many notes in one event: {count} > {MAX_EVENT_NOTES} "
+            "(device documented limit)"
+        )
+    if event_type == 0x2D and count > 1 and not allow_unsafe_2d_multi_note:
+        raise ValueError(
+            "event_type 0x2D with count > 1 is known crash-prone; "
+            "use preset-native event type or pass allow_unsafe_2d_multi_note=True"
+        )
 
     buf = bytearray()
     buf.append(event_type)

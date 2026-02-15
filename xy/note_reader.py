@@ -26,6 +26,7 @@ from .container import TrackBlock
 from .note_events import STEP_TICKS, Note, event_type_for_track
 
 KNOWN_EVENT_TYPES = frozenset({0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x25, 0x2D})
+MAX_EVENT_NOTES = 120
 
 
 def read_event(data: bytes) -> List[Note]:
@@ -51,7 +52,7 @@ def read_event(data: bytes) -> List[Note]:
 
     if event_type not in KNOWN_EVENT_TYPES:
         raise ValueError(f"unknown event type 0x{event_type:02X}")
-    if count < 1 or count > 64:
+    if count < 1 or count > MAX_EVENT_NOTES:
         raise ValueError(f"invalid note count {count}")
 
     notes: List[Note] = []
@@ -156,7 +157,8 @@ def read_event(data: bytes) -> List[Note]:
 def find_event(body: bytes, track_index: int) -> int | None:
     """Find the byte offset of a note event within a track body.
 
-    Scans for the 5-byte signature ``[event_type] [count:1-64] [00 00 02]``
+    Scans for the 5-byte signature
+    ``[event_type] [count:1-120] [00 00 02]``
     which marks the start of a note event (first note at tick 0).
 
     Falls back to scanning for any of the 9 known event types if the
@@ -202,7 +204,7 @@ def _scan_for_event(body: bytes, event_type: int) -> int | None:
             return None
 
         count = body[idx + 1]
-        if 1 <= count <= 64:
+        if 1 <= count <= MAX_EVENT_NOTES:
             # Check tick-0 first-note signature: [00 00 02]
             if body[idx + 2 : idx + 5] == b"\x00\x00\x02":
                 return idx

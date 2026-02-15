@@ -427,6 +427,38 @@ class TestBuildEventTypes:
         with pytest.raises(ValueError):
             build_event([Note(step=1, note=60, velocity=100)], event_type=0x99)
 
+    def test_count_over_120_rejected(self):
+        notes = [Note(step=i + 1, note=48 + (i % 24), velocity=100) for i in range(121)]
+        with pytest.raises(ValueError, match="too many notes"):
+            build_event(notes, event_type=0x21)
+
+    def test_count_120_allowed(self):
+        notes = [Note(step=i + 1, note=48 + (i % 24), velocity=100) for i in range(120)]
+        blob = build_event(notes, event_type=0x21)
+        assert blob[0] == 0x21
+        assert blob[1] == 120
+
+    def test_0x2d_multi_note_rejected_by_default(self):
+        notes = [
+            Note(step=1, note=60, velocity=100),
+            Note(step=5, note=64, velocity=100),
+        ]
+        with pytest.raises(ValueError, match="known crash-prone"):
+            build_event(notes, event_type=0x2D)
+
+    def test_0x2d_multi_note_allowed_with_override(self):
+        notes = [
+            Note(step=1, note=60, velocity=100),
+            Note(step=5, note=64, velocity=100),
+        ]
+        blob = build_event(
+            notes,
+            event_type=0x2D,
+            allow_unsafe_2d_multi_note=True,
+        )
+        assert blob[0] == 0x2D
+        assert blob[1] == 2
+
 
 # ── chord encoding (multiple notes at same tick) ────────────────────
 
@@ -644,6 +676,61 @@ class TestMultiPatternBuilder:
         })
         # T1 clone at block[1]: pred = T1 leader (type 0x07) → byte[1] = 0x64
         assert result.tracks[1].preamble[1] == 0x64
+
+    def test_t4_clone_byte1_exempt_from_0x64(self):
+        """T4 clone byte[1] uses baseline[T5].preamble[0], not 0x64.
+
+        Crash #11: Clone byte[1] represents the next original track's
+        preamble byte[0].  T5 (0-based idx 4) is exempt from the 0x64
+        rule, so T4 clones (whose next track IS T5) must use T5's baseline
+        value (0x2E) instead of 0x64.  Same exemption as crash #6, applied
+        to clone byte[1] instead of non-clone byte[0].
+
+        Verified against n110: all T4 clones have byte[1]=0x2E even when
+        their predecessors are activated (type 0x07).
+        """
+        proj = self._load_baseline()
+        t5_baseline_byte0 = proj.tracks[4].preamble[0]  # T5 = 0x2E
+        assert t5_baseline_byte0 == 0x2E, "sanity: T5 baseline byte[0]"
+
+        # T4 with notes → leader activated (type 0x07) → clone pred is 0x07
+        # But T4 clone byte[1] should still be 0x2E (T5 exempt from 0x64)
+        result = build_multi_pattern_project(proj, {
+            4: [[Note(step=1, note=64, velocity=100)],
+                [Note(step=1, note=67, velocity=100)]],
+        })
+        t4_clone = result.tracks[4]
+        assert t4_clone.preamble[0] == 0x00, "clone marker byte[0]"
+        assert t4_clone.preamble[1] == t5_baseline_byte0, (
+            f"T4 clone byte[1] should be 0x{t5_baseline_byte0:02X} "
+            f"(T5 exempt from 0x64), got 0x{t4_clone.preamble[1]:02X}"
+        )
+
+    def test_t4_clone_byte1_baseline_when_pred_blank(self):
+        """T4 clone byte[1] = baseline[T5] even when pred is blank (T5 exempt)."""
+        proj = self._load_baseline()
+        t5_baseline_byte0 = proj.tracks[4].preamble[0]
+
+        # T4 with blank patterns → leader type 0x05 → clone pred is 0x05
+        result = build_multi_pattern_project(proj, {
+            4: [None, None],
+        })
+        t4_clone = result.tracks[4]
+        assert t4_clone.preamble[1] == t5_baseline_byte0
+
+    def test_non_t4_clone_byte1_gets_0x64(self):
+        """Clones whose next track is NOT T5-exempt still get 0x64."""
+        proj = self._load_baseline()
+
+        # T3 clones → next track is T4, not exempt → 0x64 when pred activated
+        result = build_multi_pattern_project(proj, {
+            3: [[Note(step=1, note=60, velocity=100)],
+                [Note(step=1, note=64, velocity=100)]],
+        })
+        t3_clone = result.tracks[3]
+        assert t3_clone.preamble[1] == 0x64, (
+            "T3 clone byte[1] should be 0x64 (T4 not exempt)"
+        )
 
     # ── POST-ACT 0x64 rule ────────────────────────────────────────────
 
@@ -1219,6 +1306,51 @@ class TestMultiPatternBuilder:
         assert actual_insert == expected_insert
         assert result.pre_track[0x56] == 0x01  # T1 max_slot
         assert result.pre_track[0x57] == 0x01  # T2 max_slot
+
+    def test_8track_9pattern_t4_preamble_in_overflow(self):
+        """8-track × 9-pattern topology: T4 clones in overflow get 0x2E.
+
+        This is the full n110 topology.  Crash #11 was caused by T4
+        clones in the overflow block receiving byte[1]=0x64 instead of
+        the correct 0x2E.  T5 is exempt from the 0x64 rule, so T4 clones
+        (whose next original track is T5) must use T5's baseline value.
+        """
+        proj = self._load_baseline()
+        t5_byte0 = proj.tracks[4].preamble[0]  # 0x2E
+
+        n = Note(step=1, note=60, velocity=100)
+        tp = {ti: [[n]] * 9 for ti in range(1, 9)}
+        result = build_multi_pattern_project(
+            proj, tp, descriptor_strategy="strict",
+        )
+
+        # Parse overflow block to check embedded T4 clone preambles
+        sig = bytes([0x00, 0x00, 0x01, 0x03, 0xFF, 0x00, 0xFC, 0x00])
+        overflow_body = result.tracks[15].body
+        positions = []
+        pos = 8
+        while True:
+            idx = overflow_body.find(sig, pos)
+            if idx == -1:
+                break
+            positions.append(idx)
+            pos = idx + 1
+
+        # Track-sequential layout: T2 clones (3), T3 (9), T4 (9), ...
+        # T4 entries start at overflow entry index 12 (leader) through 20
+        # T4 clones are entries 13-20, each preceded by 4-byte preamble
+        for entry_idx in range(13, 21):
+            sig_pos = positions[entry_idx - 1]  # -1 because entry 0 has no sig
+            preamble = overflow_body[sig_pos - 4:sig_pos]
+            assert preamble[0] == 0x00, f"entry {entry_idx} byte[0] should be 0x00 (clone)"
+            assert preamble[1] == t5_byte0, (
+                f"entry {entry_idx} (T4 clone) byte[1] should be "
+                f"0x{t5_byte0:02X}, got 0x{preamble[1]:02X}"
+            )
+
+        # Also verify round-trip
+        raw = result.to_bytes()
+        assert XYProject.from_bytes(raw).to_bytes() == raw
 
     def test_new_topologies_roundtrip(self):
         """All new topology descriptors produce parseable round-trip files."""
