@@ -1,5 +1,11 @@
 # Events
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Event Families
 - `0x25`: common drum/grid event family (Track 1 constrained path).
 - `0x21`: sequential/live family used heavily on synth slots and many preset paths.

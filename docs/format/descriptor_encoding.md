@@ -1,5 +1,11 @@
 # Pre-Track Descriptor Encoding
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Overview
 
 When a project has multiple patterns on any track, a **descriptor** is inserted
@@ -166,6 +172,13 @@ the `v57=01 + body 00 00` long-form seen in blank/clone-active T2 captures.
 rather than per-track entries. This is not yet fully formalized and is beyond
 the scope of 2-pattern authoring.
 
+**Bootstrap equivalence (verified 2026-02-28):**
+- `j06_all16_p9_blank.xy` is byte-identical to a strict multi-pattern build
+  from `unnamed 1.xy` when tracks `1..8` are emitted with `9` patterns each
+  and all pattern bodies `null`/blank.
+- Repro command:
+  `python3 tools/build_xy_from_json.py specs/midi-to-xy/e01_u1_t1t8_p9_allblank.json --expect src/one-off-changes-from-default/j06_all16_p9_blank.xy --dry-run`
+
 ### `T1+T3` Collapsed Branch (`... 00 1D 01 00 00`)
 
 Device captures show a collapsed descriptor form for some `T1+T3` topologies:
@@ -255,6 +268,9 @@ Where `max` = `pattern_count - 1` for that track in long-form branches.
 5. **9-pattern run-count encoding**: j01/j06 suggest a run-length scheme for
    the T3+ body when many tracks share the same pattern count. Not relevant
    for 2-pattern authoring.
+   Partial resolution: the blank `T1..T8 x9` case is reproducible from
+   `unnamed 1` (see bootstrap equivalence above), but a general closed-form
+   encoder for all mixed active 9-pattern states remains open.
 
 6. **Activation-dependent descriptor changes** in complex topologies (j02 vs
    j01): When leaders are active in multi-track 9-pattern cases, v56/v57

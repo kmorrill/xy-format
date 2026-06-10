@@ -1,5 +1,11 @@
 # Track Blocks
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Block Discovery
 - Track signature: `00 00 01 03 ff 00 fc 00`.
 - Baseline file (`unnamed 1.xy`) has 16 track-block starts at:

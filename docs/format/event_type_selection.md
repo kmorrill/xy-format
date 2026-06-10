@@ -1,5 +1,11 @@
 # Event Type Selection
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Primary Rule
 Event type is preset-driven, not purely engine-driven or slot-driven.
 

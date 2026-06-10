@@ -1,5 +1,11 @@
 # Step Components
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Single-Step Model (Validated)
 - Components serialize into a slot table within active track bodies.
 - Empty sentinel in common drum/synth captures: `FF 00 00`.

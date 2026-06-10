@@ -1,5 +1,11 @@
 # P-Locks (Parameter Locks)
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Region Location
 - P-lock region appears after engine-config tail bytes:
   - `40 1F 00 00 0C 40 1F 00 00`

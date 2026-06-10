@@ -1,5 +1,11 @@
 # Multi-Pattern Block Rotation
 
+> **Model superseded (2026-06-09).** The byte-level facts here remain
+> useful, but the format is RLE-compressed C structs; the canonical
+> references are `docs/format/record_structure.md` and
+> `docs/format/decoded_image_map.md`. See `docs/state_of_understanding.md`.
+
+
 ## Core Mechanism
 Multiple patterns are represented by cloning/inserting track blocks inline, while keeping total top-level block slots at 16.
 Displaced blocks are absorbed into trailing overflow packing (notably around block 15/16 regions in known captures).
@@ -47,6 +53,18 @@ Displaced blocks are absorbed into trailing overflow packing (notably around blo
 - For non-last patterns, derive from full-body donor before activation/insertion, then apply required tail trim.
 - Mutate only target pattern bodies/preambles and keep unrelated descriptor/overflow bytes unchanged.
 - See `docs/format/descriptor_encoding.md` for the full encoding reference.
+
+### 2026-02-28 Safe Bootstrap Rule (Scratch Generation)
+- For the stable 9-pattern export family, bootstrap from `unnamed 1.xy` by
+  emitting explicit tracks `T1..T8`, each with 9 patterns, in `strict` mode.
+- The all-blank bootstrap is byte-identical to `j06_all16_p9_blank.xy`
+  (see `docs/logs/2026-02-28_unnamed1_to_j06_bootstrap.md`).
+- Then place musical content sparsely inside that fixed topology (for example
+  only `T3`/`T6`) rather than emitting a sparse 2-track 5-pattern topology.
+- Evidence: same-template A/B on Chase conversion:
+  - sparse `T3+T6 x5` from `unnamed 1` (`u01`) crashed on device
+  - `T1..T8 x9` strict topology from `unnamed 1` (`u02`) passed and is
+    byte-identical to prior pass `b01`.
 
 ## n110: 9-Pattern × 8-Track Clone Body Analysis
 
