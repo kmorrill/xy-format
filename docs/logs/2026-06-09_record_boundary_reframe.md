@@ -152,6 +152,68 @@ single-byte scene-token probes (crashes #8–#12) were so fragile: editing
 pre-track records without updating the pool-state byte (or vice versa) breaks
 the contract.
 
+## Part 3 (same day): Pre-Track Variable Region = One Typed Record Stream
+
+Tool: `tools/analysis/pretrack_records.py`. Validation: **217/222 corpus
+files parse with record count exactly matching the tail countdown**
+(`tail = 0xD6 − 0x21·n`), across descriptor, scene-override, scene-matrix
+(`unnamed 156`), bleez, and j-family files.
+
+### Grammar
+
+```
+pre_track := fixed_header   record*   00 00   handle_table(36B)   tail(1B)
+record    := [per-track values ...] [00 00] [tag] [0x01]      ; track-array form
+            | pair-list form (song family, see below)
+tag       := 0x1E − last_track_1based   (0x1D=T1 … 0x16=T8; 0x1E = empty/none)
+```
+
+The fixed header's end is anchored by `cd cc cc 00 0c 00 00 01 40`
+(tolerates upstream growth: MIDI config at ~0x23, scene ordinals at 0x0F).
+
+### One encoder, three record meanings (C view: `serialize_track_array(u8[16])`)
+
+1. **Pattern-count record** (the old "descriptor", Schemes A+B): per-track
+   `pattern_count − 1` values. `j06` = `08 08 06 | 00 00 | 16 01`
+   (T1=8, T2=8, then a 6-repeat for T3..T8, tag T8).
+2. **Scene-matrix record** (`unnamed 156`, bleez): per-track *pattern index*
+   for one scene. `unnamed 156` S1 = `00 01 02 03 04 05 06 07 | 00 00 | 16 01`
+   — literally T1..T8 → P1..P8. The old "v56/v57 directory bytes" are just
+   the first two values of the first record.
+3. **Compact scene-override record** (scene corpus 00–14): sparse form
+   `[scene_idx][pattern_idx] [00 00] [track_tag] 01` — e.g. file 14's
+   `01 02 00 00 1a 01` = scene 2, pattern 3, track 4.
+
+The bleez "44–111-byte records" are these same records with additional
+sub-blocks (`08 08`-prefixed groups, plus a `0x1F`-prefixed record variant in
+bleez8) — partially decoded, see open items.
+
+### Song-family records (different value type, same pool)
+
+`unnamed 124/150b/152b/154b/155b` carry `00 00`-separated 2-byte pairs,
+e.g. 155b = `(0e,02)(0d,01) (15,02)(06,01) (0e,02)(04,02)(06,01)` with
+tail predicting 3 records. Pair second-bytes are small (1–2); meaning not
+yet decoded (likely song/scene chaining state). Record boundaries within
+the pair stream are the main open question (5 of 222 files mismatch only
+in this family + bleez8).
+
+### Track signature contains a field: TRACK SCALE
+
+`unnamed 20/21/22` (track scale 2 / 16 / ½) revealed the block signature's
+4th byte is **not magic**: `00 00 01 [scale] ff 00 fc 00` with 0x03 =
+default. Observed: 0x05 = scale 2, 0x0E = scale 16, 0x01 = scale ½.
+All signature-scanning code that hardcodes `03` silently misparses these
+files (e.g. `xy/structs.py` and the previous corpus stats, which treated
+T1's whole record as pre-track in these three files).
+
+### Residual anomaly (open): the ±1 zero in track-array values
+
+A handful of array encodings carry one extra `00` in mid-array positions
+(`m05` T1+T2: `01 01 00`; `m09` T1+T4: `00 00 01`; `unnamed 156` S2:
+`01 00 02 03 04 05 06 07 08`). Likely an RLE/repeat-count element
+(cf. `j06`'s `06` repeat byte) not yet pinned down. Needs a systematic
+grammar fit across all specimens rather than more eyeballing.
+
 ## Suggested Follow-Ups
 
 1. ~~Re-express stats per-record~~ DONE (Part 2): zero unexplained cells.
