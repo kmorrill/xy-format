@@ -286,6 +286,54 @@ into human-readable scene rows (`sel[T3=P2,T4=P3] mute[T1] flags=0x1`).
   rows; duplicate scenes share rows — file 14's "ordinal=1, 2 records").
 - Song arrangement (scene order per song) lives in Track 16, not here.
 
+## Part 5 (same day): THE SERIALIZATION MODEL — the whole file is RLE'd C structs
+
+Following the RLE rule out of the pre-track region revealed it applies to
+the **entire file**: track bodies, note events, gates, ticks, performance
+lanes, the song table. The format is:
+
+> **Little-endian C structs serialized field-by-field, with count-prefixed
+> vectors, passed through a byte-level RLE: any two consecutive equal
+> bytes are followed by an extension count (additional repeats).**
+
+### What this single rule explains
+
+| legacy mystery | reality |
+|----------------|---------|
+| default gate "token" `F0 00 00 01` | RLE of `F0 00 00 00` = u32 gate = **240 ticks** (half step) |
+| explicit gate "5 bytes `[u32][00]`" | u32 gate whose `00 00` interior pair carries an ext byte |
+| tick "flag bytes 0x00/01/02/04 select field width" | ext counts on the zero run inside u32 ticks (tick=0 → `00 00 [ext]`) |
+| chord separators (`00 00 00` new-tick vs `00 00` continuation) | zero runs with/without extension |
+| **note==velocity crash (firmware "bug")** | equal adjacent bytes form an RLE pair; writer must emit `[n][n][00]`. Our velocity nudge avoided the pair instead of escaping it |
+| step-component "alloc byte formula" / "runs_adjusted separators" | RLE extension counts |
+| record tail bytes (0x64/0x63/0x60/0x61/0x2E/0x8A/0x86/0x92/0x9B/…) | `00 00 [ext]` zero-fill of the struct's fixed trailing region. 0x64 vs 0x63 = flag-3 events end with one extra nonzero byte; 0x92 vs 0x8A = 8-byte preset field zeroed |
+| pre-track scene records "tags" | trailing zero-run ext inside fixed 33-byte records |
+
+### Quantitative checks
+
+- RLE-decoding whole track records: decoded size grows by ~12 bytes per
+  note across u2/u80/u101 → RAM note struct = 12 bytes
+  (`u32 tick; u32 gate; u8 note; u8 vel; u8 ×2`).
+- Performance lanes (unnamed 106–109) decode as
+  `[first_lane_idx u8]` then consecutive lanes
+  `[count u8][v0 u16][vmax u16][frame: t u16, v u16 × (count−1)]`,
+  lanes = 0:pitchbend (vmax 8191), 1:modwheel, 2:aftertouch (vmax 254);
+  the linear MIDI-harness ramps decode to exact 480-tick keyframes and
+  linear values. Static lanes are count=1. (This closes the
+  0x60/0x61 tail family and most of the pointer-tail issue's scope.)
+
+### Open precision items
+
+1. Exact decoder state rule after an extension (does the run reset
+   pair-detection? chained extensions for runs > 257?). The naive rule
+   validated 245/246 pre-track streams but whole-body decodes need the
+   corner cases pinned against device captures.
+2. Device test: write note==velocity WITH the `00` ext byte — prediction:
+   loads fine, removing the need for the velocity nudge.
+3. Map the decoded (RAM-space) track struct layout: engine params,
+   sample tables (the `FF 00 00` regions), step components, p-locks —
+   all should become plain fixed-offset fields in decoded space.
+
 ## Suggested Follow-Ups
 
 1. ~~Re-express stats per-record~~ DONE (Part 2): zero unexplained cells.

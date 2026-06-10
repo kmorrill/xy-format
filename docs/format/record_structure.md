@@ -6,6 +6,34 @@
 > `pretrack_pattern_directory.md`, and the preamble portions of
 > `track_blocks.md` / `docs/issues/preamble_state_machine.md`.
 
+## 0. The Serialization Model (read this first)
+
+The `.xy` format is **little-endian C structs serialized field-by-field
+(vectors count-prefixed), passed through a byte-level RLE**:
+
+> After two consecutive equal bytes, the next byte is an extension count
+> (that many additional repeats of the same byte).
+
+This one rule generates most of the format's historical mysteries:
+gate "tokens" (`F0 00 00 01` = u32 gate 240), tick "flag bytes" (zero-run
+ext counts inside u32 ticks), chord "separators" (zero runs), the
+note==velocity "firmware bug" (an unescaped RLE pair — write `[n][n][00]`),
+record tail bytes (zero-fill ext of each struct's fixed trailing region),
+and the pre-track scene "tags" (trailing zero-run ext inside 33-byte
+records). The RAM-side note struct is 12 bytes
+(`u32 tick; u32 gate; u8 note; u8 vel; u8 ×2`).
+
+Performance automation decodes under the same rule:
+`[first_lane u8]` then consecutive lanes
+`[frame_count u8][v0 u16][vmax u16]` + `(t u16, v u16) × (count−1)`,
+lane order pitchbend / modwheel / aftertouch (vmax 8191 / 254 / 254);
+static lanes are count=1 (verified against unnamed 106–109 linear ramps,
+keyframes at exact 480-tick steps).
+
+Open precision items: exact decoder state after an extension (run reset /
+chained ext), and a device test writing note==velocity with the proper
+`00` extension byte.
+
 ## 1. File-Level Grammar
 
 ```
