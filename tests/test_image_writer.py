@@ -70,3 +70,24 @@ def test_build_arrangement_replicates_j06():
     from xy.image_writer import build_arrangement
     out = build_arrangement(BASE, {t: [[]] * 9 for t in range(1, 9)})
     assert out == open("src/one-off-changes-from-default/j06_all16_p9_blank.xy", "rb").read()
+
+
+def test_set_preset_matches_device_kit_load():
+    """u116's T4/T7/T8 = boop kit loaded + one C4: our donor-copy must match
+    the device byte-for-byte except known UI-session fields."""
+    from xy.rle import decode_project
+    import re
+    p = ImageProject.from_file(BASE)
+    for trk in (4, 7, 8):
+        p.set_preset(trk, BASE, donor_track=1)
+        p.add_note(trk, step=1, note=60)
+    _, ours = decode_project(p.to_bytes())
+    _, theirs = decode_project(real("unnamed 116.xy"))
+    assert len(ours) == len(theirs)
+    UI_OK = {0x3CBF, 0x3CC0, 0x3CCB, 0x3CCC, 0x3CD7, 0x3CD8, 0x3DD7, 0x3DD8, 0x389B}
+    sig = re.compile(rb"\x00\x00\x00[\x00-\x0f]\xff\x00\xfc\x00")
+    starts = [m.start() - 3 for m in sig.finditer(theirs)]
+    for i in range(len(ours)):
+        if ours[i] != theirs[i]:
+            rel = (i - starts[0]) % 17876
+            assert rel in UI_OK, f"non-UI residual at image+{i:#x} (track-rel {rel:#x})"

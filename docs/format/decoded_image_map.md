@@ -155,12 +155,26 @@ cell(step, param) = track + 0x2A0 + 84·(step−1) + 2·param_col
 ```
 
 Verified with the device-passed `plock_drum_t2.xy` (alternating
-256/32767 on known steps, uniform 84 stride) and the cc_map captures
-(u124: volume col 0, pan col 41/+82, drum "param 2" col 2/+4; LFO
-dest/param around +50/+52 with a paired default field 0x162F).
-Remaining: complete the param→column table (corpus exercise against
-`docs/format/plocks.md`'s CC list; the old "param_id" byte values were
-raw-space artifacts).
+256/32767 on known steps, uniform 84 stride) and the cc_map captures.
+The column index is the device's master per-track parameter
+enumeration (u16 byte-offsets within the row, from u121/123/124/126):
+
+| offset | col | parameter | | offset | col | parameter |
+|--------|-----|-----------|-|--------|-----|-----------|
+| 0  | 0  | Volume       | | 38 | 19 | Filter Env amount |
+| 2  | 1  | Param 1      | | 40 | 20 | Key tracking |
+| 4  | 2  | Param 2      | | 42 | 21 | Send Ext |
+| 6  | 3  | Param 3      | | 44 | 22 | Send Tape |
+| 8  | 4  | Param 4      | | 46 | 23 | Send FX I |
+| 18 | 9  | Amp Attack   | | 48 | 24 | Send FX II |
+| 20 | 10 | Amp Decay    | | ~50/52 | 25/26 | LFO param/dest (paired field 0x162F) |
+| 22 | 11 | Amp Sustain  | | 82 | 41 | Pan |
+| 24 | 12 | Amp Release  | | | | |
+
+(Filter env A/D/S/R and cutoff/reso expected at offsets 26–36 from
+u122/123's T1/T2 lanes — fill in when needed. CC9 "mute" is never
+recorded, matching the capture notes. The old raw-space "param_id"
+bytes and 3/5/9/18-byte entry formats were RLE artifacts.)
 
 ### Engine / preset region
 
@@ -182,9 +196,19 @@ field follows the table. (The "amb kit" sampler corpus referenced in
 older notes is not present in the repo; slot internals can be mapped
 from baseline + kit-change one-offs when needed.)
 
+### Preset assignment (validated)
+
+Loading a kit/preset = copying the donor's preset-identity regions into
+the target struct at the same offsets:
+`(0x13–0x2A0) ∪ (0x3457–0x456F) ∪ (0x4570–end)` — i.e. everything
+except header, pristine flag, p-lock table, step components, and the
+note vector. Validated against u116 (boop kit on T4/T7/T8): donor-copy
+reproduces the device file except UI-session bytes.
+`ImageProject.set_preset()` implements this.
+
 ## Open
 
-- P-lock param→column table (complete the mapping; corpus-only).
+- P-lock param→column table rows 13–18 (filter env / cutoff / reso).
 - Sample-slot internal fields (tune/level/envelope offsets).
 - UI session fields (+0x3B3F/+0x3CBF/+0x3DBF/+0x423F families) —
   imitate, don't derive.

@@ -94,6 +94,26 @@ class ImageProject:
         self.mark_edited(track)
         self._rescan()
 
+    # --- preset / instrument assignment -----------------------------------
+    # Loading a kit/preset copies the donor's preset-identity regions into
+    # the target struct (validated: u116's T4/T7/T8 boop-kit loads are exact
+    # donor copies of baseline T1 up to UI-session bytes). Regions exclude
+    # the header, pristine flag, p-lock table, step components, and events.
+    PRESET_REGIONS = ((0x13, 0x2A0), (0x3457, 0x456F), (0x4570, 17876))
+
+    def set_preset(self, track: int, donor_path: str, donor_track: int) -> None:
+        """Copy instrument identity (engine, params, samples, preset string,
+        trailer) from a donor file's track. Donor track must be a pristine
+        17,876-byte leader struct (no events)."""
+        _, dimg = decode_project(open(donor_path, "rb").read())
+        dstarts = [m.start() - 3 for m in SIG_RE.finditer(dimg)]
+        ds = dstarts[donor_track - 1]
+        donor = dimg[ds : ds + 17876]
+        s = self.track_start(track)
+        for a, b in self.PRESET_REGIONS:
+            self.image[s + a : s + b] = donor[a:b]
+        self._rescan()
+
     # --- output ----------------------------------------------------------
     def to_bytes(self) -> bytes:
         return encode_project(self.header, bytes(self.image))
