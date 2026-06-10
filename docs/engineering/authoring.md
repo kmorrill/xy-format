@@ -29,12 +29,39 @@ the RLE layer.
 
 ```python
 p = ImageProject.from_file("src/one-off-changes-from-default/unnamed 1.xy")
-p.set_bars(track, bars)
+
+# global project settings
+p.set_tempo(121.2)                       # BPM
+p.set_groove(groove_type)                # groove enum
+p.set_click_volume(0)
+p.set_midi_channel(track, channel)       # 1..16, or None = off
+p.set_master_eq(low=..., mid=..., high=...)
+
+# sequencer content
+p.set_bars(track, bars)                  # 1..4
 p.add_note(track, step=9, note=60, velocity=100, gate=240)   # tick optional
-p.set_preset(track, donor_path, donor_track)                  # instrument identity copy
+p.set_track_scale(track, 2)              # 0.5 / 1 / 2 / 16 (or raw byte)
+
+# instrument / sound
+p.set_engine(track, engine_id)
+p.set_engine_param(track, index, value)  # index 1..4, internal u32
+p.set_filter(track, type=..., enabled=...)
+p.set_preset(track, donor_path, donor_track)   # whole-instrument copy
+p.set_track_block(track, offset, data)   # envelopes/filter/mod-routing blocks
+
+# per-step modifiers
+p.set_step_component(track, step, "pulse", value)   # 14 component names
+p.set_plock(track, step, "cutoff", value)           # ~30 param names
+
+# drum voices (24)
 p.set_drum_voice(track, voice, tune=+7, play_mode=4, start=..., end=..., gain=...)
+
 p.save("out.xy")
 ```
+
+Every method above is validated by byte-exact replication of its device
+capture (`tests/test_image_writer.py`). Component names:
+`STEP_COMPONENTS`; p-lock param names: `PLOCK_PARAMS`.
 
 ### `build_arrangement` (multi-pattern / scenes / songs)
 

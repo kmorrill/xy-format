@@ -120,3 +120,39 @@ def test_drum_voice_tune_matches_device_capture():
     for v in (7, 9):
         off = T1 + SLOT0 + v * STRIDE  # +0x00 = tune byte
         assert ours[off] == cap[off]
+
+
+# --- convenience-method byte-exact replication of corpus captures ---------
+
+import pytest as _pytest
+
+
+@_pytest.mark.parametrize("target,edit", [
+    ("unnamed 5.xy", lambda p: p.set_tempo(121.2)),
+    ("unnamed 11.xy", lambda p: p.set_groove(8)),
+    ("unnamed 10.xy", lambda p: p.set_click_volume(0)),
+    ("unnamed 41.xy", lambda p: (p.set_midi_channel(1, 1), p.set_midi_channel(16, 16))),
+    ("unnamed 14.xy", lambda p: p.set_master_eq(low=0)),
+    ("unnamed 15.xy", lambda p: p.set_master_eq(mid=0)),
+    ("unnamed 16.xy", lambda p: p.set_master_eq(high=0)),
+    ("unnamed 20.xy", lambda p: p.set_track_scale(1, 2)),
+    ("unnamed 21.xy", lambda p: p.set_track_scale(1, 16)),
+    ("unnamed 22.xy", lambda p: p.set_track_scale(1, 0.5)),
+    ("unnamed 23.xy", lambda p: p.set_engine_param(3, 1, 0x7FFFFFFF)),
+    ("unnamed 8.xy", lambda p: p.set_step_component(1, 1, "pulse", 1)),
+    ("unnamed 59.xy", lambda p: p.set_step_component(1, 9, "pulse", 1)),
+])
+def test_convenience_methods_replicate_device_captures(target, edit):
+    p = ImageProject.from_file(BASE)
+    edit(p)
+    assert p.to_bytes() == real(target)
+
+
+def test_set_plock_writes_u16_cell():
+    p = ImageProject.from_file(BASE)
+    p.set_plock(2, 1, "param2", 256)  # step 1, Param 2 = byte offset 4 in row
+    T2 = 0xD79 + 17876
+    cell = T2 + 0x2A0 + 4
+    from xy.rle import decode_project
+    _, img = decode_project(p.to_bytes())
+    assert img[cell : cell + 2] == (256).to_bytes(2, "little")

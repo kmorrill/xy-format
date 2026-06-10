@@ -94,6 +94,113 @@ class ImageProject:
         self.mark_edited(track)
         self._rescan()
 
+    # --- global project settings (decoded_image_map.md §Global Header) ----
+    GLOBAL_TEMPO = 0x00     # u16 LE, tenths of BPM
+    GLOBAL_GROOVE = 0x03    # u8 groove type
+    GLOBAL_CLICK = 0x04     # u8 metronome/click volume
+    GLOBAL_MIDI = 0x55      # per-track channel array (T1=0x55 .. T16=0x64)
+    GLOBAL_EQ = (0x68, 0x6C, 0x70)  # master EQ low/mid/high, u32 each (default 0x40)
+
+    def set_tempo(self, bpm: float) -> None:
+        v = round(bpm * 10)
+        self.image[self.GLOBAL_TEMPO : self.GLOBAL_TEMPO + 2] = v.to_bytes(2, "little")
+
+    def set_groove(self, groove_type: int) -> None:
+        self.image[self.GLOBAL_GROOVE] = groove_type & 0xFF
+
+    def set_click_volume(self, volume: int) -> None:
+        self.image[self.GLOBAL_CLICK] = volume & 0xFF
+
+    def set_midi_channel(self, track: int, channel: int | None) -> None:
+        """channel 1..16, or None = off (0xFF)."""
+        self.image[self.GLOBAL_MIDI + track - 1] = 0xFF if channel is None else (channel - 1) & 0xFF
+
+    def set_master_eq(self, low: int | None = None, mid: int | None = None, high: int | None = None) -> None:
+        for off, val in zip(self.GLOBAL_EQ, (low, mid, high)):
+            if val is not None:
+                self.image[off : off + 4] = val.to_bytes(4, "little")
+
+    # --- per-track sound / engine (track-relative offsets) ----------------
+    TRK_SCALE = 0x06
+    TRK_ENGINE = 0x14
+    TRK_M4_PAGE = 0x20
+    TRK_FILTER_TYPE = 0x21
+    TRK_FILTER_ON = 0x25
+    TRK_PARAMS = 0x3857     # 4 engine params, u32 each
+    TRK_STEPCOMP = 0x3057   # 16 B per step
+    TRK_PLOCK = 0x2A0       # 84 B per step row, u16 cells
+    # encoded track-scale byte (0x01=½× .. 0x0E=16×); pass raw for others.
+    SCALE_BYTES = {0.5: 0x01, 1: 0x03, 2: 0x05, 16: 0x0E}
+
+    STEP_COMPONENTS = {
+        "pulse": 0, "hold": 1, "multiply": 2, "velocity": 3, "ramp_up": 4,
+        "ramp_down": 5, "random": 6, "portamento": 7, "bend": 8, "tonality": 9,
+        "jump": 10, "param": 11, "conditional_a": 12, "conditional_b": 13,
+    }
+    # p-lock param -> byte offset within the 84-byte row (= 2 * column).
+    PLOCK_PARAMS = {
+        "volume": 0, "param1": 2, "param2": 4, "param3": 6, "param4": 8,
+        "amp_attack": 18, "amp_decay": 20, "amp_sustain": 22, "amp_release": 24,
+        "poly": 26, "portamento": 28, "pitch_bend": 30, "engine_volume": 32,
+        "cutoff": 34, "resonance": 36, "filter_env_amount": 38, "key_tracking": 40,
+        "send_ext": 42, "send_tape": 44, "send_fx1": 46, "send_fx2": 48,
+        "lfo_param": 50, "lfo_dest": 52,
+        "filter_env_attack": 66, "filter_env_decay": 68,
+        "filter_env_sustain": 70, "filter_env_release": 72, "pan": 82,
+    }
+
+    def set_track_scale(self, track: int, scale) -> None:
+        """scale: 0.5/1/2/16 (known) or a raw encoded byte."""
+        b = self.SCALE_BYTES.get(scale, scale)
+        self.image[self.track_start(track) + self.TRK_SCALE] = b & 0xFF
+        self.mark_edited(track)
+
+    def set_engine(self, track: int, engine_id: int) -> None:
+        self.image[self.track_start(track) + self.TRK_ENGINE] = engine_id & 0xFF
+        self.mark_edited(track)
+
+    def set_engine_param(self, track: int, index: int, value: int) -> None:
+        """index 1..4; value is the device's internal (fixed-point) u32."""
+        o = self.track_start(track) + self.TRK_PARAMS + (index - 1) * 4
+        self.image[o : o + 4] = value.to_bytes(4, "little")
+        self.mark_edited(track)
+
+    def set_filter(self, track: int, *, type: int | None = None, enabled: bool | None = None) -> None:
+        s = self.track_start(track)
+        if type is not None:
+            self.image[s + self.TRK_FILTER_TYPE] = type & 0xFF
+        if enabled is not None:
+            self.image[s + self.TRK_FILTER_ON] = 1 if enabled else 0
+        self.mark_edited(track)
+
+    def set_track_block(self, track: int, offset: int, data: bytes) -> None:
+        """Generic in-place block write (envelopes/filter/mod-routing blocks
+        at known offsets, see decoded_image_map.md). Length-preserving."""
+        s = self.track_start(track) + offset
+        self.image[s : s + len(data)] = data
+        self.mark_edited(track)
+
+    def set_step_component(self, track: int, step: int, component: str, value: int) -> None:
+        """Enable a step component (1-based step) and set its value byte."""
+        bit = self.STEP_COMPONENTS[component]
+        s = self.track_start(track) + self.TRK_STEPCOMP + (step - 1) * 16
+        mask = int.from_bytes(self.image[s : s + 2], "little") | (1 << bit)
+        self.image[s : s + 2] = mask.to_bytes(2, "little")
+        self.image[s + 2 + bit] = value & 0xFF
+        self.mark_edited(track)
+
+    def clear_step_components(self, track: int, step: int) -> None:
+        s = self.track_start(track) + self.TRK_STEPCOMP + (step - 1) * 16
+        self.image[s : s + 16] = b"\x00" * 16
+        self.mark_edited(track)
+
+    def set_plock(self, track: int, step: int, param: str, value: int) -> None:
+        """Lock `param` to `value` (u16) on `step` (1-based)."""
+        off = self.PLOCK_PARAMS[param]
+        cell = self.track_start(track) + self.TRK_PLOCK + (step - 1) * 84 + off
+        self.image[cell : cell + 2] = (value & 0xFFFF).to_bytes(2, "little")
+        self.mark_edited(track)
+
     # --- drum-voice parameters (decoded from device capture + manual) -----
     # 24 voice slots, 128 B each, at track+0x3957 (the drum sampler table).
     DRUM_TABLE = 0x3957
