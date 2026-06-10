@@ -109,10 +109,14 @@ records; runs may span record boundaries.
 ```c
 struct Scene {
     u8 selected_pattern[16];  // 0-based pattern index per track
-    u8 mute[16];              // 0 = unmuted, 2 = muted (T1=idx16 … T16=idx31)
+    u8 mute[16];              // 0 = unmuted, nonzero = muted (T1=idx16 … T16=idx31)
     u8 flags;                 // 0x01 normal, 0x00 on blank rows
 };
 ```
+
+Mute is boolean: device probe 06 confirmed values 1, 2, and 3 **all
+display as muted** (no "solo" encoding here). The device writes 2; the
+writer emits 2 canonically.
 
 - Record 0 = live/current selection state (the old "descriptor").
 - Records 1…n−1 = scenes in order.

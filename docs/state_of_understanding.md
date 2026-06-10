@@ -50,6 +50,28 @@ the RAM struct map; then author a file purely from a constructed image
 (`encode_project`) and device-test it — the model's first generative
 test.
 
+### Update (same day, 5): Tier-2 device probes — 4/4, sparse issue closed
+
+User-verified on hardware (corpus-lab recorded):
+- **06 mute enum**: scene-2 mute values 1/2/3 ALL display as muted →
+  mute is boolean (no solo here); writer emits 2 canonically.
+- **07 note flags**: the two trailing note bytes ARE read by firmware
+  (`flags[0]=127` retriggered a note in MIDI Monitor), but corpus shows
+  the device only writes 0 (programmed) or 2 (some MIDI-record drums);
+  `flags[1]` always 0. Micro-timing lives in the tick, not these bytes.
+  Writer emits 0,0 (device default) — correct and safe; exact semantics
+  of `flags[0]` deferred (non-blocking).
+- **08 preset transfer**: boop kit copied onto T5 (non-native slot)
+  shows as "boop" and plays drum hits → struct-level preset assignment
+  works on the device.
+- **09 sparse song**: T4-only Tiesto, 6 patterns + 6 scenes + song chain
+  loads, plays, and chains → **sparse-topology stability issue CLOSED**
+  (`docs/issues/sparse_topology_stability.md`). The old crashes were
+  incoherent writer state, not sparseness.
+
+Every authoring axis is now device-confirmed: notes, gates, multi-pattern,
+scenes, songs, mutes, preset assignment, sparse arrangements.
+
 ### Update (same day, 4): CAPSTONE — Whitney plays on device
 
 The February crash-saga conversion (Whitney Houston, crashes #4/#5),

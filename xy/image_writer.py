@@ -168,6 +168,7 @@ def build_arrangement(
     track_patterns: dict[int, list[list[dict]]],
     *,
     scenes: list[dict[int, int]] | None = None,
+    scene_mutes: list[list[int]] | None = None,
     song_chain: list[int] | None = None,
     song_loop: bool = True,
 ) -> bytes:
@@ -177,6 +178,8 @@ def build_arrangement(
         dicts {step, note, velocity?, tick_offset?, gate_ticks?}.
     scenes: optional scene rows; scene k maps 1-based track -> 0-based
         pattern index (scene slots 1..n; slot 0 stays the live selection).
+    scene_mutes: optional per-scene list of 1-based muted tracks (device
+        mute value is 2; nonzero = muted, confirmed device-side).
     song_chain: optional list of 0-based scene ids for Song 1.
     """
     header, base = decode_project(open(base_path, "rb").read())
@@ -196,9 +199,12 @@ def build_arrangement(
         g[GLOBAL_SCENE_COUNT] = len(scenes) - 1
         for k, row in enumerate(scenes, start=1):
             slot = SCENE_SLOT0 + k * SCENE_SLOT_SIZE
-            if any(row.values()):
+            mutes = scene_mutes[k - 1] if scene_mutes and k - 1 < len(scene_mutes) else []
+            if any(row.values()) or mutes:
                 for t, pat in row.items():
                     g[slot + t - 1] = pat
+                for t in mutes:
+                    g[slot + 16 + t - 1] = 2  # device mute value
                 g[slot + 32] = 1
 
     parts = [bytes(g)]
