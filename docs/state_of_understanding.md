@@ -12,6 +12,46 @@ Format per entry: **Settled** (corpus/device-validated), **Believed**
 
 ---
 
+## 2026-06-09 (later) — Round-trip passed; container layer solved
+
+### One-sentence status
+
+The decisive test passed: **245/246 corpus files decode and re-encode
+byte-identically as one RLE stream**, so the whole-file RLE claim moves
+from Believed to Settled, and the unit of study is now the decoded
+~290 KB RAM image, where one-off changes are pure substitutions at fixed
+offsets.
+
+### Newly settled
+
+- RLE semantics pinned: pairing on consecutive input bytes; the
+  extension byte resets pair state; runs chunk at 257; the firmware
+  encoder is canonical-greedy. Codec: `xy/rle.py` (252 tests).
+- Decoded-space facts: tempo u16 @0x0, groove @0x3, click @0x4,
+  song @0x6, MIDI @0x55/0x64, T1 bars @0xd7a, scale @0xd7f,
+  step components = 16-byte per-step slots (T1 step1 @0x3dd0),
+  notes = +12 bytes each, pattern struct = 17,875 bytes,
+  engine swap = size-preserving in-place substitution.
+- The "next decisive test" of the previous entry is discharged; the
+  remaining-mysteries list shrinks to field mapping plus the device
+  test of note==velocity written as `[n][n][00]`.
+
+### New anomaly
+
+- `bleez.xy` (alone in the corpus, incl. its bleez1–36 siblings)
+  contains non-greedy run splits; decodes fine, re-encodes smaller.
+  Believed tool-assembled in lineage. Treat as non-canonical specimen,
+  not as evidence against the model.
+
+### Next decisive test
+
+Corpus-wide field-mapping join (decoded diff × change log) to produce
+the RAM struct map; then author a file purely from a constructed image
+(`encode_project`) and device-test it — the model's first generative
+test.
+
+---
+
 ## 2026-06-09 — The serialization-model reframe
 
 ### One-sentence status

@@ -334,6 +334,55 @@ lanes, the song table. The format is:
    sample tables (the `FF 00 00` regions), step components, p-locks —
    all should become plain fixed-offset fields in decoded space.
 
+## Part 6 (same day): ROUND-TRIP PASSED — the container layer is solved
+
+The decisive test from `docs/state_of_understanding.md` ran and passed on
+the first decoder variant (C-style input-pairing, extension byte resets
+the pair state, greedy canonical encoder chunked at 257):
+
+- **245/246 `src/` files round-trip byte-identically** as ONE continuous
+  RLE stream from offset 8 (after magic+firmware header) to EOF.
+- The test is not vacuous: non-canonical run encodings exist and would
+  fail it. Every device-saved file is canonical-greedy.
+- The sole failure, `bleez.xy`, *decodes* fine but contains ~648 bytes of
+  non-greedy run splits (3 zeros as `00 00 00` + `00` instead of
+  `00 00 01`) — unique in the corpus, including its own bleez1–36
+  siblings; believed tool-assembled somewhere in its lineage.
+
+Codec: `xy/rle.py` (+ `tests/test_rle.py`, corpus-parameterized).
+Workhorse: `tools/analysis/decoded_diff.py`.
+
+### Decoded space behaves exactly as predicted
+
+Baseline decodes to a **289,521-byte RAM image** (30× expansion). One-off
+changes become pure substitutions at fixed offsets / exact struct growth:
+
+| change (file) | Δlen | decoded diff |
+|---|---|---|
+| tempo 40 / 121.2 (u4, u5) | 0 | u16 tenths at **0x0** (+1 related byte at 0x4) |
+| groove type / amount (u11, u12) | 0 | 1 byte at **0x3** |
+| click volume (u10) | 0 | 1 byte at **0x4** |
+| empty Song 2 (u13) | 0 | 1 byte at **0x6** |
+| MIDI channels (u41) | 0 | bytes at **0x55 / 0x64** |
+| T1 bars (u17/u19) | 0 | 1 byte at **0xd7a** (+ status byte 0xd8a) |
+| T1 track scale (u20/u22) | 0 | 1 byte at **0xd7f** |
+| pulse component step 1 vs 9 (u8, u59) | 0 | 3 bytes at **0x3dd0** vs **0x3e50** → **16-byte per-step slots** |
+| all 14 components on step 9 (u63) | 0 | 16 bytes at 0x3e50 (one slot) |
+| notes (u2/u3/u80/u81) | **+12 per note** | event vector + step-map regions |
+| new blank pattern (u6/u7) | **+17,875 per pattern** | the pattern struct size |
+| engine swap, no preset (u34) | **0** | in-place substitutions — param block is fixed-size |
+| scene mute (150b) | 0 | scene structs at ~0x275xx + flags at 0x7/0xa5/0xb5 |
+
+Step components, which took a 14-type two-bank encoder and crash ladder
+to map in raw space, are a 16-byte-stride array lookup in decoded space.
+
+### Status
+
+**The container layer is solved.** Remaining work is field mapping inside
+the decoded image (a corpus-wide decoded-diff × change-log join), then a
+struct-level writer (build image, `encode_project`) replacing scaffold
+transplants.
+
 ## Suggested Follow-Ups
 
 1. ~~Re-express stats per-record~~ DONE (Part 2): zero unexplained cells.
