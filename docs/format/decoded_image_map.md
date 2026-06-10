@@ -40,7 +40,7 @@ live in the global region in scene-bearing files.)
 | offset | field | evidence |
 |---|---|---|
 | +0x00 | pattern count (leader) | header decode |
-| +0x01 | bar count (`bars<<4` nibble byte) | u17–u19 |
+| +0x01 | pattern length in sequencer steps (`0x10`/`0x20`/`0x30`/`0x40` = 1/2/3/4 bars). Whole-bar values are device-captured; non-multiple values are the inferred storage for the guide's final-bar sequence-length control and still need a direct device capture. | u17–u19 |
 | +0x02 | 0xF0 marker | — |
 | +0x03 | signature `00 00 00 [scale] FF 00 FC 00` | — |
 | +0x06 | **track scale** (0x01=½, 0x03=1, 0x05=2, 0x0E=16) | u20–u22 |
@@ -153,6 +153,16 @@ Per-step lock rows at **track+0x2A0**, **84 bytes per step** (×64),
 ```
 cell(step, param) = track + 0x2A0 + 84·(step−1) + 2·param_col
 ```
+
+**Automation requires flags** (decoded 2026-06-10 from `unnamed 35` +
+device-passed `plock_drum_t2`). The value cell alone is inert; the
+firmware also reads:
+- per-step active flag at `track+0x2C4E + 8·(step−1)` = `0x01` — GLOBAL
+  per step (any param; param1 and param2 captures share these offsets),
+- a per-track master flag at `track+0x304E` = `0x01`.
+`ImageProject.automate_param()` / `set_plock()` write all three.
+(A UI current-value header at `track+0x24C + 2·col` and the resting
+engine value mirror the lane but are cosmetic, not needed for playback.)
 
 Verified with the device-passed `plock_drum_t2.xy` (alternating
 256/32767 on known steps, uniform 84 stride) and the cc_map captures.

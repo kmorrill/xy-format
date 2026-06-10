@@ -366,14 +366,72 @@ def main():
     p.set_step_component(idx(6, 5), 13, "bend", 1)        # solo: bend dip
     p.set_step_component(idx(6, 5), 28, "portamento", 6)  # solo: slide
 
-    # --- p-locks ------------------------------------------------------------
-    for s, v in [(1, 4000), (17, 9000), (33, 15000), (49, 24000)]:
-        p.set_plock(idx(5, 5), s, "cutoff", v)            # breakdown pad opens up
-    for b in range(4):                                    # P4 arp ping-pong pan
-        for s, v in [(1, 9000), (5, 23000), (9, 9000), (13, 23000)]:
-            p.set_plock(idx(4, 4), b * 16 + s, "pan", v)
+    # --- parameter automation ---------------------------------------------
+    # Each entry below is logged to the automation map so it can be verified
+    # on the device. ramp()/wave() generate per-step value curves; automate
+    # writes the value lane + per-step flags + master flag.
+    def ramp(steps, lo, hi):
+        n = len(steps)
+        return {s: round(lo + (hi - lo) * i / max(1, n - 1)) for i, s in enumerate(steps)}
+
+    def wave(steps, lo, hi, period):
+        import math
+        return {s: round(lo + (hi - lo) * (0.5 - 0.5 * math.cos(2 * math.pi * i / period)))
+                for i, s in enumerate(steps)}
+
+    automations = []  # (section, track, pattern, param, curve, note)
+
+    def auto(section, track, pat, param, curve, note):
+        p.automate_param(idx(track, pat), param, curve)
+        automations.append((section, f"T{track}", pat, param,
+                            f"{min(curve.values())}→{max(curve.values())} over {len(curve)} steps", note))
+
+    allsteps = list(range(1, 65))
+
+    # CUTOFF — the signature breakdown filter open (smooth 64-step sweep)
+    auto("breakdown", 5, 5, "cutoff", ramp(allsteps, 1200, 31000),
+         "pad opens from near-closed to wide over all 4 bars")
+    # CUTOFF — gentle groove swell (LFO-ish wobble on the pad)
+    auto("groove", 5, 3, "cutoff", wave(allsteps, 9000, 22000, 16),
+         "pad breathes once per bar")
+    # CUTOFF — climax brightness rising through the anthem (lead)
+    auto("climax", 6, 6, "cutoff", ramp(list(range(1, 33)), 14000, 30000),
+         "lead brightens across the first half of the chorus")
+    auto("climax-var", 6, 7, "cutoff", ramp(allsteps, 16000, 32000),
+         "lead pushed fully bright in the final chorus")
+    # SYNTH PARAM — bass grit driving the climaxes (param1 movement)
+    auto("climax", 3, 6, "param1", wave(allsteps, 6000, 26000, 8),
+         "bass timbre pulses every half-beat for drive")
+    auto("climax-var", 3, 7, "param1", wave(allsteps, 8000, 30000, 8),
+         "bass grit intensified")
+    # SYNTH PARAM — pad texture evolving through the breakdown
+    auto("breakdown", 5, 5, "param1", ramp(allsteps, 4000, 20000),
+         "pad character morphs as the filter opens")
+    # LFO PARAM ramp — tension/energy rising across the song sections
+    auto("build", 5, 2, "lfo_param", ramp(allsteps, 3000, 9000),
+         "LFO begins slow, edges up through the build")
+    auto("groove", 5, 3, "lfo_param", ramp(allsteps, 9000, 14000),
+         "LFO faster in the groove")
+    auto("breakdown", 5, 5, "lfo_param", ramp(allsteps, 6000, 24000),
+         "LFO accelerates dramatically as the breakdown swells")
+    auto("climax", 5, 6, "lfo_param", ramp(allsteps, 22000, 30000),
+         "LFO fast and intense at the peak")
+    # PAN — ping-pong on the variation arp (now actually armed)
+    p.automate_param(idx(4, 4), "pan",
+                     {b * 16 + s: v for b in range(4) for s, v in
+                      [(1, 9000), (5, 23000), (9, 9000), (13, 23000)]})
+    automations.append(("groove-var", "T4", 4, "pan", "ping-pong L/R every 4 steps",
+                        "arp bounces across the stereo field"))
 
     p.save(OUT)
+
+    # --- automation map (for device verification) --------------------------
+    SCENE_OF = {1: "1 intro", 2: "2 build", 3: "3 groove", 4: "4 groove-var",
+                5: "5 breakdown", 6: "6 climax", 7: "7 climax-var", 8: "8 outro"}
+    print("\nAUTOMATION MAP — watch/listen for these on device:")
+    print(f"  {'section':<12}{'track':<6}{'scene played':<14}{'param':<11}{'curve':<26}what to notice")
+    for sec, trk, pat, param, curve, note in automations:
+        print(f"  {sec:<12}{trk:<6}{SCENE_OF[pat]:<14}{param:<11}{curve:<26}{note}")
 
     # --- verification -------------------------------------------------------
     data = Path(OUT).read_bytes()
@@ -381,9 +439,10 @@ def main():
     import re
     sigs = len(re.findall(rb"\x00\x00\x00[\x00-\x0f]\xff\x00\xfc\x00", img))
     total = sum(len(pp) for ps in tracks.values() for pp in ps) + sum(len(h) for h in t8_hits.values())
-    print(f"AURORA ENGINE: {len(data):,} bytes raw, {len(img):,} decoded, "
+    secs = len(chain) * 16 * 60 / 104       # 14 scenes × 4 bars × 4 beats
+    print(f"\nAURORA ENGINE: {len(data):,} bytes raw, {len(img):,} decoded, "
           f"{sigs} structs (expect 72), ~{total} notes, "
-          f"{len(chain)} scene-plays ≈ {len(chain)*4*60*4/104/4:.0f}s at 104 BPM")
+          f"{len(chain)} scene-plays ≈ {int(secs//60)}:{int(secs%60):02d} at 104 BPM")
     return 0
 
 

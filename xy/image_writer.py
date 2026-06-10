@@ -19,7 +19,8 @@ from xy.rle import decode_project, encode_project
 SIG_RE = re.compile(rb"\x00\x00\x00[\x00-\x0f]\xff\x00\xfc\x00", re.S)
 
 # track-struct relative offsets (docs/format/decoded_image_map.md)
-OFF_BARS = 0x01
+OFF_PATTERN_STEPS = 0x01
+OFF_BARS = OFF_PATTERN_STEPS  # compatibility alias: whole bars are steps/16
 OFF_SCALE = 0x06
 OFF_PRISTINE = 0x11   # u16: 8 = factory, 0 = edited (sticky)
 OFF_NOTE_COUNT = 0x456F
@@ -53,10 +54,23 @@ class ImageProject:
         s = self.track_start(track)
         self.image[s + OFF_PRISTINE : s + OFF_PRISTINE + 2] = b"\x00\x00"
 
-    def set_bars(self, track: int, bars: int) -> None:
+    def set_pattern_steps(self, track: int, steps: int) -> None:
+        """Set the played pattern length in sequencer steps (1..64).
+
+        Device captures validate the whole-bar values 16/32/48/64. The guide's
+        final-bar length control is inferred to use the same byte for non-16
+        values; those values still need a direct device capture.
+        """
+        if not 1 <= steps <= 64:
+            raise ValueError("pattern length must be 1..64 steps")
         s = self.track_start(track)
-        self.image[s + OFF_BARS] = (bars & 0xF) << 4
+        self.image[s + OFF_PATTERN_STEPS] = steps & 0xFF
         self.mark_edited(track)
+
+    def set_bars(self, track: int, bars: int) -> None:
+        if not 1 <= bars <= 4:
+            raise ValueError("bar count must be 1..4")
+        self.set_pattern_steps(track, bars * 16)
 
     # --- note vector -----------------------------------------------------
     def note_count(self, track: int) -> int:
@@ -194,12 +208,31 @@ class ImageProject:
         self.image[s : s + 16] = b"\x00" * 16
         self.mark_edited(track)
 
+    # Automation requires more than the value cell: the firmware reads a
+    # per-step "this step has automation" flag (GLOBAL per step, not per
+    # param — confirmed across unnamed 35 param1 and plock_drum_t2 param2)
+    # and a per-track master flag, or the value lane is inert.
+    PLOCK_STEP_FLAG = 0x2C4E   # +8*(step-1), value 0x01
+    PLOCK_MASTER = 0x304E      # 0x01 once per automated track
+
     def set_plock(self, track: int, step: int, param: str, value: int) -> None:
-        """Lock `param` to `value` (u16) on `step` (1-based)."""
+        """Lock `param` to `value` (u16) on `step` (1-based). Also arms the
+        per-step + master automation flags so the lock actually plays."""
+        s = self.track_start(track)
         off = self.PLOCK_PARAMS[param]
-        cell = self.track_start(track) + self.TRK_PLOCK + (step - 1) * 84 + off
+        cell = s + self.TRK_PLOCK + (step - 1) * 84 + off
         self.image[cell : cell + 2] = (value & 0xFFFF).to_bytes(2, "little")
+        self.image[s + self.PLOCK_STEP_FLAG + (step - 1) * 8] = 0x01
+        self.image[s + self.PLOCK_MASTER] = 0x01
         self.mark_edited(track)
+
+    def automate_param(self, track: int, param: str, step_values: dict[int, int]) -> None:
+        """Automate `param` across steps. `step_values` maps 1-based step ->
+        u16 value. Writes the value lane + per-step flags + master flag —
+        the device automation structure (matches unnamed 35 / plock_drum_t2).
+        Values are the device's internal fixed-point (e.g. 0..0x7FFF)."""
+        for step, v in step_values.items():
+            self.set_plock(track, step, param, v)
 
     # --- drum-voice parameters (decoded from device capture + manual) -----
     # 24 voice slots, 128 B each, at track+0x3957 (the drum sampler table).
@@ -288,14 +321,31 @@ FOOTER_SLOTS = 14
 STRIDE = 17876
 
 
-def _pattern_struct(base_struct: bytes, notes: list[dict]) -> bytes:
+def _pattern_payload(pattern) -> tuple[list[dict], int | None]:
+    """Accept either a plain note list or {'notes': [...], 'steps': N}."""
+    if isinstance(pattern, dict):
+        notes = pattern.get("notes", [])
+        steps = pattern.get("steps")
+        if steps is None and pattern.get("bars") is not None:
+            steps = int(pattern["bars"]) * 16
+        return notes, steps
+    return pattern, None
+
+
+def _pattern_struct(base_struct: bytes, pattern) -> bytes:
     """Build one pattern struct from the track's baseline struct."""
+    notes, explicit_steps = _pattern_payload(pattern)
     st = bytearray(base_struct)
+    if explicit_steps is not None:
+        if not 1 <= explicit_steps <= 64:
+            raise ValueError("pattern length must be 1..64 steps")
+        st[OFF_PATTERN_STEPS] = explicit_steps
+        st[OFF_PRISTINE : OFF_PRISTINE + 2] = b"\x00\x00"
     if not notes:
         return bytes(st)
     max_step = max(n["step"] for n in notes)
-    bars = min(4, max(1, (max_step + 15) // 16))
-    st[OFF_BARS] = bars << 4
+    inferred_steps = min(64, max(16, ((max_step + 15) // 16) * 16))
+    st[OFF_PATTERN_STEPS] = explicit_steps or inferred_steps
     st[OFF_PRISTINE : OFF_PRISTINE + 2] = b"\x00\x00"
     cpos = OFF_NOTE_COUNT
     recs = bytearray()
@@ -313,7 +363,7 @@ def _pattern_struct(base_struct: bytes, notes: list[dict]) -> bytes:
 
 def build_arrangement(
     base_path: str,
-    track_patterns: dict[int, list[list[dict]]],
+    track_patterns: dict[int, list[list[dict] | dict]],
     *,
     scenes: list[dict[int, int]] | None = None,
     scene_mutes: list[list[int]] | None = None,
@@ -322,8 +372,10 @@ def build_arrangement(
 ) -> bytes:
     """Assemble a project image from scratch.
 
-    track_patterns: 1-based track -> list of patterns, each a list of note
-        dicts {step, note, velocity?, tick_offset?, gate_ticks?}.
+    track_patterns: 1-based track -> list of patterns. Each pattern may be
+        either a list of note dicts {step, note, velocity?, tick_offset?,
+        gate_ticks?}, or {"notes": [...], "steps": N} / {"notes": [...],
+        "bars": N} to set the explicit pattern length.
     scenes: optional scene rows; scene k maps 1-based track -> 0-based
         pattern index (scene slots 1..n; slot 0 stays the live selection).
     scene_mutes: optional per-scene list of 1-based muted tracks (device

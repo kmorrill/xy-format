@@ -38,6 +38,23 @@ def test_replicates_unnamed_19_bar_count():
     assert out == real("unnamed 19.xy")
 
 
+def test_set_pattern_steps_writes_final_bar_length_byte():
+    from xy.rle import decode_project
+    p = ImageProject.from_file(BASE)
+    p.set_pattern_steps(1, 24)
+    _, img = decode_project(p.to_bytes())
+    t1 = p.track_start(1)
+    assert img[t1 + 0x01] == 24
+
+
+def test_set_pattern_steps_rejects_out_of_range_values():
+    p = ImageProject.from_file(BASE)
+    with pytest.raises(ValueError):
+        p.set_pattern_steps(1, 0)
+    with pytest.raises(ValueError):
+        p.set_pattern_steps(1, 65)
+
+
 def test_replicates_unnamed_92_notes_with_gates():
     def edits(p):
         p.add_note(3, step=1, note=48, gate=960)
@@ -70,6 +87,15 @@ def test_build_arrangement_replicates_j06():
     from xy.image_writer import build_arrangement
     out = build_arrangement(BASE, {t: [[]] * 9 for t in range(1, 9)})
     assert out == open("src/one-off-changes-from-default/j06_all16_p9_blank.xy", "rb").read()
+
+
+def test_build_arrangement_accepts_explicit_pattern_steps():
+    from xy.image_writer import build_arrangement
+    from xy.rle import decode_project
+    out = build_arrangement(BASE, {3: [{"steps": 24, "notes": []}]})
+    _, img = decode_project(out)
+    t3 = 0xD79 + (3 - 1) * 17876
+    assert img[t3 + 0x01] == 24
 
 
 def test_set_preset_matches_device_kit_load():
@@ -156,3 +182,33 @@ def test_set_plock_writes_u16_cell():
     from xy.rle import decode_project
     _, img = decode_project(p.to_bytes())
     assert img[cell : cell + 2] == (256).to_bytes(2, "little")
+
+
+def test_automate_param_reproduces_device_capture_structure():
+    """automate_param writes the device automation structure (value lane +
+    per-step flags + master) matching unnamed 35's param1 automation."""
+    from xy.rle import decode_project
+    T3 = 0xD79 + 2 * 17876
+    _, cap = decode_project(real("unnamed 35.xy"))
+    vals = {k + 1: int.from_bytes(cap[T3 + 0x2A0 + k * 84 + 2:T3 + 0x2A0 + k * 84 + 4], "little")
+            for k in range(16)}
+    p = ImageProject.from_file(BASE)
+    p.automate_param(3, "param1", vals)
+    _, ours = decode_project(p.to_bytes())
+    # value lane, per-step flags, master flag must match the capture
+    for k in range(16):
+        cell = T3 + 0x2A0 + k * 84 + 2
+        assert ours[cell:cell + 2] == cap[cell:cell + 2]
+        assert ours[T3 + 0x2C4E + k * 8] == cap[T3 + 0x2C4E + k * 8] == 1
+    assert ours[T3 + 0x304E] == cap[T3 + 0x304E] == 1
+
+
+def test_set_plock_arms_flags():
+    from xy.rle import decode_project
+    p = ImageProject.from_file(BASE)
+    p.set_plock(3, 5, "cutoff", 20000)
+    _, img = decode_project(p.to_bytes())
+    T3 = 0xD79 + 2 * 17876
+    assert img[T3 + 0x2A0 + 4 * 84 + 34:T3 + 0x2A0 + 4 * 84 + 36] == (20000).to_bytes(2, "little")
+    assert img[T3 + 0x2C4E + 4 * 8] == 1   # step 5 flag
+    assert img[T3 + 0x304E] == 1            # master
