@@ -105,3 +105,18 @@ def test_spec_to_xy_image_reproduces_whitney_probe():
     assert open(out, "rb").read() == open(
         "output/image-probes/05_e_whitney_img_song.xy", "rb"
     ).read()
+
+
+def test_drum_voice_tune_matches_device_capture():
+    """Decoded drum tune (root note ±48) reproduces the device capture's
+    edited voices byte-exactly."""
+    from xy.rle import decode_project
+    p = ImageProject.from_file(BASE)
+    p.set_drum_voice(1, 7, tune=+48)   # shaker -> max
+    p.set_drum_voice(1, 9, tune=-48)   # ch boop b -> min
+    _, ours = decode_project(p.to_bytes())
+    _, cap = decode_project(open("output/image-probes/cap_drum_params.xy", "rb").read())
+    T1, SLOT0, STRIDE = 0xD79, 0x3957, 0x80
+    for v in (7, 9):
+        off = T1 + SLOT0 + v * STRIDE  # +0x00 = tune byte
+        assert ours[off] == cap[off]

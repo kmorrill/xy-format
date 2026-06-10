@@ -94,6 +94,47 @@ class ImageProject:
         self.mark_edited(track)
         self._rescan()
 
+    # --- drum-voice parameters (decoded from device capture + manual) -----
+    # 24 voice slots, 128 B each, at track+0x3957 (the drum sampler table).
+    DRUM_TABLE = 0x3957
+    DRUM_SLOT = 0x80
+    DRUM_TUNE = 0x00       # u8 root note, default 0x3c, ±48 semitones
+    DRUM_PLAY_MODE = 0x03  # u8: 1=key, 2=oneshot, 3=mute group, 4=loop
+    DRUM_DIRECTION = 0x07  # u8: 0=forward, 1=backward
+    DRUM_START = 0x68      # u32 sample start, default 0
+    DRUM_END = 0x70        # u32 sample end, default 0xFFFFFFFF
+    DRUM_GAIN = 0x7C       # u32 sample gain, default 0 (max 0x7FFFFFFF)
+    # +0x05/+0x06 hold pan / loop-crossfade (provisional); not exposed yet.
+
+    def set_drum_voice(
+        self,
+        track: int,
+        voice: int,
+        *,
+        tune: int | None = None,
+        play_mode: int | None = None,
+        direction: int | None = None,
+        start: int | None = None,
+        end: int | None = None,
+        gain: int | None = None,
+    ) -> None:
+        """Set per-voice drum parameters (voice = 0..23). `tune` is in
+        semitones (−48..+48). Device-decoded from `cap_drum_params.xy`."""
+        s = self.track_start(track) + self.DRUM_TABLE + voice * self.DRUM_SLOT
+        if tune is not None:
+            self.image[s + self.DRUM_TUNE] = (0x3C + tune) & 0xFF
+        if play_mode is not None:
+            self.image[s + self.DRUM_PLAY_MODE] = play_mode
+        if direction is not None:
+            self.image[s + self.DRUM_DIRECTION] = 1 if direction else 0
+        if start is not None:
+            self.image[s + self.DRUM_START : s + self.DRUM_START + 4] = start.to_bytes(4, "little")
+        if end is not None:
+            self.image[s + self.DRUM_END : s + self.DRUM_END + 4] = end.to_bytes(4, "little")
+        if gain is not None:
+            self.image[s + self.DRUM_GAIN : s + self.DRUM_GAIN + 4] = gain.to_bytes(4, "little")
+        self.mark_edited(track)
+
     # --- preset / instrument assignment -----------------------------------
     # Loading a kit/preset copies the donor's preset-identity regions into
     # the target struct (validated: u116's T4/T7/T8 boop-kit loads are exact

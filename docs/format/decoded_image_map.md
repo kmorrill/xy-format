@@ -197,6 +197,34 @@ field follows the table. (The "amb kit" sampler corpus referenced in
 older notes is not present in the repo; slot internals can be mapped
 from baseline + kit-change one-offs when needed.)
 
+### Drum sampler table — per-voice parameter slot (device-decoded)
+
+24 voice slots × 128 bytes at **track+0x3957**; voice `v` at
+`+0x3957 + 0x80·v`. Decoded from a device capture
+(`output/image-probes/cap_drum_params.xy`) cross-referenced with the
+OP-XY drum-knob manual (8 knobs: tune / start / end / play-mode, and
+shift: direction / pan / fade / gain). Voices map to drum sounds in key
+order (v0 kick a … v23 chi).
+
+| slot offset | field | encoding |
+|---|---|---|
+| +0x00 | **tune** | u8 root note, default 0x3c, **±48 semitones** |
+| +0x02 | key assignment | u8 (MIDI key this voice triggers) |
+| +0x03 | **play mode** | u8: 1=key, 2=oneshot, 3=mute group, 4=loop |
+| +0x05 / +0x06 | **pan / loop-crossfade (fade)** | signed bytes (which-is-which provisional) |
+| +0x07 | **sample direction** | u8: 0=forward, 1=backward |
+| +0x08 | sample path string | null-padded |
+| +0x68 | **sample start** | u32, default 0 |
+| +0x70 | **sample end** | u32, default 0xFFFFFFFF (per-sample length) |
+| +0x7c | **sample gain** | u32, default 0, max 0x7FFFFFFF |
+
+Clean single-param voices pin it: clap moved only +0x68 (start), ride
+only +0x70 (end), shaker/ch-b moved +0x00 (tune ±48), ht +0x03
+(play mode), lc +0x07 (direction), cow +0x7c (gain max). The +0x68/+0x70
+pair co-moving on several voices is a loop/fade side-effect, not start vs
+end. `ImageProject.set_drum_voice()` writes tune/play_mode/direction/
+start/end/gain (validated: tune reproduces the capture byte-exact).
+
 ### Preset assignment (validated)
 
 Loading a kit/preset = copying the donor's preset-identity regions into
