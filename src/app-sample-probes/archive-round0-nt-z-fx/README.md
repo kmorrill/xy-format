@@ -1,5 +1,7 @@
 # Round 0 — `nt-z-fx` user preset sample paths
 
+> **Status:** captured
+
 Superseded for primary development by `../2026-06-sample-paths/` (round 1, built-in
 `perc/chi *` names). Still decoded and tested — shows **family B** paths
 (`/fat32/presets/fx/nt-z-fx.preset/unnamed-….wav`) on a `pp` drum kit.

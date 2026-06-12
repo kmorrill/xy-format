@@ -1,5 +1,7 @@
 # P1-B — Structural preset path fixtures
 
+> **Status:** todo
+
 ⬜ **Pending device captures.**
 
 Operator procedure:

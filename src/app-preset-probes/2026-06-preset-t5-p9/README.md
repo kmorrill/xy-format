@@ -1,5 +1,7 @@
 # M2 — Preset on T5–P9 (optional / deferred)
 
+> **Status:** todo
+
 ⏸ **Deferred** unless app needs upper-track per-pattern presets.
 
 Operator procedure:
