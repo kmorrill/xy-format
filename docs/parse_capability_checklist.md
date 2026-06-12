@@ -25,6 +25,7 @@ device-validated.
 | Step components | `xy/step_components.py` | `ImageProject.set_step_component` |
 | JSON intent export | `xy/project_to_json.py` | `xy/json_build_spec.py` + profiles |
 | Preset reference inference | `xy/project_inspection.py` | `ImageProject.set_preset` (donor copy) |
+| Drum sample path read | `xy/drum_sample_inspection.py` | indirect via `set_preset`; no per-slot path API |
 | Human report | `tools/inspect_xy.py` | — |
 
 Detailed guide cross-reference: `docs/format/opxy_user_guide_save_audit.md`.
@@ -110,9 +111,13 @@ Field offsets: `docs/format/decoded_image_map.md`.
 ## 8. Drum sampler (24 voices)
 
 - [x] 24×128 B voice table @ track+`0x3957` — `set_drum_voice`, `tests/test_image_writer.py`
-- [x] Sample path @ slot+`0x08` — decoded map
-- [x] Tune, play mode, direction, start, end, gain — `set_drum_voice`
-- [~] Pan/fade @ `+0x05/+0x06` — provisional
+- [x] Sample path **read** @ slot+`0x08` — `xy/drum_sample_inspection.py`, device fixtures
+  `src/app-sample-probes/2026-06-sample-paths/` + `archive-round0-nt-z-fx/`,
+  `tests/test_drum_sample_inspection.py`, `tests/test_drum_sample_inspection_round0.py`
+- [~] Sample path **write** — only as part of donor `set_preset` region copy; no
+  `set_drum_voice_path()` yet — `docs/format/drum_sample_paths.md`
+- [x] Tune, play mode, direction, start, end, gain — `set_drum_voice` (tune device-validated)
+- [~] Pan/fade @ `+0x05/+0x06` — provisional; Mission 3 probes pending
 - [ ] Drum slicing metadata / choke groups — gap
 
 ## 9. One-shot / multisampler slots
@@ -160,7 +165,7 @@ Field offsets: `docs/format/decoded_image_map.md`.
 - [x] Profile-gated JSON build — `xy/profiles.py`, `tests/test_profiles.py`
 - [x] Corpus index/lab — `tools/corpus_lab.py`
 - [x] Round-trip verify — `tools/roundtrip_xy.py`
-- [x] Inspector CLI with preset section — `tools/inspect_xy.py`
+- [x] Inspector CLI with preset + drum sample sections — `tools/inspect_xy.py`
 
 ## 15. Outside project `.xy`
 
@@ -177,8 +182,32 @@ Field offsets: `docs/format/decoded_image_map.md`.
 4. Check the box here and link the test file.
 5. Update `docs/format/opxy_user_guide_save_audit.md` if guide-visible.
 
+## Device roundtrip workflow (author → OP-XY → confirm)
+
+Use this when promoting a field from decoded → **device-validated**:
+
+1. **Author** — build or edit with `ImageProject` / `tools/spec_to_xy_image.py` /
+   JSON profiles; save `.xy` under `output/` or `src/`.
+2. **Expect** — write a short expectation file (YAML/JSON/markdown) listing what
+   you believe the device should show: preset name, drum path per voice, tempo,
+   etc. Keep one variable per probe file when possible.
+3. **Transfer** — MTP upload to OP-XY (`tools/mtp_upload.py` or app).
+4. **Load** — open on hardware; note pass/fail per expectation line.
+5. **Capture** — Save As on device; pull `.xy` back; add as fixture under
+   `src/app-*-probes/`.
+6. **Verify** — `inspect_xy` + targeted tests; compare author bytes to capture
+   where byte-exact writer tests exist (`tests/test_image_writer.py` pattern).
+
+In-repo **software** roundtrip (no device): `tools/roundtrip_xy.py` checks RLE
+re-encode; `tests/test_container_roundtrip.py` and corpus parametrized tests
+check decode→encode on fixtures. That does **not** prove the device accepts an
+authored edit — only that our container layer round-trips.
+
 ## Related logs
 
 - App preset probe inspection: `docs/logs/2026-06-09_app_preset_probe_inspection.md`
+- Drum sample path inspection: `docs/logs/2026-06-12_drum_sample_path_inspection.md`
+- Round 0 `nt-z-fx` paths: `docs/logs/2026-06-12_round0_nt-z-fx_sample_paths.md`
+- Drum path format reference: `docs/format/drum_sample_paths.md`
 - State-of-understanding ledger: `docs/state_of_understanding.md`
 - OP-XY user guide save audit (detailed tables): `docs/format/opxy_user_guide_save_audit.md`

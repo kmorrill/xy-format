@@ -47,3 +47,10 @@ from .project_inspection import (  # noqa: F401
     inspect_project,
     inspect_project_bytes,
 )
+from .drum_sample_inspection import (  # noqa: F401
+    DrumTrackSamples,
+    DrumVoiceSample,
+    ProjectDrumSamples,
+    inspect_drum_samples,
+    inspect_drum_samples_bytes,
+)

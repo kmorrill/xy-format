@@ -2,6 +2,7 @@
 
 ## Start Here
 - Operating guide: `AGENTS.md`
+- **Parse & author capability checklist: `docs/parse_capability_checklist.md`**
 - **State of understanding (dated ledger of what we believe/doubt): `docs/state_of_understanding.md`**
 - **Parse & author capability checklist: `docs/parse_capability_checklist.md`**
 - Roadmap: `docs/roadmap.md`
@@ -66,6 +67,7 @@ Reference material:
 - P-locks: `docs/format/plocks.md`
 - Mod routing: `docs/format/mod_routing.md`
 - Multi-pattern block rotation: `docs/format/multi_pattern_block_rotation.md`
+- Drum sampler sample paths: `docs/format/drum_sample_paths.md`
 
 ## Engineering
 - **Authoring `.xy` files (canonical writer guide)**: `docs/engineering/authoring.md`
@@ -86,7 +88,10 @@ Reference material:
 - Sparse topology stability issue: `docs/issues/sparse_topology_stability.md`
 
 ## Logs
+- Parse capability checklist: `docs/parse_capability_checklist.md`
 - App preset probe inspection: `docs/logs/2026-06-09_app_preset_probe_inspection.md`
+- Drum sample path inspection: `docs/logs/2026-06-12_drum_sample_path_inspection.md`
+- Round 0 `nt-z-fx` sample paths: `docs/logs/2026-06-12_round0_nt-z-fx_sample_paths.md`
 - Variable-length + writer root cause: `docs/logs/2025-02-11_variable_length_and_writer_root_cause.md`
 - Firmware package notes: `docs/logs/2025-02-14_firmware_package_notes.md`
 - Multi-pattern breakthrough: `docs/logs/2026-02-12_multipattern_breakthrough.md`
