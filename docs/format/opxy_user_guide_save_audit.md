@@ -202,7 +202,7 @@ Guide refs: section 18.1 p.77-78; section 18.2 p.79-82; section 18.3 p.83-84; se
 | Function | What should save | Current decode |
 |---|---|---|
 | Sample folder | External WAV/AIFF files and folders. | Outside `.xy` except project sample-path references. |
-| One-shot synth sampler | Sample path, start, loop start/end, end, direction, tune, loop crossfade, gain, loop type. | Gap/partial. Sampler table structure is known at a high level, but one-shot slot internals are not itemized. |
+| One-shot synth sampler | Sample path, start, loop start/end, end, direction, tune, loop crossfade, gain, loop type. | **Decoded (P2-B):** header @ `track+0x3943`…`+0x3956`; path/tune/gain/direction/loop-type @ voice-0 `+0x3957`. Tune UI scaling partial. |
 | Drum sampler sample assignment | 24 key slots with path strings. | Decoded: 24 x 128-byte slots at track `+0x3957`; sample path at slot `+0x08`. |
 | Drum sampler edit controls | Tune, start, end, play mode, direction, pan, fade, gain. | **Decoded:** tune `+0x00`, play mode `+0x03`, direction `+0x07`, pan `+0x06` (M3 ±100), start `+0x68`, end `+0x70`, gain/fade `+0x7C` (fade on preceding slot for pad voices, M3). |
 | Drum clear/copy/paste/select multiple | Assignment/table operations. | Operation over decoded slot table; multi-select UI state itself is not relevant unless saved as UI state. |

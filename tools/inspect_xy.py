@@ -30,6 +30,7 @@ if str(REPO_ROOT) not in sys.path:
 import re
 
 from xy.drum_sample_inspection import inspect_drum_samples_bytes  # noqa: E402
+from xy.sampler_sample_inspection import inspect_sampler_samples_bytes  # noqa: E402
 from xy.note_reader import read_event as _unified_read_event  # noqa: E402
 from xy.preset_path_inspection import inspect_preset_paths_bytes  # noqa: E402
 from xy.project_inspection import inspect_project_bytes  # noqa: E402
@@ -1752,6 +1753,28 @@ def generate_report(path: Path, data: bytes) -> str:
                     f"tune={voice.tune} key={voice.key_assignment} mode={voice.play_mode} "
                     f"pan={voice.pan}"
                 )
+        lines.append("")
+
+    try:
+        sampler_samples = inspect_sampler_samples_bytes(data)
+    except Exception:
+        sampler_samples = None
+
+    if sampler_samples and sampler_samples.tracks:
+        lines.append("[Sampler Sample]")
+        for sample in sampler_samples.tracks:
+            lines.append(f"  Track {sample.track} (engine 0x{sample.engine_id:02X})")
+            lines.append(f"    path: {sample.path}")
+            lines.append(
+                f"    start={sample.sample_start} end={sample.sample_end} "
+                f"loop={sample.loop_start}…{sample.loop_end} "
+                f"crossfade={sample.loop_crossfade} ({sample.loop_crossfade_percent}%)"
+            )
+            lines.append(
+                f"    tune={sample.tune_byte} aux={sample.tune_aux_byte} "
+                f"gain={sample.gain} dir={sample.direction_label} "
+                f"loop_type={sample.loop_type}"
+            )
         lines.append("")
 
     lines.append("[Tracks]")

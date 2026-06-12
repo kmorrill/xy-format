@@ -175,7 +175,7 @@ track unless noted.
 | --- | --- | --- |
 | Scene-stored volumes (playback semantics) | **~** bytes @ `+0x38FE` per scene routing — P2-D | chained scene A/B listen test |
 | Scene 2+ mutes (slot index) | **x** | P2-E `mute2`–`mute8` — scene *N* → slot *N−1* |
-| One-shot / multisampler zones | **?** | P2-B / P2-C |
+| One-shot / multisampler zones | **~** one-shot ✅ P2-B · multi todo | P2-C |
 | Player (arp / maestro / hold) | **?** | P3-B |
 | Aux T9–T16 special settings | **?** | P3-A |
 | Project transpose, time sig | **?** | global sweep |
@@ -223,7 +223,7 @@ and **sampler zone internals**.
 | `2026-06-preset-path` | P1-B | track `+0x453F` | **captured** |
 | `2026-06-drum-pan-fade` | M3 | drum slot `+0x06`, `+0x7C` | **captured** |
 | `2026-06-sample-paths` | M1 | drum slot `+0x08` | **captured** |
-| `2026-06-sampler-oneshot` | P2-B | drum/sampler table internals | **todo** |
+| `2026-06-sampler-oneshot` | P2-B | sampler header `+0x3943`, slot `+0x3957` | **captured** |
 | `2026-06-sampler-multi` | P2-C | zone map | **todo** |
 | `2026-06-aux-tracks` | P3-A | T9–T16 structs | **todo** |
 | `2026-06-players` | P3-B | player state | **todo** |

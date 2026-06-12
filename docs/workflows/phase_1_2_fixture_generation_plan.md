@@ -39,7 +39,7 @@
 | P1-A | `project_to_json` export golden | `app-json-golden/` | **Derived** (no device) | ~8 |
 | P1-B | Structural preset path `@+0x453F` | `2026-06-preset-path/` | Yes | 6 |
 | P2-A | Static mixer vol/pan/send | `2026-06-mixer-static/` | Yes | 12 |
-| P2-B | One-shot sampler slots | `2026-06-sampler-oneshot/` | Yes | 10 |
+| P2-B | One-shot sampler slots | `2026-06-sampler-oneshot/` | Yes | 15 |
 | P2-C | Multisampler zones | `2026-06-sampler-multi/` | Yes | 8 |
 | P2-D | Scene-stored track volumes | `2026-06-scene-volumes/` | Yes | 6 |
 | P2-E | Scene-stored track mutes | `2026-06-track-mutes/` | Yes | 4 + 9 |
@@ -183,30 +183,18 @@ aren’t the only storage (compare to `unnamed 14/16` corpus if needed).
 
 ---
 
-### P2-B — One-shot sampler slot internals
+### P2-B — One-shot sampler slot internals ✅
 
 | | |
 | --- | --- |
 | **Pack** | `user_probes/2026-06-sampler-oneshot/` → `src/app-sampler-probes/2026-06-oneshot/` |
-| **Engine** | T1 = **Sampler** (engine 9), preset with **one** clear sample (e.g. `nt-106 bass`) |
-| **Goal** | Map path, start, loop, end, direction, tune, gain fields in sample table |
+| **Engine** | T1 = **Sampler** (`0x02`); preset **`nt-acidic`** |
+| **Goal** | Map path, start, loop, end, direction, tune, gain, loop type, crossfade |
 
-**Baseline:** `g0-baseline-sampler.xy` — load sampler preset, don’t edit sample page.
+**Baseline:** `g0.xy`. Device files `g0`…`g14` (15 captures). Operator README lists each edit.
 
-| On-device | PC filename | Edit (sample edit screen, one field) |
-| --- | --- | --- |
-| `g1` | `g1-tune-min.xy` | Tune → min |
-| `g2` | `g2-tune-max.xy` | Tune → max |
-| `g3` | `g3-start-mid.xy` | Start point → obvious non-zero |
-| `g4` | `g4-end-short.xy` | End → shorten sample |
-| `g5` | `g5-loop-on.xy` | Enable loop (if toggle) |
-| `g6` | `g6-loop-start.xy` | Loop start moved |
-| `g7` | `g7-direction-back.xy` | Direction backward |
-| `g8` | `g8-gain-min.xy` | Gain min |
-| `g9` | `g9-gain-max.xy` | Gain max |
-
-**Note:** Table likely shares drum slot layout (`+0x3957` region) — compare diffs to
-`cap_drum_params.xy` field map.
+**Analysis:** Sampler start/end/loop @ `track+0x3943`…`+0x3956` (not drum `slot+0x68`).
+Log: `docs/logs/2026-06-12_sampler_oneshot_inspection.md`. **Status:** captured ✅
 
 ---
 

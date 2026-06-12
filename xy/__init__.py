@@ -111,3 +111,13 @@ from .preset_path_inspection import (  # noqa: F401
     inspect_preset_paths,
     inspect_preset_paths_bytes,
 )
+from .sampler_sample_inspection import (  # noqa: F401
+    LOOP_TYPE_INFINITE,
+    LOOP_TYPE_OFF,
+    LOOP_TYPE_UNTIL_RELEASE,
+    ProjectSamplerSamples,
+    SamplerSampleEdit,
+    inspect_sampler_samples,
+    inspect_sampler_samples_bytes,
+    read_sampler_sample_edit,
+)

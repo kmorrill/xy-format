@@ -217,12 +217,6 @@ matching the capture notes. The old raw-space "param_id" bytes and
 - Engine parameter cells: 4-byte values from +0x3857 (current values;
   preset load rewrites them — copy from a corpus donor per preset).
 
-### Sample table (drum/sampler) — structure decoded
-
-Preset name field follows the drum table. (The "amb kit" sampler corpus
-referenced in older notes is not present in the repo; slot internals can
-be mapped from baseline + kit-change one-offs when needed.)
-
 ### Drum sampler table — per-voice parameter slot (device-decoded)
 
 24 voice slots × 128 bytes at **track+0x3957**; voice `v` at
@@ -252,6 +246,26 @@ only +0x70 (end), shaker/ch-b moved +0x00 (tune ±48), ht +0x03
 pair co-moving on several voices is a loop/fade side-effect, not start vs
 end. `ImageProject.set_drum_voice()` writes tune/play_mode/direction/
 start/end/gain (validated: tune reproduces the capture byte-exact).
+
+### One-shot Sampler (`0x02`) — sample-edit header (P2-B)
+
+Voice-0 path still @ `track+0x3957`, slot `+0x08`. **Start/end/loop** for
+Sampler are **not** at drum `slot+0x68`/`+0x70`; they precede the table:
+
+| track offset | field | probes |
+|---|---|---|
+| `+0x3943` | sample start u16 LE | `g3` |
+| `+0x3947` | sample end u16 LE | `g4` |
+| `+0x394B` | loop start u16 LE | `g5` |
+| `+0x394F` | loop end u16 LE | `g6` |
+| `+0x3956` | loop crossfade u8 | `g11` (`96` ≈ 75% UI) |
+| `+0x3957` | tune u8 | `g1`/`g2` (+ aux @ `+0x395B` on max) |
+| `+0x395A` | loop type u8 | `0x80` infinite · `0x40` off · `0x00` until-release |
+| `+0x395C` | gain u8 | `g8`/`g9` |
+| `+0x395E` | direction u8 | `g7` |
+
+API: `xy/sampler_sample_inspection.py`. Log:
+`docs/logs/2026-06-12_sampler_oneshot_inspection.md`.
 
 ### Preset assignment (validated)
 

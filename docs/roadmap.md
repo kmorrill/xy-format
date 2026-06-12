@@ -94,6 +94,7 @@ Goal: **reliably answer “what does this project contain?”** without manual h
 | Scene-stored volumes (bytes; playback **~**) | `xy/scene_volume_inspection.py`, P2-D |
 | Scene track mutes (scenes 1–8) | `scene_mute_storage_slot`, `read_scene_muted_tracks`, P2-E |
 | Master EQ | `xy/master_eq_inspection.py`, P2-F |
+| Sampler sample-edit read | `sampler_sample_inspection`, P2-B |
 | Master saturator | `xy/master_saturator_inspection.py`, P2-G |
 | Inspector sections | `tools/inspect_xy.py` — presets, drum samples, preset paths |
 | Parse capability checklist | `docs/parse_capability_checklist.md` |
@@ -106,7 +107,7 @@ Goal: **reliably answer “what does this project contain?”** without manual h
 | --- | --- | --- |
 | P1 | Export preset refs + drum paths in `project_to_json` | Golden fixtures (P1-A) |
 | P1 | Drum per-voice param read API (start/end/direction/gain) | extend `drum_sample_inspection` |
-| P2 | One-shot sampler slot decode | P2-B captures (priority for opxy_mtp_manager) |
+| P2 | One-shot sampler slot decode | ✅ P2-B |
 | P2 | Multisampler zones | P2-C (defer — no external presets) |
 | P3 | Auxiliary tracks T9–T16 semantics | P3-A |
 | P3 | Players (arpeggio / maestro / hold) | P3-B |
@@ -137,7 +138,7 @@ Operator READMEs: `user_probes/` · promoted fixtures: `src/app-*-probes/`.
 | P2-E | Scene track mutes | ✅ | scenes 1–8 · `mute#` + `mute2`–`mute8` |
 | P2-F | Master EQ | ✅ | `app-mixer-probes/2026-06-eq/` |
 | P2-G | Master saturator | ✅ | `app-mixer-probes/2026-06-saturator/` |
-| P2-B | One-shot sampler slots | ⬜ | `2026-06-sampler-oneshot/` |
+| P2-B | One-shot sampler slots | ✅ | `app-sampler-probes/2026-06-oneshot/` |
 | P2-C | Multisampler zones | ⬜ | `2026-06-sampler-multi/` |
 | P3-A | Aux tracks T9–T16 | ⬜ | `2026-06-aux-tracks/` |
 | P3-B | Players (arp / maestro / hold) | ⬜ | `2026-06-players/` |
@@ -294,9 +295,8 @@ for features you care about.
 
 For **you + this repo right now**:
 
-1. **P2-B** one-shot sampler (`g0`–`g9`) — opxy_mtp_manager sample-param priority
-2. **Drum read API** — expose start/end/direction/gain in `drum_sample_inspection`
-3. **P1-A** `project_to_json` golden export (preset + drum + sampler slots)
+1. **Drum read API** — expose start/end/direction/gain in `drum_sample_inspection`
+2. **P1-A** `project_to_json` golden export (preset + drum + sampler slots)
 4. Implement **`set_drum_voice_path`** + device roundtrip
 5. **P3-A** aux tracks or **M6** pad→voice map if non-`pp` kits needed
 6. Open **upstream PR** for inspection stack; wire **`opxy_mtp_manager`**
@@ -315,7 +315,7 @@ For **you + this repo right now**:
 | 2026-06-12 | Merged preset + drum inspection to `main` (`swekkiekekkie/xy-format`) |
 | 2026-06-12 | M3 drum pan/fade; P1-B preset path; P2-A static mixer; P2-D scene volumes |
 | 2026-06-12 | P2-E scene mutes (scene 1); P2-F EQ; P2-G saturator; `image_coverage_map.md` |
-| 2026-06-12 | P2-E scene 2–8 mutes; EQ power/blend follow-up (`eq7`/`eq8`) |
+| 2026-06-12 | P2-B one-shot sampler sample-edit (`g0`–`g14`) |
 
 ---
 
