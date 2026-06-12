@@ -9,7 +9,8 @@ from .rle import decode_project
 
 # Global header — 4-byte LE fields; level byte is @ field start (not +3 like mixer).
 GLOBAL_PREFIX_U32_OFFSET = 0x64  # default 0xFF; purpose open (not saturator gain)
-GLOBAL_EQ_BLEND_U32_OFFSET = 0x74  # default level 0x40; likely EQ blend (unprobed)
+GLOBAL_EQ_BLEND_U32_OFFSET = 0x74  # default 0x40; 4th EQ UI ("power") does not write here on 1.1.4
+EQ_BLEND_BYTE_DEFAULT = 0x40
 GLOBAL_EQ_LOW_U32_OFFSET = 0x68
 GLOBAL_EQ_MID_U32_OFFSET = 0x6C
 GLOBAL_EQ_HIGH_U32_OFFSET = 0x70
@@ -45,6 +46,11 @@ class MasterEq:
 def _read_eq_band(img: bytes, u32_offset: int) -> MasterEqBand:
     u32 = int.from_bytes(img[u32_offset : u32_offset + 4], "little")
     return MasterEqBand(byte=img[u32_offset], u32=u32)
+
+
+def read_master_eq_blend(project: ImageProject) -> MasterEqBand:
+    """Raw u32 @ ``0x74`` — not the live 4th EQ UI knob; see blend/power log."""
+    return _read_eq_band(project.image, GLOBAL_EQ_BLEND_U32_OFFSET)
 
 
 def read_master_eq(project: ImageProject) -> MasterEq:

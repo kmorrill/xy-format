@@ -36,7 +36,7 @@ vectors (notes: +12 bytes each).
 | 0x55–0x64 | per-track MIDI channel array, 1 byte/track (T1=0x55 … T16=0x64) | u41, u54 |
 | 0x64–0x67 | global prefix u32 (byte @ 0x64 default `0xFF`; purpose open) | P2-F `eq2` tail |
 | 0x68 / 0x6C / 0x70 | **master EQ** bass / mid / treble u32 (level byte @ field start; default `0x40`, max `0x7F`) | u14–u16, P2-F `eq0`–`eq6` |
-| 0x74–0x77 | likely **EQ blend** u32 (byte @ 0x74 default `0x40`) | unprobed |
+| 0x74–0x77 | u32 @ 0x74 default `0x40` — **not** the 4th EQ UI knob; power control rewrites band bytes only (`eq7`/`eq8`) | P2-F |
 | 0x75 / 0x79 / 0x7D / 0x81 | **saturator** gain / clip / tone / mix u32 | P2-G `sat0`–`sat8` |
 | 0x78 / 0x7C / 0x80 / 0x84 | saturator level bytes (`u32+3`; gain/clip default `0x19`, tone `0x40`, mix `0x00`) | P2-G |
 | 0x85–0x88 | **master percussion** volume u32 (byte @ 0x88) | P2-A `f10`/`f11` |

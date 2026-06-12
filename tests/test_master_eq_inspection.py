@@ -30,6 +30,7 @@ BASELINE = PROBES / "eq0-baseline.xy"
         ("eq4-mid-max.xy", EQ_BYTE_DEFAULT, EQ_BYTE_MAX, EQ_BYTE_DEFAULT),
         ("eq5-treble-min.xy", EQ_BYTE_DEFAULT, EQ_BYTE_DEFAULT, EQ_BYTE_MIN),
         ("eq6-treble-max.xy", EQ_BYTE_DEFAULT, EQ_BYTE_DEFAULT, EQ_BYTE_MAX),
+        ("eq8-blend-max.xy", EQ_BYTE_MAX, EQ_BYTE_MAX, EQ_BYTE_MAX),
     ],
 )
 def test_master_eq_levels(filename: str, low: int, mid: int, high: int) -> None:
@@ -71,3 +72,18 @@ def test_max_probes_set_level_and_prior_field_tail() -> None:
             filename
         ]
         assert band.byte == EQ_BYTE_MAX
+
+
+def test_blend_min_matches_baseline() -> None:
+    _, base = decode_project(BASELINE.read_bytes())
+    _, blend = decode_project((PROBES / "eq7-blend-min.xy").read_bytes())
+    assert read_master_eq(ImageProject(b"", bytearray(base))) == read_master_eq(
+        ImageProject(b"", bytearray(blend))
+    )
+    global_diffs = [i for i in range(len(base)) if base[i] != blend[i] and i < 0xD79]
+    assert global_diffs == []
+
+
+def test_blend_max_sets_all_bands() -> None:
+    eq = read_master_eq(ImageProject.from_file(str(PROBES / "eq8-blend-max.xy")))
+    assert eq.low.byte == eq.mid.byte == eq.high.byte == EQ_BYTE_MAX

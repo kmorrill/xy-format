@@ -79,15 +79,18 @@ from .master_saturator_inspection import (  # noqa: F401
     read_master_saturator,
 )
 from .master_eq_inspection import (  # noqa: F401
+    EQ_BLEND_BYTE_DEFAULT,
     EQ_BYTE_DEFAULT,
     EQ_BYTE_MAX,
     EQ_BYTE_MIN,
+    GLOBAL_EQ_BLEND_U32_OFFSET,
     GLOBAL_EQ_OFFSETS,
     MasterEq,
     MasterEqBand,
     inspect_master_eq,
     inspect_master_eq_bytes,
     read_master_eq,
+    read_master_eq_blend,
 )
 from .scene_volume_inspection import (  # noqa: F401
     SceneVolumeInspection,
@@ -98,6 +101,7 @@ from .scene_volume_inspection import (  # noqa: F401
     read_scene_muted_tracks,
     read_scene_slot_mute_bytes,
     read_scene_track_volume,
+    scene_mute_storage_slot,
     scene_volume_storage_track,
     SCENE_MUTE_VALUE,
 )
