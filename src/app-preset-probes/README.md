@@ -1,8 +1,8 @@
 # App preset probe fixtures
 
-> **Status:** index — see per-pack `captured` / `todo` below
+Device-authored `.xy` captures for `xy/project_inspection.py` and `xy/preset_path_inspection.py`.
 
-Device-authored `.xy` captures for `xy/project_inspection.py`.
+Capture recipes live in each pack README below.
 
 ## Packs
 
@@ -13,5 +13,5 @@ Device-authored `.xy` captures for `xy/project_inspection.py`.
 | [`2026-06-preset-path/`](2026-06-preset-path/) | P1-B | **captured** |
 | [`2026-06-preset-t5-p9/`](2026-06-preset-t5-p9/) | M2 | **todo** (optional) |
 
-Tests: `tests/test_project_inspection.py`  
+Tests: `tests/test_project_inspection.py`, `tests/test_preset_path_structural.py`  
 Log: `docs/logs/2026-06-09_app_preset_probe_inspection.md`

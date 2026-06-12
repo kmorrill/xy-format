@@ -7,7 +7,7 @@
 > - Field pins & evidence: [`decoded_image_map.md`](decoded_image_map.md)
 > - Read/write/API status: [`parse_capability_checklist.md`](../parse_capability_checklist.md)
 > - Guide feature gaps: [`opxy_user_guide_save_audit.md`](opxy_user_guide_save_audit.md)
-> - Probe recipes: [`../workflows/phase_1_2_fixture_generation_plan.md`](../workflows/phase_1_2_fixture_generation_plan.md)
+> - Probe recipes: `src/app-*-probes/*/README.md`
 
 **Baseline:** `unnamed 1.xy` · decoded size **289,521** bytes · firmware **1.1.4**
 unless noted.
@@ -228,7 +228,7 @@ and **sampler zone internals**.
 | `2026-06-aux-tracks` | P3-A | T9–T16 structs | **todo** |
 | `2026-06-players` | P3-B | player state | **todo** |
 
-Operator capture recipes: `docs/workflows/phase_1_2_fixture_generation_plan.md`.
+Operator capture recipes: `src/app-*-probes/*/README.md`.
 Promoted fixtures: `src/app-*-probes/`.
 
 ---

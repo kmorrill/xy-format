@@ -1,8 +1,6 @@
 # App mixer probe fixtures
 
-> **Status:** captured (static + EQ + saturator)
-
-Device-authored `.xy` captures for master mix field decode.
+Device-authored `.xy` captures for master mix field decode. Capture recipes in each pack README.
 
 ## Packs
 
@@ -11,6 +9,3 @@ Device-authored `.xy` captures for master mix field decode.
 | [`2026-06-static/`](2026-06-static/) | P2-A | **captured** |
 | [`2026-06-eq/`](2026-06-eq/) | P2-F | **captured** |
 | [`2026-06-saturator/`](2026-06-saturator/) | P2-G | **captured** |
-
-Operator captures: this fixture pack, this fixture pack,
-this fixture pack

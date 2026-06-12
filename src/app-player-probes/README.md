@@ -1,11 +1,9 @@
-# App player probe fixtures (hold / arp / maestro)
+# App player probe fixtures
 
-> **Status:** todo (pack `2026-06`)
+Arpeggio, maestro, hold player decode. Capture recipe: [`2026-06/README.md`](2026-06/README.md).
 
 ## Packs
 
 | Pack | ID | Status |
 | --- | --- | --- |
 | [`2026-06/`](2026-06/) | P3-B | **todo** |
-
-Operator captures: this fixture pack

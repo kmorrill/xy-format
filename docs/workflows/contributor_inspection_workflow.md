@@ -24,7 +24,7 @@ When closing a read gap:
 5. Wire `tools/inspect_xy.py` when the field is user-visible in inspection.
 6. Record device outcome with `python tools/corpus_lab.py record …` when possible.
 
-Fixture capture recipes: [`phase_1_2_fixture_generation_plan.md`](phase_1_2_fixture_generation_plan.md).
+Fixture capture recipes: `src/app-*-probes/*/README.md` (operator procedure + results per pack).
 
 ## Inspection modules landed (2026-06)
 

@@ -1,8 +1,6 @@
 # App auxiliary track probe fixtures (T9–T16)
 
-> **Status:** todo (pack `2026-06-t9-t16`)
-
-Brain, Punch-in FX, External MIDI/CV/Audio, Tape, FX I/II parameter maps.
+Brain, Punch-in FX, External MIDI/CV/Audio, Tape, FX I/II parameter maps. Capture recipe: [`2026-06-t9-t16/README.md`](2026-06-t9-t16/README.md).
 
 ## Packs
 
@@ -10,6 +8,4 @@ Brain, Punch-in FX, External MIDI/CV/Audio, Tape, FX I/II parameter maps.
 | --- | --- | --- |
 | [`2026-06-t9-t16/`](2026-06-t9-t16/) | P3-A | **todo** |
 
-Operator captures: this fixture pack
-
-Shortcut: T9 + T11 + T15 minimum set documented in operator README.
+Shortcut: T9 + T11 + T15 minimum set in pack README.

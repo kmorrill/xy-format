@@ -1,8 +1,6 @@
 # App sample probe fixtures
 
-> **Status:** index — see per-pack `captured` / `todo` below
-
-Drum sampler captures for `xy/drum_sample_inspection.py`.
+Drum sampler captures for `xy/drum_sample_inspection.py`. Capture recipes in each pack README.
 
 ## Packs
 
@@ -13,5 +11,4 @@ Drum sampler captures for `xy/drum_sample_inspection.py`.
 | [`2026-06-drum-pan-fade/`](2026-06-drum-pan-fade/) | M3 | **captured** |
 | [`2026-06-pad-voice-map/`](2026-06-pad-voice-map/) | M6 | **todo** |
 
-Operator captures: `src/app-*-probes/`  
 Logs: `docs/logs/2026-06-12_drum_sample_path_inspection.md`, `docs/format/drum_sample_paths.md`
