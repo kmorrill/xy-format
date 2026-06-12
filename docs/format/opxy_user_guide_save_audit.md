@@ -189,7 +189,7 @@ Guide refs: section 17.1 p.70; section 17.2 p.71; section 17.3 p.72; section 17.
 |---|---|---|
 | Track volume | Per-track level. | **Decoded (P2-A).** Static byte @ `track+0x38FE` (u32 @ `+0x38FB`); p-lock col 0 / CC7 also. |
 | Track pan | Per-track pan. | **Decoded (P2-A).** Static byte @ `track+0x38FA`; p-lock col 41 / CC10 also. |
-| Track mute | Per-track mute/live mix state. | **Partial.** Scene mute in 33-byte slots (P2-E); CC9 not p-lock. Live mixer mute not separate from scene mute. |
+| Track mute | Per-track mute/live mix state. | **Decoded:** scene mute in 33-byte slots (P2-E scenes 1–8, slot `N−1`, value `0x02`); CC9 not p-lock. Live mixer mute not separate from scene mute. |
 | Sends | Ext/tape/FX I/FX II sends. | **Partial (P2-A).** Static FX1/FX2 @ `+0x38B2`/`+0x38B6`; tape/ext p-lock cols known. |
 | Master EQ | Low/mid/high. | **Device-validated (P2-F).** Global `0x68`/`0x6C`/`0x70`; blend @ `0x74` unprobed. |
 | Saturator | Gain/clip/tone/mix. | **Device-validated (P2-G).** Global `0x78`/`0x7C`/`0x80`/`0x84`. |

@@ -120,6 +120,18 @@ def read_scene_track_volume(
     )
 
 
+def scene_mute_storage_slot(scene: int) -> int:
+    """Map 1-based scene ordinal to the 0-based scene slot holding mute bytes.
+
+    Validated on P2-E (firmware 1.1.4): scene 1 on a single-scene project
+    uses slot 0; on a multi-scene project scene *N* uses slot *N − 1* (same
+    row as that scene's pattern selection — slot 0 = scene 1 / live row).
+    """
+    if scene < 1:
+        raise ValueError("scene is 1-based")
+    return scene - 1
+
+
 def read_scene_slot_pattern_sel(project: ImageProject, scene_slot: int) -> tuple[int, ...]:
     """Pattern index (0-based) per track for a scene slot (0 = live / scene 1 on single-scene)."""
     slot = SCENE_SLOT0 + scene_slot * SCENE_SLOT_SIZE

@@ -42,8 +42,8 @@
 | P2-B | One-shot sampler slots | `2026-06-sampler-oneshot/` | Yes | 10 |
 | P2-C | Multisampler zones | `2026-06-sampler-multi/` | Yes | 8 |
 | P2-D | Scene-stored track volumes | `2026-06-scene-volumes/` | Yes | 6 |
-| P2-E | Scene-stored track mutes | `2026-06-track-mutes/` | Partial | 4 + 4 |
-| P2-F | Master EQ bass/mid/treble | `2026-06-eq/` | Yes | 7 |
+| P2-E | Scene-stored track mutes | `2026-06-track-mutes/` | Yes | 4 + 9 |
+| P2-F | Master EQ bass/mid/treble + power | `2026-06-eq/` | Yes | 9 |
 | P2-G | Master saturator | `2026-06-saturator/` | Yes | 9 |
 | P3-A | Auxiliary tracks T9–T16 | `2026-06-aux-tracks/` | Yes | 16 |
 | P3-B | Players (arp / maestro / hold) | `2026-06-players/` | Yes | 9 |
@@ -281,21 +281,26 @@ carried unintentionally.
 
 **Status:** captured ✅
 
-#### Scene 2+ (two-scene baseline)
+#### Scene 2+ (8-scene / 8-pattern T1 baseline)
 
-| On-device | PC filename | Procedure |
-| --- | --- | --- |
-| `mute2base` | `mute2-#-#-#-#.xy` | 2 scenes, distinct patterns, no mutes |
-| `mute2-1-3-#` | `mute2-1-3-#.xy` | Re-open mute2base → **Scene 2** → mute T1,T3 |
-| `mute2-4-5-6-#` | `mute2-4-5-6-#.xy` | Scene 2 → mute T4,T5,T6 |
-| `mute1-2-8-#` | `mute1-2-8-#.xy` | Scene **1** control → mute T2,T8 only |
+Operator procedure: `user_probes/2026-06-track-mutes/README.md` § Scene 2+.
 
-**Critical:** Re-open `mute2base` before each scene-2 variant (same rule as P2-D).
+| On-device | PC filename | Scene | Muted tracks |
+| --- | --- | --- | --- |
+| `mute#-#-#-#-#` | `mute#-#-#-#-#.xy` | — | none (baseline) |
+| `mute2-1-7-8-#` | `mute2-1-7-8-#.xy` | 2 | T1, T7, T8 |
+| `mute3-1-7-8-#` | `mute3-1-7-8-#.xy` | 3 | T1, T7, T8 |
+| `mute3-2-3-6-7` | `mute3-2-3-6-7.xy` | 3 | T2, T3, T6, T7 |
+| `mute4-6-7-8-#` | `mute4-6-7-8-#.xy` | 4 | T6–T8 |
+| `mute5-2-4-6-7` | `mute5-2-4-6-7.xy` | 5 | T2, T4, T6, T7 |
+| `mute6-1-7-8-#` | `mute6-1-7-8-#.xy` | 6 | T1, T7, T8 |
+| `mute7-2-3-6-7` | `mute7-2-3-6-7.xy` | 7 | T2, T3, T6, T7 |
+| `mute8-6-7-8-#` | `mute8-6-7-8-#.xy` | 8 | T6–T8 |
 
-**Analysis:** mute bytes at `slot + 16 + (track−1)`; value `0x02` = muted.
-Scene 1 on single-scene project → **slot 0**. Scene 2+ slot index TBD.
+**Analysis:** scene **N** → slot **N − 1**; mute byte `0x02`. Arrange-view mutes
+match mixer-view storage. Log: `docs/logs/2026-06-12_scene_track_mute_inspection.md`.
 
-**Status:** todo ⬜
+**Status:** captured ✅
 
 ---
 
@@ -316,11 +321,14 @@ Scene 1 on single-scene project → **slot 0**. Scene 2+ slot index TBD.
 | `eq4` | `eq4-mid-max.xy` | Re-open eq0 → mid max |
 | `eq5` | `eq5-treble-min.xy` | Re-open eq0 → treble min |
 | `eq6` | `eq6-treble-max.xy` | Re-open eq0 → treble max |
+| `eq7` | `eq7-blend-min.xy` | Re-open eq0 → blend min |
+| `eq8` | `eq8-blend-max.xy` | Re-open eq0 → blend max |
 
 **Analysis:** level byte @ `0x68` / `0x6C` / `0x70` (field start); default
 `0x40`, min `0x00`, max `0x7F`. Max also sets `0xFF` on prior field tail bytes.
+Blend min = byte-identical to baseline; blend max = all three bands `0x7F`.
 
-**Status:** captured ✅
+**Status:** captured ✅ (incl. blend)
 
 ---
 

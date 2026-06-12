@@ -81,7 +81,7 @@ block-beta
 | `0x68`–`0x6B` | 4 | **x** | Master EQ **bass** (level @ `0x68`) | P2-F `eq*` |
 | `0x6C`–`0x6F` | 4 | **x** | Master EQ **mid** (level @ `0x6C`) | P2-F |
 | `0x70`–`0x73` | 4 | **x** | Master EQ **treble** (level @ `0x70`) | P2-F |
-| `0x74`–`0x77` | 4 | **~** | Likely **EQ blend** (default `0x40`); overlaps sat u32 tail | blend min/max probe |
+| `0x74`–`0x77` | 4 | **~** | Legacy “blend” u32 (default `0x40`); **4th EQ UI knob does not write here** — acts as EQ **power** over the three band bytes (`eq7` no-op, `eq8` all bands `0x7F` from baseline) | P2-F `eq7`/`eq8` |
 | `0x75`–`0x78` | 4 | **x** | Saturator **gain** (level @ `0x78`, `u32+3`) | P2-G `sat*` |
 | `0x79`–`0x7C` | 4 | **x** | Saturator **clip** (level @ `0x7C`) | P2-G |
 | `0x7D`–`0x80` | 4 | **x** | Saturator **tone** (level @ `0x80`) | P2-G |
@@ -97,7 +97,7 @@ block-beta
 | Offset in slot | Size | Status | Field |
 | --- | ---: | --- | --- |
 | `+0`–`+15` | 16 | **x** | Pattern index per track (0-based) |
-| `+16`–`+31` | 16 | **x** | Mute per track (`0` = on, `2` = muted) — P2-E scene 1 ✅, scene 2+ todo |
+| `+16`–`+31` | 16 | **x** | Mute per track (`0` = on, `2` = muted) — P2-E scenes 1–8, slot `N−1` |
 | `+32` | 1 | **~** | Flags (`0x01` active row) |
 
 ---
@@ -174,12 +174,11 @@ track unless noted.
 | Feature | Status | Suggested probe |
 | --- | --- | --- |
 | Scene-stored volumes (playback semantics) | **~** bytes @ `+0x38FE` per scene routing — P2-D | chained scene A/B listen test |
-| Scene 2+ mutes (slot index) | **~** | P2-E `mute2-*` |
+| Scene 2+ mutes (slot index) | **x** | P2-E `mute2`–`mute8` — scene *N* → slot *N−1* |
 | One-shot / multisampler zones | **?** | P2-B / P2-C |
 | Player (arp / maestro / hold) | **?** | P3-B |
 | Aux T9–T16 special settings | **?** | P3-A |
 | Project transpose, time sig | **?** | global sweep |
-| EQ blend @ `0x74` | **~** | `eq7`/`eq8` blend min/max |
 
 ---
 
@@ -220,7 +219,7 @@ and **sampler zone internals**.
 | `2026-06-eq` | P2-F | global `+0x68`–`+0x70` | **captured** |
 | `2026-06-saturator` | P2-G | global `+0x78`–`+0x84` | **captured** |
 | `2026-06-scene-volumes` | P2-D | track `+0x38FE`, global `+0x94` | **captured** (playback **~**) |
-| `2026-06-track-mutes` | P2-E | scene slot `+16…+31` | **partial** (scene 1 only) |
+| `2026-06-track-mutes` | P2-E | scene slot `+16…+31` | **captured** (scenes 1–8) |
 | `2026-06-preset-path` | P1-B | track `+0x453F` | **captured** |
 | `2026-06-drum-pan-fade` | M3 | drum slot `+0x06`, `+0x7C` | **captured** |
 | `2026-06-sample-paths` | M1 | drum slot `+0x08` | **captured** |
@@ -237,11 +236,11 @@ Operator READMEs: `opxy_mtp_manager/reference_material/user_probes/`.
 
 | Address | Hypothesis | How to test |
 | --- | --- | --- |
-| `0x74` | EQ **blend** knob (guide: 4th EQ control) | Fresh project → blend min/max only |
+| `0x74` | EQ **power** follow-up: bands at non-default, then power max | Confirm scaling vs clamp |
 | `0x64` | Global FX enable / bus prefix, not sat gain | Toggle master FX bypass if UI has it |
 | `0x08`–`0x54` | Groove amount, time signature, transpose, voice limit | One global knob per file from `eq0`/`sat0` baseline |
 | `+0x3147` region | Player or modulation extension | P3-B player enable on T1 |
-| Scene slot `+0` vs `+1` on multi-scene | Scene index routing for mutes/volumes | P2-E `mute2-*` + P2-D `s0b` |
+| Scene slot routing on multi-scene | Scene *N* mutes → slot *N−1* (P2-E ✅); volumes partial (P2-D) | — |
 | Footer extra byte | Loop/song mode flags | Multi-song arrangement save |
 
 ---

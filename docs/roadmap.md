@@ -92,7 +92,7 @@ Goal: **reliably answer “what does this project contain?”** without manual h
 | Drum pan / fade | `xy/drum_sample_inspection.py`, M3 |
 | Static mixer + master buses | `xy/mixer_static_inspection.py`, P2-A |
 | Scene-stored volumes (bytes; playback **~**) | `xy/scene_volume_inspection.py`, P2-D |
-| Scene track mutes (scene 1) | `read_scene_muted_tracks`, P2-E partial |
+| Scene track mutes (scenes 1–8) | `scene_mute_storage_slot`, `read_scene_muted_tracks`, P2-E |
 | Master EQ | `xy/master_eq_inspection.py`, P2-F |
 | Master saturator | `xy/master_saturator_inspection.py`, P2-G |
 | Inspector sections | `tools/inspect_xy.py` — presets, drum samples, preset paths |
@@ -105,9 +105,9 @@ Goal: **reliably answer “what does this project contain?”** without manual h
 | Priority | Item | Depends on |
 | --- | --- | --- |
 | P1 | Export preset refs + drum paths in `project_to_json` | Golden fixtures (P1-A) |
-| P2 | Scene 2+ mutes (slot index) | P2-E `mute2-*` captures |
-| P2 | EQ blend @ `global+0x74` | One-variable probe |
-| P2 | One-shot / multisampler slot decode | P2-B / P2-C |
+| P1 | Drum per-voice param read API (start/end/direction/gain) | extend `drum_sample_inspection` |
+| P2 | One-shot sampler slot decode | P2-B captures (priority for opxy_mtp_manager) |
+| P2 | Multisampler zones | P2-C (defer — no external presets) |
 | P3 | Auxiliary tracks T9–T16 semantics | P3-A |
 | P3 | Players (arpeggio / maestro / hold) | P3-B |
 
@@ -134,7 +134,7 @@ Operator READMEs: `user_probes/` · promoted fixtures: `src/app-*-probes/`.
 | P1-B | Preset path `@+0x453F` | ✅ | `app-preset-probes/2026-06-preset-path/` |
 | P2-A | Static mixer vol/pan/send + master buses | ✅ | `app-mixer-probes/2026-06-static/` |
 | P2-D | Scene-stored volumes | ✅ bytes / **~** playback | `app-scene-probes/2026-06-volumes/` |
-| P2-E | Scene track mutes | 🔄 partial | scene 1 ✅ · scene 2+ todo |
+| P2-E | Scene track mutes | ✅ | scenes 1–8 · `mute#` + `mute2`–`mute8` |
 | P2-F | Master EQ | ✅ | `app-mixer-probes/2026-06-eq/` |
 | P2-G | Master saturator | ✅ | `app-mixer-probes/2026-06-saturator/` |
 | P2-B | One-shot sampler slots | ⬜ | `2026-06-sampler-oneshot/` |
@@ -294,14 +294,13 @@ for features you care about.
 
 For **you + this repo right now**:
 
-1. **P2-E** scene 2+ mutes (`mute2-*`) → close slot-index hypothesis
-2. **EQ blend** probe @ `0x74` (optional; guide-visible)
-3. **P2-B / P2-C** sampler probes, or **P3-A** aux tracks
-4. Scaffold **Phase 4** roundtrip (drum tune or static mixer — read APIs exist)
-5. Implement **`set_drum_voice_path`** + device test (highest-value write gap)
-6. **P1-A** `project_to_json` golden export
-7. Open **upstream PR** for inspection stack; wire **`opxy_mtp_manager`**
-8. Chip **Phase 5** Wave A; **midi_to_xy v2** when edit surface is broad enough
+1. **P2-B** one-shot sampler (`g0`–`g9`) — opxy_mtp_manager sample-param priority
+2. **Drum read API** — expose start/end/direction/gain in `drum_sample_inspection`
+3. **P1-A** `project_to_json` golden export (preset + drum + sampler slots)
+4. Implement **`set_drum_voice_path`** + device roundtrip
+5. **P3-A** aux tracks or **M6** pad→voice map if non-`pp` kits needed
+6. Open **upstream PR** for inspection stack; wire **`opxy_mtp_manager`**
+7. Chip **Phase 5** Wave A; **midi_to_xy v2** when edit surface is broad enough
 
 ---
 
@@ -316,6 +315,7 @@ For **you + this repo right now**:
 | 2026-06-12 | Merged preset + drum inspection to `main` (`swekkiekekkie/xy-format`) |
 | 2026-06-12 | M3 drum pan/fade; P1-B preset path; P2-A static mixer; P2-D scene volumes |
 | 2026-06-12 | P2-E scene mutes (scene 1); P2-F EQ; P2-G saturator; `image_coverage_map.md` |
+| 2026-06-12 | P2-E scene 2–8 mutes; EQ power/blend follow-up (`eq7`/`eq8`) |
 
 ---
 

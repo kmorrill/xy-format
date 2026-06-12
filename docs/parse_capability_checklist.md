@@ -137,7 +137,7 @@ Field offsets: `docs/format/decoded_image_map.md`.
 ## 10. Scenes, songs, arrangement
 
 - [x] Scene slots: pattern sel[16] + mute[16] + flags — `build_arrangement`, `docs/format/scenes_songs.md`
-- [x] Scene mute (device value 2) — device-validated scene 1 slot 0 — `tests/test_scene_track_mute_inspection.py`, `read_scene_muted_tracks`
+- [x] Scene mute (device value 2) — scenes 1–8, slot `N−1` — `tests/test_scene_track_mute_inspection.py`, `scene_mute_storage_slot`, `read_scene_muted_tracks`
 - [x] Song footer chain + loop word — `build_arrangement`
 - [x] Multi-pattern clone assembly — `build_arrangement`
 - [~] 14 song slots vs guide “9 songs” — partial reconciliation — `opxy_user_guide_save_audit.md`
