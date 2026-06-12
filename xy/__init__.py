@@ -67,14 +67,39 @@ from .mixer_static_inspection import (  # noqa: F401
     inspect_static_mixer,
     inspect_static_mixer_bytes,
 )
+from .master_saturator_inspection import (  # noqa: F401
+    GLOBAL_SAT_CLIP_BYTE_OFFSET,
+    GLOBAL_SAT_GAIN_BYTE_OFFSET,
+    GLOBAL_SAT_MIX_BYTE_OFFSET,
+    GLOBAL_SAT_TONE_BYTE_OFFSET,
+    MasterSaturator,
+    SaturatorBand,
+    inspect_master_saturator,
+    inspect_master_saturator_bytes,
+    read_master_saturator,
+)
+from .master_eq_inspection import (  # noqa: F401
+    EQ_BYTE_DEFAULT,
+    EQ_BYTE_MAX,
+    EQ_BYTE_MIN,
+    GLOBAL_EQ_OFFSETS,
+    MasterEq,
+    MasterEqBand,
+    inspect_master_eq,
+    inspect_master_eq_bytes,
+    read_master_eq,
+)
 from .scene_volume_inspection import (  # noqa: F401
     SceneVolumeInspection,
     TrackMixVolume,
     encode_mix_vol_byte,
     inspect_scene_volumes,
     inspect_scene_volumes_bytes,
+    read_scene_muted_tracks,
+    read_scene_slot_mute_bytes,
     read_scene_track_volume,
     scene_volume_storage_track,
+    SCENE_MUTE_VALUE,
 )
 from .preset_path_inspection import (  # noqa: F401
     ProjectPresetPaths,

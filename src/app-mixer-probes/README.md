@@ -1,13 +1,16 @@
 # App mixer probe fixtures
 
-> **Status:** captured (pack `2026-06-static`)
+> **Status:** captured (static + EQ + saturator)
 
-Device-authored `.xy` captures for static mixer field decode (vol/pan/send).
+Device-authored `.xy` captures for master mix field decode.
 
 ## Packs
 
 | Pack | ID | Status |
 | --- | --- | --- |
 | [`2026-06-static/`](2026-06-static/) | P2-A | **captured** |
+| [`2026-06-eq/`](2026-06-eq/) | P2-F | **captured** |
+| [`2026-06-saturator/`](2026-06-saturator/) | P2-G | **captured** |
 
-Operator captures: `opxy_mtp_manager/reference_material/user_probes/2026-06-mixer-static/`
+Operator captures: `user_probes/2026-06-mixer-static/`, `user_probes/2026-06-eq/`,
+`user_probes/2026-06-saturator/`
