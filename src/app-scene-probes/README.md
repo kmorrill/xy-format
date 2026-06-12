@@ -1,6 +1,6 @@
 # App scene probe fixtures
 
-> **Status:** todo (pack `2026-06-volumes`)
+> **Status:** captured (pack `2026-06-volumes`)
 
 Scene-specific storage beyond pattern/mute (e.g. per-scene track volumes).
 
