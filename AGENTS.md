@@ -24,7 +24,8 @@
 - Active issues: `docs/issues/index.md`
 - MIDI CC/p-lock discovery log: `docs/logs/2026-02-13_midi_cc_plock_discovery.md`
 - Prior long-form notebook snapshot: `docs/logs/2026-02-13_agents_legacy_snapshot.md`
-- Current roadmap: `docs/roadmap.md`
+- **Roadmap (phases, missions, exit criteria): `docs/roadmap.md`**
+- Parse & author checklist: `docs/parse_capability_checklist.md`
 
 ## Operating Norms
 - Keep generated device test filenames short and sortable.
