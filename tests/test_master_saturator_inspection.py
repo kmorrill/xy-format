@@ -4,10 +4,16 @@ import pytest
 
 from xy.image_writer import ImageProject
 from xy.master_saturator_inspection import (
+    SAT_CLIP_DEFAULT_U32,
     SAT_CLIP_DEFAULT,
     SAT_GAIN_DEFAULT,
+    SAT_GAIN_DEFAULT_U32,
     SAT_MIX_DEFAULT,
+    SAT_MIX_DEFAULT_U32,
     SAT_TONE_DEFAULT,
+    SAT_TONE_DEFAULT_U32,
+    SAT_U32_MAX,
+    SAT_U32_MIN,
     GLOBAL_SAT_CLIP_BYTE_OFFSET,
     GLOBAL_SAT_GAIN_BYTE_OFFSET,
     GLOBAL_SAT_MIX_BYTE_OFFSET,
@@ -26,15 +32,69 @@ BASELINE = PROBES / "sat0-baseline.xy"
 @pytest.mark.parametrize(
     "filename,gain,clip,tone,mix",
     [
-        ("sat0-baseline.xy", SAT_GAIN_DEFAULT, SAT_CLIP_DEFAULT, SAT_TONE_DEFAULT, SAT_MIX_DEFAULT),
-        ("sat1-gain-min.xy", SAT_BYTE_MIN, SAT_CLIP_DEFAULT, SAT_TONE_DEFAULT, SAT_MIX_DEFAULT),
-        ("sat2-gain-max.xy", SAT_BYTE_MAX, SAT_CLIP_DEFAULT, SAT_TONE_DEFAULT, SAT_MIX_DEFAULT),
-        ("sat3-clip-min.xy", SAT_GAIN_DEFAULT, SAT_BYTE_MIN, SAT_TONE_DEFAULT, SAT_MIX_DEFAULT),
-        ("sat4-clip-max.xy", SAT_GAIN_DEFAULT, SAT_BYTE_MAX, SAT_TONE_DEFAULT, SAT_MIX_DEFAULT),
-        ("sat5-tone-min.xy", SAT_GAIN_DEFAULT, SAT_CLIP_DEFAULT, SAT_BYTE_MIN, SAT_MIX_DEFAULT),
-        ("sat6-tone-max.xy", SAT_GAIN_DEFAULT, SAT_CLIP_DEFAULT, SAT_BYTE_MAX, SAT_MIX_DEFAULT),
-        ("sat7-mix-min.xy", SAT_GAIN_DEFAULT, SAT_CLIP_DEFAULT, SAT_TONE_DEFAULT, SAT_BYTE_MIN),
-        ("sat8-mix-max.xy", SAT_GAIN_DEFAULT, SAT_CLIP_DEFAULT, SAT_TONE_DEFAULT, SAT_BYTE_MAX),
+        (
+            "sat0-baseline.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_CLIP_DEFAULT,
+            SAT_TONE_DEFAULT,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat1-gain-min.xy",
+            SAT_BYTE_MIN,
+            SAT_CLIP_DEFAULT,
+            SAT_TONE_DEFAULT,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat2-gain-max.xy",
+            SAT_BYTE_MAX,
+            SAT_CLIP_DEFAULT,
+            SAT_TONE_DEFAULT,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat3-clip-min.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_BYTE_MIN,
+            SAT_TONE_DEFAULT,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat4-clip-max.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_BYTE_MAX,
+            SAT_TONE_DEFAULT,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat5-tone-min.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_CLIP_DEFAULT,
+            SAT_BYTE_MIN,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat6-tone-max.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_CLIP_DEFAULT,
+            SAT_BYTE_MAX,
+            SAT_MIX_DEFAULT,
+        ),
+        (
+            "sat7-mix-min.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_CLIP_DEFAULT,
+            SAT_TONE_DEFAULT,
+            SAT_BYTE_MIN,
+        ),
+        (
+            "sat8-mix-max.xy",
+            SAT_GAIN_DEFAULT,
+            SAT_CLIP_DEFAULT,
+            SAT_TONE_DEFAULT,
+            SAT_BYTE_MAX,
+        ),
     ],
 )
 def test_saturator_levels(
@@ -45,6 +105,84 @@ def test_saturator_levels(
     assert sat.clip.byte == clip
     assert sat.tone.byte == tone
     assert sat.mix.byte == mix
+
+
+@pytest.mark.parametrize(
+    "filename,gain,clip,tone,mix",
+    [
+        (
+            "sat0-baseline.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_TONE_DEFAULT_U32,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat1-gain-min.xy",
+            SAT_U32_MIN,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_TONE_DEFAULT_U32,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat2-gain-max.xy",
+            SAT_U32_MAX,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_TONE_DEFAULT_U32,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat3-clip-min.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_U32_MIN,
+            SAT_TONE_DEFAULT_U32,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat4-clip-max.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_U32_MAX,
+            SAT_TONE_DEFAULT_U32,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat5-tone-min.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_U32_MIN,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat6-tone-max.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_U32_MAX,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat7-mix-min.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_TONE_DEFAULT_U32,
+            SAT_MIX_DEFAULT_U32,
+        ),
+        (
+            "sat8-mix-max.xy",
+            SAT_GAIN_DEFAULT_U32,
+            SAT_CLIP_DEFAULT_U32,
+            SAT_TONE_DEFAULT_U32,
+            SAT_U32_MAX,
+        ),
+    ],
+)
+def test_saturator_u32_lanes(
+    filename: str, gain: int, clip: int, tone: int, mix: int
+) -> None:
+    sat = read_master_saturator(ImageProject.from_file(str(PROBES / filename)))
+    assert sat.gain.u32 == gain
+    assert sat.clip.u32 == clip
+    assert sat.tone.u32 == tone
+    assert sat.mix.u32 == mix
 
 
 def test_mix_min_matches_baseline() -> None:

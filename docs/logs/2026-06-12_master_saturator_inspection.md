@@ -23,6 +23,18 @@ Fresh-project defaults for gain/clip/tone/mix are already present in `sat0`
 
 **Mix min** (`sat7`) is byte-identical to baseline — default mix is already `0`.
 
+Follow-up exact u32 pin (2026-06-13): min captures store `0x00000000`, max
+captures store `0x7FFFFFFF`. Defaults are:
+
+| Control | Default u32 |
+| --- | --- |
+| Gain | `0x1999999A` |
+| Clip | `0x1999999A` |
+| Tone | `0x40000000` |
+| Mix | `0x00000000` |
+
+Tests now assert both the UI byte and the full u32 lane for all P2-G captures.
+
 ## Correction vs P2-F hypothesis
 
 Bass EQ max (`eq2`) touches `0x65–0x67`, not because saturator lives @ `0x64`,
