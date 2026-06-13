@@ -2,11 +2,14 @@
 
 ## Start Here
 - Operating guide: `AGENTS.md`
+- **Parse & author capability checklist: `docs/parse_capability_checklist.md`**
 - **State of understanding (dated ledger of what we believe/doubt): `docs/state_of_understanding.md`**
 - Roadmap: `docs/roadmap.md`
 - Human explainer: `docs/human-explainer.md`
 
 ## Workflows
+- **Contributor inspection workflow (2026-06): `docs/workflows/contributor_inspection_workflow.md`**
+- Device probe capture recipes: `src/*-probes/*/README.md`
 - Device test naming: `docs/workflows/device_test_naming.md`
 - Inspector sweep: `docs/workflows/inspector_sweep.md`
 - Crash capture protocol: `docs/workflows/crash_capture.md`
@@ -53,7 +56,9 @@ Reference material:
 - **Record structure (start here)**: `docs/format/record_structure.md`
   (serialization model, record grammar, tail bytes, pre-track scene RLE —
   supersedes the descriptor/preamble framing in older docs)
-- **Decoded image map (RAM struct fields)**: `docs/format/decoded_image_map.md`
+- **Image coverage map (mapped vs unmapped at a glance)**:
+  `docs/format/image_coverage_map.md`
+- **Decoded image map (RAM struct field pins)**: `docs/format/decoded_image_map.md`
 - OP-XY user guide save audit: `docs/format/opxy_user_guide_save_audit.md`
 - Header: `docs/format/header.md`
 - Pre-track / pattern directory: `docs/format/pretrack_pattern_directory.md`
@@ -65,6 +70,7 @@ Reference material:
 - P-locks: `docs/format/plocks.md`
 - Mod routing: `docs/format/mod_routing.md`
 - Multi-pattern block rotation: `docs/format/multi_pattern_block_rotation.md`
+- Drum sampler sample paths: `docs/format/drum_sample_paths.md`
 
 ## Engineering
 - **Authoring `.xy` files (canonical writer guide)**: `docs/engineering/authoring.md`
@@ -85,6 +91,22 @@ Reference material:
 - Sparse topology stability issue: `docs/issues/sparse_topology_stability.md`
 
 ## Logs
+- App preset probe inspection: `docs/logs/2026-06-09_app_preset_probe_inspection.md`
+- Drum sample path inspection: `docs/logs/2026-06-12_drum_sample_path_inspection.md`
+- Round 0 `nt-z-fx` sample paths: `docs/logs/2026-06-12_round0_nt-z-fx_sample_paths.md`
+- Drum pan/fade inspection: `docs/logs/2026-06-12_drum_pan_fade_inspection.md`
+- Drum voice param read API: `docs/logs/2026-06-12_drum_voice_param_read_api.md`
+- Project config inspection: `docs/logs/2026-06-13_project_config_inspection.md`
+- Global header inspection: `docs/logs/2026-06-13_global_header_inspection.md`
+- Bar menu inspection: `docs/logs/2026-06-13_bar_menu_inspection.md`
+- Preset path structural (P1-B): `docs/logs/2026-06-12_preset_path_structural.md`
+- Scene volume inspection (P2-D): `docs/logs/2026-06-12_scene_volume_inspection.md`
+- Scene track mute inspection (P2-E): `docs/logs/2026-06-12_scene_track_mute_inspection.md`
+- Mixer static inspection (P2-A): `docs/logs/2026-06-12_mixer_static_inspection.md`
+- Master EQ inspection (P2-F): `docs/logs/2026-06-12_master_eq_inspection.md`
+- Master EQ blend/power: `docs/logs/2026-06-12_master_eq_blend_inspection.md`
+- Master saturator inspection (P2-G): `docs/logs/2026-06-12_master_saturator_inspection.md`
+- Sampler one-shot inspection (P2-B): `docs/logs/2026-06-12_sampler_oneshot_inspection.md`
 - Variable-length + writer root cause: `docs/logs/2025-02-11_variable_length_and_writer_root_cause.md`
 - Firmware package notes: `docs/logs/2025-02-14_firmware_package_notes.md`
 - Multi-pattern breakthrough: `docs/logs/2026-02-12_multipattern_breakthrough.md`

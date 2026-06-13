@@ -1,6 +1,12 @@
 # Header
 
-## Canonical Offsets (Current)
+> **Decoded RAM image (authoring):** tempo @ `0x00`, groove @ `0x03`,
+> click @ `0x04` — see [`decoded_image_map.md`](decoded_image_map.md) and
+> `xy/image_writer.py`. Offsets below (`0x08` tempo, etc.) are from an
+> **older header scan** and may not match the flat decoded image.
+> Coverage overview: [`image_coverage_map.md`](image_coverage_map.md).
+
+## Canonical Offsets (legacy scan — verify before use)
 - `0x08-0x09` (`u16 LE`): tempo in tenths of BPM.
 - `0x0A` (`u8`): observed padding/unused (`0x00` in baseline captures).
 - `0x0B` (`u8`): groove type enum (`0x00` straight, `0x08` dis-funk, `0x03` bombora).
@@ -29,3 +35,23 @@
 ## Tooling
 - Reader utility: `docs/tools/read_xy_header.md`
 - Inspector workflow: `docs/workflows/inspector_sweep.md`
+
+## Decoded Project-Config Bytes
+
+Firmware 1.1.4 project-config probes (`src/project-config-probes/2026-06-project-config/`)
+pin guide-visible decoded-image bytes that are not represented by the legacy
+scan above:
+
+- `0x08` scene length mode.
+- `0x02` signed groove amount.
+- `0x04` metronome/click volume. HDR toggle probes did not reveal a separate
+  on/off byte; off and volume-min both persist as `0x00`.
+- `0x06` active scene slot.
+- `0x07` active song slot.
+- `0x1B` signed global transpose.
+- `0x1C` time signature enum.
+- `0x4D–0x54` T1–T8 voice allocation.
+- `0x55–0x64` T1–T16 MIDI channel map.
+
+Use `xy/project_config_inspection.py` and `docs/format/decoded_image_map.md`
+as the authoritative map for these fields.

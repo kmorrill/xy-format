@@ -54,7 +54,7 @@ p.set_step_component(track, step, "pulse", value)   # 14 component names
 p.set_plock(track, step, "cutoff", value)           # ~30 param names
 
 # drum voices (24)
-p.set_drum_voice(track, voice, tune=+7, play_mode=4, start=..., end=..., gain=...)
+p.set_drum_voice(track, voice, tune=+7, play_mode=4, start=..., loop_start=..., end=..., gain=...)
 
 p.save("out.xy")
 ```

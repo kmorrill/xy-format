@@ -165,6 +165,8 @@ parameter table layout.
 - Additional metadata bytes may appear before synth parameter slabs.
 - Full byte-level examples live in `docs/logs/2026-02-13_agents_legacy_snapshot.md`.
 - Shared parser helpers live in `xy/plocks.py` (`find_plock_start`, standard table decode, T1/T10 helpers).
+- `tools/inspect_xy.py` prints a compact `[P-Locks]` summary for non-empty
+  standard lanes (for example `0x5Ex14`) and the T10 9-byte header.
 - Shared authoring helpers also live in `xy/plocks.py` (`rewrite_standard_nonempty_values`, `rewrite_standard_values_for_param_groups`).
 - Project-level writer helpers live in `xy/project_builder.py`:
   - `transplant_track(...)` for donor topology transplant

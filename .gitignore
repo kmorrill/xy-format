@@ -61,6 +61,9 @@ Thumbs.db
 # Local source-material imports (do not commit)
 raw/
 
+# Local experiment output (not fixtures)
+output/multistep/
+
 # Vim / Emacs swap
 *.swp
 *.swo

@@ -29,7 +29,29 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 import re
 
+from xy.drum_sample_inspection import inspect_drum_samples_bytes  # noqa: E402
+from xy.bar_menu_inspection import inspect_bar_menu_bytes  # noqa: E402
+from xy.container import XYProject  # noqa: E402
+from xy.image_writer import ImageProject  # noqa: E402
+from xy.master_eq_inspection import inspect_master_eq_bytes  # noqa: E402
+from xy.master_saturator_inspection import inspect_master_saturator_bytes  # noqa: E402
+from xy.mixer_static_inspection import inspect_static_mixer_bytes  # noqa: E402
+from xy.plocks import (  # noqa: E402
+    CONTINUATION_MARKER,
+    find_plock_start,
+    parse_standard_slots,
+    parse_t10_header,
+)
+from xy.rle import decode_project  # noqa: E402
+from xy.sampler_sample_inspection import inspect_sampler_samples_bytes  # noqa: E402
+from xy.scene_volume_inspection import (  # noqa: E402
+    inspect_scene_volumes_bytes,
+    read_scene_muted_tracks,
+)
 from xy.note_reader import read_event as _unified_read_event  # noqa: E402
+from xy.preset_path_inspection import inspect_preset_paths_bytes  # noqa: E402
+from xy.project_config_inspection import inspect_project_config_bytes  # noqa: E402
+from xy.project_inspection import inspect_project_bytes  # noqa: E402
 from xy.structs import (  # noqa: E402
     SENTINEL_BYTES,
     STEP_TICKS,
@@ -1612,6 +1634,44 @@ def parse_eq_entries(data: bytes) -> list[tuple[int, int]]:
     return entries
 
 
+def summarize_plock_lanes(body: bytes) -> str | None:
+    start = find_plock_start(body)
+    if start is None:
+        return None
+
+    try:
+        slots, _next = parse_standard_slots(body, start=start)
+    except ValueError:
+        try:
+            header = parse_t10_header(body, start=start)
+        except ValueError:
+            return None
+        return (
+            f"T10 9-byte pid=0x{header.param_id:02X} "
+            f"values={1 + header.continuation_count} "
+            f"init=0x{header.initial_value:04X} "
+            f"meta=0x{header.meta_hi:02X}{header.meta_lo:02X}"
+        )
+
+    groups: list[tuple[int, int]] = []
+    current_idx: int | None = None
+    for slot in slots:
+        if slot.param_id is None:
+            continue
+        if slot.param_id == CONTINUATION_MARKER and current_idx is not None:
+            pid, count = groups[current_idx]
+            groups[current_idx] = (pid, count + 1)
+            continue
+        groups.append((slot.param_id, 1))
+        current_idx = len(groups) - 1
+
+    if not groups:
+        return None
+
+    lanes = ", ".join(f"0x{pid:02X}x{count}" for pid, count in groups)
+    return f"standard lanes={lanes}"
+
+
 def fmt_u16(value: int) -> str:
     return f"0x{value:04X}"
 
@@ -1692,6 +1752,294 @@ def generate_report(path: Path, data: bytes) -> str:
                 f"    Slot 0x{slot.slot:04X} @0x{slot.offset:04X} → tag=0x{tag:02X}  raw={slot.raw.hex()}"
             )
     lines.append("")
+
+    try:
+        project_inspection = inspect_project_bytes(data)
+        active_preset_refs = project_inspection.active_preset_refs
+    except Exception:
+        active_preset_refs = ()
+
+    try:
+        preset_paths = inspect_preset_paths_bytes(data)
+    except Exception:
+        preset_paths = None
+
+    if preset_paths and preset_paths.tracks:
+        shown = [
+            row
+            for row in preset_paths.tracks
+            if row.track <= 8 and row.path and row.path != "/"
+        ]
+        if shown:
+            lines.append("[Track Preset Paths]")
+            for row in shown:
+                lines.append(
+                    f"  T{row.track:02d}: {row.path}  engine=0x{row.engine_id:02X}"
+                )
+            lines.append("")
+
+    if active_preset_refs:
+        lines.append("[Pattern Presets]")
+        for track_index, pattern, ref in active_preset_refs:
+            engine = (
+                f"0x{pattern.engine_id:02X}"
+                + (f" ({pattern.engine_name})" if pattern.engine_name else "")
+                if pattern.engine_id is not None
+                else "unknown"
+            )
+            lines.append(
+                f"  T{track_index:02d} P{pattern.pattern}: {ref.folder}  "
+                f"kind={ref.kind}  confidence={ref.confidence}  hits={ref.hit_count}  "
+                f"engine={engine}"
+            )
+        lines.append("")
+
+    try:
+        drum_samples = inspect_drum_samples_bytes(data)
+    except Exception:
+        drum_samples = None
+
+    if drum_samples and drum_samples.tracks:
+        lines.append("[Drum Samples]")
+        for drum_track in drum_samples.tracks:
+            lines.append(f"  Track {drum_track.track} (engine 0x{drum_track.engine_id:02X})")
+            for voice in drum_track.assigned_paths:
+                gain_s = (
+                    f"gain=0x{voice.gain_u32:08X}"
+                    if voice.gain_u32
+                    else "gain=0"
+                )
+                fade_s = (
+                    f"fade={voice.loop_fade_ui}"
+                    if voice.loop_fade_ui
+                    else "fade=0"
+                )
+                lines.append(
+                    f"    v{voice.voice:02d}: {voice.path}  "
+                    f"tune={voice.tune_semitones:+d} key={voice.key_assignment} "
+                    f"mode={voice.play_mode} dir={voice.direction_label} pan={voice.pan} "
+                    f"start={voice.start} loop_start={voice.loop_start} "
+                    f"end=0x{voice.end:08X} {gain_s} {fade_s}"
+                )
+        lines.append("")
+
+    try:
+        sampler_samples = inspect_sampler_samples_bytes(data)
+    except Exception:
+        sampler_samples = None
+
+    if sampler_samples and sampler_samples.tracks:
+        lines.append("[Sampler Sample]")
+        for sample in sampler_samples.tracks:
+            try:
+                tune_s = f"{sample.tune_ui:+.2f}"
+            except ValueError:
+                tune_s = "unknown"
+            lines.append(f"  Track {sample.track} (engine 0x{sample.engine_id:02X})")
+            lines.append(f"    path: {sample.path}")
+            lines.append(
+                f"    start={sample.sample_start} end={sample.sample_end} "
+                f"loop={sample.loop_start}…{sample.loop_end} "
+                f"crossfade={sample.loop_crossfade} ({sample.loop_crossfade_percent}%)"
+            )
+            lines.append(
+                f"    tune={tune_s} (raw 0x{sample.tune_byte:02X}/"
+                f"0x{sample.tune_aux_byte:02X}) "
+                f"gain={sample.gain} dir={sample.direction_label} "
+                f"loop_type={sample.loop_type}"
+            )
+        lines.append("")
+
+    scene_project: ImageProject | None = None
+    try:
+        header, image = decode_project(data)
+        scene_project = ImageProject(header, bytearray(image))
+        scene_project._rescan()
+    except Exception:
+        scene_project = None
+
+    try:
+        static_mixer = inspect_static_mixer_bytes(data)
+    except Exception:
+        static_mixer = None
+
+    if static_mixer:
+        lines.append("[Static Mixer]")
+        for track_mix in static_mixer.tracks[:8]:
+            show_row = (
+                track_mix.track == 1
+                or track_mix.volume.byte != 0x60
+                or track_mix.pan.byte != 0x40
+                or track_mix.send_fx1.byte != 0
+                or track_mix.send_fx2.byte != 0
+            )
+            if not show_row:
+                continue
+            lines.append(
+                f"  T{track_mix.track} vol={track_mix.volume.byte} "
+                f"pan={track_mix.pan.byte} fx1={track_mix.send_fx1.byte} "
+                f"fx2={track_mix.send_fx2.byte}"
+            )
+            lines.append(
+                f"  T{track_mix.track} raw_u32 "
+                f"vol=0x{track_mix.volume.u32:08X} "
+                f"pan=0x{track_mix.pan.u32:08X} "
+                f"fx1=0x{track_mix.send_fx1.u32:08X} "
+                f"fx2=0x{track_mix.send_fx2.u32:08X}"
+            )
+        m = static_mixer.master
+        lines.append(
+            f"  Master perc={m.percussion.byte} melody={m.melody.byte} "
+            f"comp={m.compressor.byte} master={m.master.byte}"
+        )
+        lines.append(
+            f"  Master raw_u32 perc=0x{m.percussion.u32:08X} "
+            f"melody=0x{m.melody.u32:08X} "
+            f"comp=0x{m.compressor.u32:08X} "
+            f"master=0x{m.master.u32:08X}"
+        )
+        lines.append("")
+
+    try:
+        scene_mix = inspect_scene_volumes_bytes(data)
+    except Exception:
+        scene_mix = None
+
+    if scene_mix:
+        lines.append("[Scene Mix]")
+        present_slots = ",".join(str(slot) for slot in scene_mix.present_scene_slots) or "-"
+        lines.append(
+            f"  present={scene_mix.present_scene_count} "
+            f"active_scene={scene_mix.active_scene_ordinal} "
+            f"active_song={scene_mix.active_song_ordinal} "
+            f"master_vol={scene_mix.master_vol_byte} "
+            f"present_slots={present_slots}"
+        )
+        for row in scene_mix.track_volumes[:8]:
+            lines.append(f"  T{row.track:02d} vol_byte={row.vol_byte}")
+        lines.append("")
+
+    if scene_project is not None:
+        mute_lines: list[str] = []
+        slots = scene_mix.present_scene_slots if scene_mix else (0,)
+        for slot in slots:
+            try:
+                muted = read_scene_muted_tracks(scene_project, slot)
+            except Exception:
+                muted = ()
+            if muted:
+                mute_lines.append(
+                    f"  slot {slot}: {', '.join(f'T{t}' for t in muted)}"
+                )
+        if mute_lines:
+            lines.append("[Scene Mutes]")
+            lines.extend(mute_lines)
+            lines.append("")
+
+    try:
+        master_eq = inspect_master_eq_bytes(data)
+    except Exception:
+        master_eq = None
+
+    if master_eq:
+        lines.append("[Master EQ]")
+        lines.append(
+            f"  low={master_eq.low.byte} mid={master_eq.mid.byte} "
+            f"high={master_eq.high.byte}"
+        )
+        lines.append(
+            f"  raw_u32 low=0x{master_eq.low.u32:08X} "
+            f"mid=0x{master_eq.mid.u32:08X} "
+            f"high=0x{master_eq.high.u32:08X}"
+        )
+        lines.append("")
+
+    try:
+        project_config = inspect_project_config_bytes(data)
+    except Exception:
+        project_config = None
+
+    if project_config:
+        voice_s = " ".join(
+            f"T{index + 1}={voices if voices is not None else 'auto'}"
+            for index, voices in enumerate(project_config.voice_allocations)
+        )
+        midi_s = " ".join(
+            f"T{index + 1}={channel if channel is not None else 'off'}"
+            for index, channel in enumerate(project_config.midi_channels)
+        )
+        lines.append("[Project Config]")
+        lines.append(
+            f"  transpose={project_config.transpose_semitones:+d} "
+            f"scene_length={project_config.scene_length} "
+            f"time_signature={project_config.time_signature} "
+            f"groove={project_config.groove_type} "
+            f"groove_amount={project_config.groove_amount:+d} "
+            f"click_vol={project_config.click_volume_raw} "
+            f"metronome={'on' if project_config.metronome_enabled else 'off'} "
+            f"active_scene={project_config.active_scene_ordinal} "
+            f"active_song={project_config.active_song_ordinal}"
+        )
+        lines.append(f"  voices {voice_s}")
+        lines.append(f"  midi {midi_s}")
+        lines.append("")
+
+    try:
+        bar_menu = inspect_bar_menu_bytes(data, tracks=1)
+    except Exception:
+        bar_menu = ()
+
+    if bar_menu:
+        row = bar_menu[0]
+        lines.append("[Bar Menu]")
+        lines.append(
+            f"  T{row.track} pattern_steps={row.pattern_steps} "
+            f"bars={row.bar_count} final_bar_steps={row.final_bar_steps} "
+            f"length_ticks={row.default_step_length_ticks} "
+            f"length_ui~={row.default_step_length_ui} "
+            f"quant_raw={row.quantization_raw} "
+            f"quant_ui~={row.quantization_ui_approx} "
+            f"groove_ui={row.groove_ui_value if row.groove_ui_value is not None else '?'} "
+            f"groove_index={row.groove_index if row.groove_index is not None else '?'} "
+            f"groove_raw={row.groove_signed_raw:+d} "
+            f"plock_shape_raw={row.plock_shape_signed_raw:+d}"
+        )
+        lines.append("")
+
+    try:
+        saturator = inspect_master_saturator_bytes(data)
+    except Exception:
+        saturator = None
+
+    if saturator:
+        lines.append("[Master Saturator]")
+        lines.append(
+            f"  gain={saturator.gain.byte} clip={saturator.clip.byte} "
+            f"tone={saturator.tone.byte} mix={saturator.mix.byte}"
+        )
+        lines.append(
+            f"  raw_u32 gain=0x{saturator.gain.u32:08X} "
+            f"clip=0x{saturator.clip.u32:08X} "
+            f"tone=0x{saturator.tone.u32:08X} "
+            f"mix=0x{saturator.mix.u32:08X}"
+        )
+        lines.append("")
+
+    try:
+        logical_project = XYProject.from_bytes(data)
+    except Exception:
+        logical_project = None
+
+    if logical_project:
+        plock_lines: list[str] = []
+        for track_block in logical_project.tracks:
+            summary = summarize_plock_lanes(track_block.body)
+            if summary:
+                plock_lines.append(f"  T{track_block.index + 1}: {summary}")
+        if plock_lines:
+            lines.append("[P-Locks]")
+            lines.extend(plock_lines)
+            lines.append("")
 
     lines.append("[Tracks]")
     for track in tracks:
@@ -1848,6 +2196,9 @@ def generate_report(path: Path, data: bytes) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(
         description="Inspect a single OP-XY project file."
     )

@@ -57,3 +57,16 @@ One tiny probe file + a glance at the device UI each:
 4. `xy/image_writer.py`: byte-exact replication of device captures;
    device-verified probes incl. note==velocity; Whitney capstone plays
    end-to-end with scenes + song chain.
+
+---
+
+## Field-level status (supplement — does not replace tiers above)
+
+Per-field read/write/inspect status with evidence links lives in
+[`parse_capability_checklist.md`](parse_capability_checklist.md).
+
+Recent contributor work (2026-06, pending upstream review) adds
+read-only inspection modules and device probe fixtures. That progress is
+tracked in the checklist and dated logs — not by rewriting this tier
+list. See [`workflows/contributor_inspection_workflow.md`](workflows/contributor_inspection_workflow.md)
+for how those contributions map back to Tier 1–3 items.

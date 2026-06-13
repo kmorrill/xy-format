@@ -295,3 +295,63 @@ What we thought before the reframe (preserved so the shift is legible):
 The legacy docs (`descriptor_encoding.md`, `preamble_state_machine.md`,
 `scenes_songs.md` §§5–23) remain useful as device-outcome ledgers even
 though their *models* are superseded.
+
+---
+
+## 2026-06-13 — Phase 1–2 read-only inspection pass (contributor)
+
+### One-sentence status
+
+A coordinated device probe program (firmware **1.1.4**) added **byte-pinned
+read APIs** for mix, scenes, EQ, saturator, drum/sampler sample tables, and
+structural preset paths — plus a **heuristic** preset-reference reader for
+active pattern bodies. Evidence is fixture-backed in this repo; playback
+semantics for scene-stored volumes remain open.
+
+### Newly settled (E2 — probe + pytest)
+
+- **Static mixer** per track @ `+0x38FE` vol, `+0x38FA` pan, `+0x38B2`/`+0x38B6`
+  sends; master perc/melody/compressor/master @ global `+0x88`/`+0x8C`/`+0x90`/`+0x94`
+  — P2-A `f0`–`f24`, `xy/mixer_static_inspection.py`.
+- **Structural preset path** @ track `+0x453F` — P1-B, `xy/preset_path_inspection.py`.
+- **Drum sample paths** (three families), **pan** @ slot `+0x06`, **fade** storage
+  on preceding voice — M1/M3, `xy/drum_sample_inspection.py`.
+- **Scene track mutes** in 33-byte scene slots @ global `+0x95`; mute byte **2**;
+  scene *N* → slot *N−1* — P2-E scenes 1–8, `read_scene_muted_tracks`.
+- **Master EQ** bands @ `0x68`/`0x6C`/`0x70`; blend u32 @ `0x74` not tied to 4th
+  EQ UI knob on 1.1.4 — P2-F, `xy/master_eq_inspection.py`.
+- **Master saturator** @ `0x78`/`0x7C`/`0x80`/`0x84` — P2-G.
+- **One-shot sampler** sample-edit fields + tune encoding — P2-B `g0`–`g14`,
+  `xy/sampler_sample_inspection.py`.
+
+### Believed (E2 bytes, E3 playback open)
+
+- **Scene-stored track volumes** use track struct bytes that differ per scene
+  in captures (P2-D `s0b`), but operator reported **global mix** on 1.1.4 when
+  switching scenes — storage mapped, playback semantics not closed.
+- **Scene volume routing** `scene_volume_storage_track(scene, track)` validated
+  for subset (scene 1 T1 → T1; scene 2 T1 → T2); full 16×scene matrix not closed.
+
+### Heuristic (stay `[~]` until structural decode)
+
+- **Pattern preset references** via `/fat32/presets/…` paths (strong for drums)
+  and `0xF7`-adjacent fragmented names (medium) — `xy/project_inspection.py`.
+  Open: exact struct around `0xF7` vs `ImageProject.set_preset` donor layout.
+
+### Mysteries unchanged
+
+- Tier 2 note trailing flag bytes; scene-row flag semantics; limits certification pack.
+- Multisampler zones, aux tracks T9–T16, players — no probes yet.
+
+### Next decisive test
+
+1. Scene volume **playback** retest: multi-scene project, change scene 2 T1 vol only,
+   confirm audible difference vs scene 1 on device.
+2. Promote preset refs into `project_to_json` once golden export fixtures exist.
+3. `corpus_lab record` on representative probe per pack for traceability.
+
+### References
+
+- Checklist: `docs/parse_capability_checklist.md`
+- Contributor map: `docs/workflows/contributor_inspection_workflow.md`
+- Logs: `docs/logs/2026-06-12_*.md`, `docs/logs/2026-06-09_app_preset_probe_inspection.md`

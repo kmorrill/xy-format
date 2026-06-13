@@ -1,5 +1,11 @@
 # Scenes and Songs
 
+> **Flat decoded image (canonical for read/write):** 33-byte scene slots @
+> `GLOBAL+0x95 + slot×33` (`sel[16] + mute[16] + flags`). See
+> [`record_structure.md`](record_structure.md) §4, [`image_coverage_map.md`](image_coverage_map.md),
+> P2-D volumes, P2-E mutes. Sections below on RLE insertions and Track 16
+> tail bytes are **supplemental** (older probe narrative).
+
 ## Scope
 This document captures stable format findings for scene/song state from
 `unnamed 149/150/151/152/154/155` and follow-up `b/nl/lp` probes.
@@ -12,6 +18,32 @@ Current stable model is split storage:
 2. Track 16 control bytes (tail control region in normalized branch).
 
 ## Stable Findings
+
+### 0) Flat Scene Slot Layout
+
+Decoded-image scene rows are 33-byte slots at `GLOBAL+0x95 + slot×33`:
+
+- `+0..15`: 0-based pattern selection per track.
+- `+16..31`: mute byte per track (`0x00` unmuted, `0x02` muted in device probes).
+- `+32`: row flag. Existing device fixtures and `build_arrangement` use `0x01`
+  for populated/present rows and `0x00` for empty trailing rows.
+
+Examples: single-scene mute probes flag only slot 0; clean two-scene volume
+probes flag slots 0 and 1; the eight-scene mute baseline flags slots 0..7.
+Use row flags, not global `0x06`, when counting populated scene rows. HDR
+active-scene probes show `0x06` is the active scene slot (zero-based), while
+present scene count is derived from these row flags.
+
+### 0.1) Active Scene And Song Selectors
+
+Firmware 1.1.4 HDR probes isolate:
+
+- `GLOBAL+0x06`: active scene slot, zero-based (`hdr-arr-act2` changes only
+  `0x06: 00 -> 01`; `hdr-arr-act3` changes only `0x06: 00 -> 02`).
+- `GLOBAL+0x07`: active song slot when explicitly selected. Fresh/default
+  Song 1 reads `0x10`; selecting Song 2 writes `0x01`.
+
+Adding scenes while staying on scene 1 changes the scene rows, not `0x06`.
 
 ### 1) Loop Is Per-Song (Normalized Branch)
 Loop toggles were isolated as Track 16 control-byte changes:
