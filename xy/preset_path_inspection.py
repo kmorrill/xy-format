@@ -3,7 +3,7 @@
 Format: ``<category>/<preset-name>`` null-padded (e.g. ``drum/pp``,
 ``wind/nt-accord``, ``bass/nt-106 bass``). Engine swap without choosing a
 preset can leave ``/`` alone. See ``docs/format/decoded_image_map.md`` and
-device fixtures in ``src/app-preset-probes/2026-06-preset-path/``.
+device fixtures in ``src/preset-probes/2026-06-preset-path/``.
 """
 
 from __future__ import annotations

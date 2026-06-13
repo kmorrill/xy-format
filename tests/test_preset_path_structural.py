@@ -4,7 +4,7 @@ from xy.preset_path_inspection import PRESET_PATH_OFFSET, inspect_preset_paths_b
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-preset-probes" / "2026-06-preset-path"
+PROBES = ROOT / "src" / "preset-probes" / "2026-06-preset-path"
 
 
 def _track1_path(path: Path) -> str:

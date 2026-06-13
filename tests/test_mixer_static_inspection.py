@@ -17,7 +17,7 @@ from xy.rle import decode_project
 from xy.scene_volume_inspection import TRACK_MIX_VOL_BYTE_OFFSET
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-mixer-probes" / "2026-06-static"
+PROBES = ROOT / "src" / "mixer-probes" / "2026-06-static"
 BASELINE = PROBES / "f0-baseline-mix-default.xy"
 
 

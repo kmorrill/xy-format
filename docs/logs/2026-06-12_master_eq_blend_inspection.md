@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-12  
 **Firmware:** 1.1.4  
-**Fixtures:** `eq7-blend-min.xy`, `eq8-blend-max.xy` in `src/app-mixer-probes/2026-06-eq/`
+**Fixtures:** `eq7-blend-min.xy`, `eq8-blend-max.xy` in `src/mixer-probes/2026-06-eq/`
 
 ## Operator hypothesis (why this was a late probe)
 

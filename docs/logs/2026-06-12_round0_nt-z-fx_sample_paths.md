@@ -1,8 +1,8 @@
 # 2026-06-12 Round 0 — `nt-z-fx` user-preset sample paths on a `pp` drum kit
 
 Decoded analysis of archived captures in
-`src/app-sample-probes/archive-round0-nt-z-fx/` (also copied to
-`src/app-sample-probes/archive-round0-nt-z-fx/`).
+`src/drum-sample-probes/archive-round0-nt-z-fx/` (also copied to
+`src/drum-sample-probes/archive-round0-nt-z-fx/`).
 
 ## Operator intent
 

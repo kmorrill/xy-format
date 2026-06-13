@@ -15,9 +15,9 @@ INSPECTOR = ROOT / "tools" / "inspect_xy.py"
 CHANGE_LOG = ROOT / "src" / "one-off-changes-from-default" / "op-xy_project_change_log.md"
 DATA_DIR = ROOT / "src" / "one-off-changes-from-default"
 BASELINE_FILE = DATA_DIR / "unnamed 1.xy"
-MIXER_PROBES = ROOT / "src" / "app-mixer-probes" / "2026-06-static"
-SCENE_VOLUME_PROBES = ROOT / "src" / "app-scene-probes" / "2026-06-volumes"
-PROJECT_CONFIG_PROBES = ROOT / "src" / "app-project-config-probes" / "2026-06-project-config"
+MIXER_PROBES = ROOT / "src" / "mixer-probes" / "2026-06-static"
+SCENE_VOLUME_PROBES = ROOT / "src" / "scene-probes" / "2026-06-volumes"
+PROJECT_CONFIG_PROBES = ROOT / "src" / "project-config-probes" / "2026-06-project-config"
 
 
 def _label_to_filename(label: str) -> Path:

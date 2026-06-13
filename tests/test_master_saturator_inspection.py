@@ -25,7 +25,7 @@ from xy.master_saturator_inspection import (
 from xy.rle import decode_project
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-mixer-probes" / "2026-06-saturator"
+PROBES = ROOT / "src" / "mixer-probes" / "2026-06-saturator"
 BASELINE = PROBES / "sat0-baseline.xy"
 
 

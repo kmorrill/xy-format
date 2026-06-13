@@ -4,7 +4,7 @@ from xy.drum_sample_inspection import inspect_drum_samples_bytes
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-sample-probes" / "archive-round0-nt-z-fx"
+PROBES = ROOT / "src" / "drum-sample-probes" / "archive-round0-nt-z-fx"
 BASELINE = PROBES / "c0-baseline-pp.xy"
 
 

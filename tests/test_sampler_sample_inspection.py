@@ -29,7 +29,7 @@ from xy.sampler_sample_inspection import (
 from xy.image_writer import ImageProject
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-sampler-probes" / "2026-06-oneshot"
+PROBES = ROOT / "src" / "sampler-probes" / "2026-06-oneshot"
 BASELINE = PROBES / "g0.xy"
 
 

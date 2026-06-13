@@ -14,7 +14,7 @@ from xy.image_writer import ImageProject
 from xy.rle import decode_project
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-scene-probes" / "2026-06-volumes"
+PROBES = ROOT / "src" / "scene-probes" / "2026-06-volumes"
 
 
 @pytest.fixture(scope="module")

@@ -1,7 +1,7 @@
 # 2026-06-12 Mission 3 — Drum pan vs fade
 
-Fixtures: `src/app-sample-probes/2026-06-drum-pan-fade/`  
-Operator notes: `src/app-sample-probes/2026-06-drum-pan-fade/README.md`
+Fixtures: `src/drum-sample-probes/2026-06-drum-pan-fade/`
+Operator notes: `src/drum-sample-probes/2026-06-drum-pan-fade/README.md`
 
 ## Setup
 

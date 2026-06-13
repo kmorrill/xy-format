@@ -270,5 +270,5 @@ edited project-config field.
 
 ## After capture
 
-Promoted to `xy-format-fork/src/app-project-config-probes/` and covered by
+Promoted to `xy-format-fork/src/project-config-probes/` and covered by
 `tests/test_project_config_inspection.py`.

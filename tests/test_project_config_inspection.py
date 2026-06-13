@@ -15,7 +15,7 @@ from xy.project_config_inspection import (
 from xy.rle import decode_project
 
 
-PROBES = Path("src/app-project-config-probes/2026-06-project-config")
+PROBES = Path("src/project-config-probes/2026-06-project-config")
 BASELINE = PROBES / "prjconf0.xy"
 
 

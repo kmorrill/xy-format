@@ -30,7 +30,7 @@ fields. Heuristic reads must say so and stay `[~]` until structural decode exist
 
 | Module | Tests | Primary log | Fixtures |
 | --- | --- | --- | --- |
-| `xy/project_inspection.py` | `test_project_inspection.py` | `2026-06-09_app_preset_probe_inspection.md` | `app-preset-probes/` (heuristic preset refs) |
+| `xy/project_inspection.py` | `test_project_inspection.py` | `2026-06-09_app_preset_probe_inspection.md` | `preset-probes/` (heuristic preset refs) |
 | `xy/preset_path_inspection.py` | `test_preset_path_structural.py` | `2026-06-12_preset_path_structural.md` | `2026-06-preset-path/` |
 | `xy/drum_sample_inspection.py` | `test_drum_sample_inspection*.py`, `test_drum_pan_fade_inspection.py`, `test_drum_voice_params_inspection.py` | `2026-06-12_drum_sample_path_inspection.md` | `2026-06-sample-paths/`, `2026-06-drum-pan-fade/` |
 | `xy/mixer_static_inspection.py` | `test_mixer_static_inspection.py` | `2026-06-12_mixer_static_inspection.md` | `2026-06-static/` |
@@ -147,7 +147,7 @@ Field offsets: `docs/format/decoded_image_map.md`.
   `xy/project_inspection.py` / `tests/test_project_inspection.py`; stays partial until the
   `0xF7` preset-fragment region is structurally decoded
 - [x] Preset path structural **read** @ track `+0x453F` — `xy/preset_path_inspection.py`,
-  `tests/test_preset_path_structural.py`, `src/app-preset-probes/2026-06-preset-path/`
+  `tests/test_preset_path_structural.py`, `src/preset-probes/2026-06-preset-path/`
 - [~] Preset path **write** @ `+0x453F` — not exported in `project_to_json` yet
 - [~] Play mode poly/mono/legato current value — partial
 - [~] Portamento amount/type, bend range — partial
@@ -162,7 +162,7 @@ Field offsets: `docs/format/decoded_image_map.md`.
 
 - [x] 24×128 B voice table @ track+`0x3957` — `set_drum_voice`, `tests/test_image_writer.py`
 - [x] Sample path **read** @ slot+`0x08` — `xy/drum_sample_inspection.py`, device fixtures
-  `src/app-sample-probes/2026-06-sample-paths/` + `archive-round0-nt-z-fx/`,
+  `src/drum-sample-probes/2026-06-sample-paths/` + `archive-round0-nt-z-fx/`,
   `tests/test_drum_sample_inspection.py`, `tests/test_drum_sample_inspection_round0.py`
 - [~] Sample path **write** — only as part of donor `set_preset` region copy; no
   `set_drum_voice_path()` yet — `docs/format/drum_sample_paths.md`

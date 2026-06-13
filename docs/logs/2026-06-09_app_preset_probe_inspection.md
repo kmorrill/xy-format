@@ -11,8 +11,8 @@ finding reproducible from fixture files rather than rely on narrative claims.
 
 Fixture subset:
 
-- `src/app-preset-probes/2026-06-app-required/`
-- `src/app-preset-probes/2026-06-phase-b/`
+- `src/preset-probes/2026-06-app-required/`
+- `src/preset-probes/2026-06-phase-b/`
 
 The A-series app-required captures isolate tracks 1-4 with nine active patterns
 on the target track. Patterns P1-P9 use drum preset folders `pp` through `xx`.

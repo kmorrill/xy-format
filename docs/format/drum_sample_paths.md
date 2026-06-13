@@ -4,7 +4,7 @@
 > **slot `+0x08`** (null-padded). See `decoded_image_map.md` § drum sampler.
 
 Read API: `xy/drum_sample_inspection.py`  
-Fixtures: `src/app-sample-probes/`  
+Fixtures: `src/drum-sample-probes/`
 Capture logs: `docs/logs/2026-06-12_drum_sample_path_inspection.md`,
 `docs/logs/2026-06-12_round0_nt-z-fx_sample_paths.md`
 
@@ -57,7 +57,7 @@ Example: `/fat32/presets/fx/nt-z-fx.preset/unnamed-a2-3.wav`
 - `nt-z-fx` is the **preset bundle name** in the path.
 - Track kit string remains `drum/pp`.
 
-Fixture evidence: `src/app-sample-probes/archive-round0-nt-z-fx/`.
+Fixture evidence: `src/drum-sample-probes/archive-round0-nt-z-fx/`.
 
 ### C — Built-in / library-relative
 
@@ -72,7 +72,7 @@ Example: `content/samples/perc/chi box.wav`
 - `<folder>` is a sample library category (`perc`), **not** a `.preset` file.
 - Does **not** use `/fat32/presets/...`.
 
-Fixture evidence: `src/app-sample-probes/2026-06-sample-paths/` (round 1).
+Fixture evidence: `src/drum-sample-probes/2026-06-sample-paths/` (round 1).
 
 ## Quick reference
 

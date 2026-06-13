@@ -8,7 +8,7 @@ AI-assisted implementation; claims are fixture-backed (round 1 captures below).
 ## Round 1 captures (canonical)
 
 Operator README:
-`src/app-sample-probes/2026-06-sample-paths/README.md`.
+`src/drum-sample-probes/2026-06-sample-paths/README.md`.
 
 | File | Pad (UI) | Voice | MIDI key | Sample | Slot path |
 |------|----------|-------|----------|--------|-----------|

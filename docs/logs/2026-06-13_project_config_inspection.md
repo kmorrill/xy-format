@@ -1,6 +1,6 @@
 # 2026-06-13 — Project config inspection
 
-Fixture pack: `src/app-project-config-probes/2026-06-project-config/`
+Fixture pack: `src/project-config-probes/2026-06-project-config/`
 
 Source probe README status: firmware 1.1.4, fresh baseline `prjconf0.xy`.
 The pack contains 52 one-variable or layout variants plus the baseline and

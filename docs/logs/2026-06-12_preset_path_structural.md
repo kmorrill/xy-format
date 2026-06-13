@@ -1,6 +1,6 @@
 # 2026-06-12 P1-B — Structural preset path @ track `+0x453F`
 
-Fixtures: `src/app-preset-probes/2026-06-preset-path/`  
+Fixtures: `src/preset-probes/2026-06-preset-path/`
 API: `xy/preset_path_inspection.py`
 
 ## Capture

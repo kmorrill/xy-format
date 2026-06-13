@@ -14,7 +14,7 @@ from xy.image_writer import ImageProject
 from xy.rle import decode_project
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-sample-probes" / "2026-06-drum-pan-fade"
+PROBES = ROOT / "src" / "drum-sample-probes" / "2026-06-drum-pan-fade"
 BASELINE = PROBES / "d0-baseline-pp.xy"
 VOICE = 23  # low F kick pad on pp kit (key 53)
 STORAGE_VOICE = drum_fade_storage_voice(VOICE)

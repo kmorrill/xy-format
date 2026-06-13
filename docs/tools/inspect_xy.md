@@ -25,9 +25,9 @@
 - Legacy EQ/global snippets (older offsets).
 
 ## Usage
-- `python tools/inspect_xy.py 'src/app-mixer-probes/2026-06-static/f0-baseline-mix-default.xy'`
-- `python tools/inspect_xy.py 'src/app-preset-probes/2026-06-app-required/a1-t1-p9.xy'`
-- `python tools/inspect_xy.py 'src/app-project-config-probes/2026-06-project-config/prjconf-v-mix-1234.xy'`
+- `python tools/inspect_xy.py 'src/mixer-probes/2026-06-static/f0-baseline-mix-default.xy'`
+- `python tools/inspect_xy.py 'src/preset-probes/2026-06-app-required/a1-t1-p9.xy'`
+- `python tools/inspect_xy.py 'src/project-config-probes/2026-06-project-config/prjconf-v-mix-1234.xy'`
 
 ## Notes
 - Pointer-tail and pointer-21 note decode is still incomplete; see `docs/issues/pointer_tail_decoding.md`.

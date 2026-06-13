@@ -38,7 +38,7 @@
 
 ## Decoded Project-Config Bytes
 
-Firmware 1.1.4 project-config probes (`src/app-project-config-probes/2026-06-project-config/`)
+Firmware 1.1.4 project-config probes (`src/project-config-probes/2026-06-project-config/`)
 pin guide-visible decoded-image bytes that are not represented by the legacy
 scan above:
 

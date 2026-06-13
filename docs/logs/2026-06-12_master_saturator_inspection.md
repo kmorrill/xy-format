@@ -2,8 +2,8 @@
 
 **Date:** 2026-06-12  
 **Firmware:** 1.1.4  
-**Fixtures:** `src/app-mixer-probes/2026-06-saturator/`  
-**Operator README:** `src/app-mixer-probes/2026-06-saturator/README.md`
+**Fixtures:** `src/mixer-probes/2026-06-saturator/`
+**Operator README:** `src/mixer-probes/2026-06-saturator/README.md`
 
 ## Summary
 

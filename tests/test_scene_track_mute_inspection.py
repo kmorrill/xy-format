@@ -15,7 +15,7 @@ from xy.scene_volume_inspection import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBES = ROOT / "src" / "app-scene-probes" / "2026-06-track-mutes"
+PROBES = ROOT / "src" / "scene-probes" / "2026-06-track-mutes"
 BASELINE = PROBES / "mute-#-#-#-#.xy"
 MULTI_BASELINE = PROBES / "mute#-#-#-#-#.xy"
 SLOT0 = 0  # scene 1 on single-scene project (firmware 1.1.4)

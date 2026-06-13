@@ -5,7 +5,7 @@ from xy.project_inspection import inspect_project_bytes
 
 
 ROOT = Path(__file__).resolve().parents[1]
-APP_PROBES = ROOT / "src" / "app-preset-probes"
+APP_PROBES = ROOT / "src" / "preset-probes"
 APP_REQUIRED = APP_PROBES / "2026-06-app-required"
 PHASE_B = APP_PROBES / "2026-06-phase-b"
 
