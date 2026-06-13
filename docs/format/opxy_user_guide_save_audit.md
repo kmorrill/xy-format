@@ -179,7 +179,7 @@ Guide refs: section 16.1 p.66; section 16.2 p.66; section 16.3 p.67; section 16.
 | Song arrangement | Scene chain per song. | Decoded: footer song table slots `[scene_count][scene_ids...][loop_word]`. |
 | Song loop | Loop on/off per song. | Decoded: loop word in footer, device-validated. |
 | Number of songs | Guide says 9 songs. | Partial/mismatch. Footer has 14 four-byte slots in decoded image; need reconcile which slots are user-visible vs reserved/other state. |
-| Active song/scene selection | Current selected song/scene. | Partial. Global `0x06-0x07` are touched by song/scene changes; exact selector/count semantics need cleanup. |
+| Active song/scene selection | Current selected song/scene. | Decoded (HDR). Global `0x06` is active scene slot, zero-based; global `0x07` is active song slot, with `0x10` as fresh/default Song 1 sentinel. |
 
 ### Mix, EQ, Saturator, and Master
 

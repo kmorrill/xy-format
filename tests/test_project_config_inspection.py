@@ -17,6 +17,7 @@ from xy.rle import decode_project
 
 PROBES = Path("src/project-config-probes/2026-06-project-config")
 BASELINE = PROBES / "prjconf0.xy"
+HEADER_PROBES = Path("src/project-config-probes/2026-06-global-header")
 
 
 def _config(filename: str):
@@ -25,6 +26,14 @@ def _config(filename: str):
 
 def _decoded(filename: str) -> bytes:
     return decode_project((PROBES / filename).read_bytes())[1]
+
+
+def _header_config(filename: str):
+    return inspect_project_config(HEADER_PROBES / filename)
+
+
+def _header_decoded(filename: str) -> bytes:
+    return decode_project((HEADER_PROBES / filename).read_bytes())[1]
 
 
 def test_project_config_baseline_defaults() -> None:
@@ -37,6 +46,12 @@ def test_project_config_baseline_defaults() -> None:
     assert config.time_signature == "4/4"
     assert config.groove_type_raw == 0
     assert config.groove_type == "shuffle"
+    assert config.groove_amount_raw == 0
+    assert config.groove_amount == 0
+    assert config.click_volume_raw == 0xA8
+    assert config.metronome_enabled
+    assert config.active_scene_ordinal == 1
+    assert config.active_song_ordinal == 1
     assert config.voice_allocations == (None,) * 8
     assert config.midi_channels == (None,) * 16
 
@@ -139,6 +154,67 @@ def test_midi_channel_alternate_and_full_map() -> None:
     assert _config("prjconf-m-all-ch1-16.xy").midi_channels == tuple(range(1, 17))
 
 
+@pytest.mark.parametrize(
+    "filename,raw,signed",
+    [
+        ("hdr-grv-l1.xy", 0xFE, -2),
+        ("hdr-grv-l2.xy", 0xFC, -4),
+        ("hdr-grv-r1.xy", 0x02, 2),
+        ("hdr-grv-r2.xy", 0x04, 4),
+        ("hdr-grv-min.xy", 0x81, -127),
+        ("hdr-grv-minp1.xy", 0x82, -126),
+        ("hdr-grv-minp2.xy", 0x84, -124),
+        ("hdr-grv-max.xy", 0x7F, 127),
+        ("hdr-grv-maxm1.xy", 0x7E, 126),
+        ("hdr-grv-maxm2.xy", 0x7C, 124),
+    ],
+)
+def test_groove_amount_signed_i8(filename: str, raw: int, signed: int) -> None:
+    config = _header_config(filename)
+    assert config.groove_amount_raw == raw
+    assert config.groove_amount == signed
+
+
+@pytest.mark.parametrize(
+    "filename,volume,enabled",
+    [
+        ("hdr-mclk-volmin.xy", 0x00, False),
+        ("hdr-mclk-off.xy", 0x00, False),
+        ("hdr-mclk-off-volmin.xy", 0x00, False),
+        ("hdr-mclk-on.xy", 0xA8, True),
+        ("hdr-mclk-volmid.xy", 0xA8, True),
+        ("hdr-mclk-volmax.xy", 0xFF, True),
+    ],
+)
+def test_metronome_volume_and_toggle_share_click_volume_byte(
+    filename: str, volume: int, enabled: bool
+) -> None:
+    config = _header_config(filename)
+    assert config.click_volume_raw == volume
+    assert config.metronome_enabled is enabled
+
+
+def test_active_scene_and_song_selectors() -> None:
+    assert _header_config("hdr-arr-nsc2.xy").active_scene_ordinal == 1
+    assert _header_config("hdr-arr-act2.xy").active_scene_ordinal == 2
+    assert _header_config("hdr-arr-nsc3.xy").active_scene_ordinal == 1
+    assert _header_config("hdr-arr-act3.xy").active_scene_ordinal == 3
+    assert _header_config("hdr-arr-song1.xy").active_song_ordinal == 1
+    assert _header_config("hdr-arr-song2.xy").active_song_ordinal == 2
+
+
+def test_adding_scenes_does_not_change_active_scene_selector() -> None:
+    nsc2 = _header_decoded("hdr-arr-nsc2.xy")
+    nsc3 = _header_decoded("hdr-arr-nsc3.xy")
+    assert nsc2[0x06] == nsc3[0x06] == 0
+
+
+def test_project_display_name_is_not_stored_in_decoded_image() -> None:
+    image = _header_decoded("hdr0.xy")
+    for text in (b"hdr0", b"2026-06-global-header", b"MyProbeName"):
+        assert text not in image
+
+
 def test_project_config_setters_write_decoded_bytes() -> None:
     project = ImageProject.from_file(str(BASELINE))
 
@@ -146,6 +222,10 @@ def test_project_config_setters_write_decoded_bytes() -> None:
     project.set_project_transpose(-24)
     project.set_time_signature(0x15)
     project.set_groove(10)
+    project.set_groove_amount(-4)
+    project.set_click_volume(0)
+    project.set_active_scene(3)
+    project.set_active_song(2)
     project.set_voice_allocation(1, 8)
     project.set_voice_allocation(2, None)
     project.set_midi_channel(3, 8)
@@ -155,6 +235,10 @@ def test_project_config_setters_write_decoded_bytes() -> None:
     assert image[GLOBAL_TRANSPOSE_OFFSET] == 0xE8
     assert image[GLOBAL_TIME_SIGNATURE_OFFSET] == 0x15
     assert image[GLOBAL_GROOVE_TYPE_OFFSET] == 10
+    assert image[0x02] == 0xFC
+    assert image[0x04] == 0
+    assert image[0x06] == 2
+    assert image[0x07] == 1
     assert image[GLOBAL_VOICE_ALLOCATION_OFFSET] == 8
     assert image[GLOBAL_VOICE_ALLOCATION_OFFSET + 1] == 0
     assert image[GLOBAL_MIDI_CHANNEL_OFFSET + 2] == 7
@@ -168,6 +252,10 @@ def test_project_config_captures_only_change_config_bytes_plus_save_noise() -> N
         for rel in (0x38F2, 0x38F6)
     }
     config_window = {
+        0x02,
+        0x04,
+        0x06,
+        0x07,
         GLOBAL_GROOVE_TYPE_OFFSET,
         GLOBAL_SCENE_LENGTH_OFFSET,
         GLOBAL_TRANSPOSE_OFFSET,

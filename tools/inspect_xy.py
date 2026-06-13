@@ -1908,8 +1908,10 @@ def generate_report(path: Path, data: bytes) -> str:
         lines.append("[Scene Mix]")
         present_slots = ",".join(str(slot) for slot in scene_mix.present_scene_slots) or "-"
         lines.append(
-            f"  scenes={scene_mix.scene_count} present={scene_mix.present_scene_count} "
-            f"active={scene_mix.active_scene_ordinal} master_vol={scene_mix.master_vol_byte} "
+            f"  present={scene_mix.present_scene_count} "
+            f"active_scene={scene_mix.active_scene_ordinal} "
+            f"active_song={scene_mix.active_song_ordinal} "
+            f"master_vol={scene_mix.master_vol_byte} "
             f"present_slots={present_slots}"
         )
         for row in scene_mix.track_volumes[:8]:
@@ -1970,7 +1972,12 @@ def generate_report(path: Path, data: bytes) -> str:
             f"  transpose={project_config.transpose_semitones:+d} "
             f"scene_length={project_config.scene_length} "
             f"time_signature={project_config.time_signature} "
-            f"groove={project_config.groove_type}"
+            f"groove={project_config.groove_type} "
+            f"groove_amount={project_config.groove_amount:+d} "
+            f"click_vol={project_config.click_volume_raw} "
+            f"metronome={'on' if project_config.metronome_enabled else 'off'} "
+            f"active_scene={project_config.active_scene_ordinal} "
+            f"active_song={project_config.active_song_ordinal}"
         )
         lines.append(f"  voices {voice_s}")
         lines.append(f"  midi {midi_s}")

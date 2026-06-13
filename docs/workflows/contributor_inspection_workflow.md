@@ -11,20 +11,20 @@
 2. Narrative / open questions → dated `docs/logs/*`.
 3. Belief changes → append `docs/state_of_understanding.md` (do not rewrite old entries).
 4. Prefer byte-pinned reads over heuristics; label confidence when heuristic.
-5. Promoted fixtures live under `src/app-*-probes/` in **this repo** (self-contained).
+5. Promoted fixtures live under `src/*-probes/` in **this repo** (self-contained).
 
 ## Promotion checklist
 
 When closing a read gap:
 
-1. Capture one-variable device diff → add fixture under `src/app-*-probes/`.
+1. Capture one-variable device diff → add fixture under `src/*-probes/`.
 2. Write `docs/logs/YYYY-MM-DD_<topic>.md` (procedure, findings, open questions).
 3. Add `xy/*_inspection.py` + `tests/test_*_inspection.py`.
 4. Update `decoded_image_map.md`, `image_coverage_map.md`, `parse_capability_checklist.md`.
 5. Wire `tools/inspect_xy.py` when the field is user-visible in inspection.
 6. Record device outcome with `python tools/corpus_lab.py record …` when possible.
 
-Fixture capture recipes: `src/app-*-probes/*/README.md` (operator procedure + results per pack).
+Fixture capture recipes: `src/*-probes/*/README.md` (operator procedure + results per pack).
 
 ## Inspection modules landed (2026-06)
 
@@ -43,7 +43,7 @@ unless the log marks E2/E3 (see checklist evidence tiers).
 | `xy/master_saturator_inspection.py` | saturator | `2026-06-saturator/` | `test_master_saturator_inspection.py` | `2026-06-12_master_saturator_inspection.md` |
 | `xy/sampler_sample_inspection.py` | Tier 1 §4 one-shot | `2026-06-oneshot/` | `test_sampler_sample_inspection.py` | `2026-06-12_sampler_oneshot_inspection.md` |
 
-Paths above are under `src/app-{preset,sample,mixer,scene,sampler}-probes/` unless noted.
+Paths above are under the relevant `src/*-probes/` fixture directory unless noted.
 
 ## Open / partial (honest gaps)
 

@@ -56,9 +56,10 @@ Baseline: `mute#-#-#-#-#.xy` — 8 patterns on T1 (steps 1–16), no mutes.
 | `mute7-2-3-6-7.xy` | 7 | 2,3,6,7 | 6 |
 | `mute8-6-7-8-#.xy` | 8 | 6,7,8 | 7 |
 
-Touching scene *N* also bumps `GLOBAL+0x6` (stored scene count − 1). Incremental
-clone saves can differ in decoded image size vs a fresh baseline re-save; tests
-compare **scene-region mute bytes** only.
+Touching scene *N* also updates `GLOBAL+0x06`, which later HDR probes identify
+as the active scene slot rather than stored scene count. Incremental clone saves
+can differ in decoded image size vs a fresh baseline re-save; tests compare
+**scene-region mute bytes** only.
 
 ## API
 

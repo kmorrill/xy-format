@@ -326,7 +326,7 @@ def test_inspector_prints_present_scene_count_from_slot_flags():
     path = SCENE_VOLUME_PROBES / "s0b-baseline-2scenes.xy"
     code, output, err = _run_inspector(path)
     assert code == 0, f"Inspector failed for {path.name}: {err}"
-    assert "scenes=1 present=2" in output
+    assert "present=2 active_scene=1" in output
     assert "present_slots=0,1" in output
 
 
@@ -351,7 +351,7 @@ def test_inspector_prints_project_config():
     code, output, err = _run_inspector(path)
     assert code == 0, f"Inspector failed for {path.name}: {err}"
     assert "[Project Config]" in output
-    assert "transpose=+0 scene_length=longest time_signature=4/4 groove=shuffle" in output
+    assert "transpose=+0 scene_length=longest time_signature=4/4 groove=shuffle groove_amount=+0" in output
     assert "voices T1=1 T2=2 T3=3 T4=4 T5=auto" in output
 
 

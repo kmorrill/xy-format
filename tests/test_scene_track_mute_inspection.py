@@ -156,7 +156,7 @@ def test_multi_scene_mute_diffs_are_isolated_to_target_slot(
     assert all(mute_start <= d < mute_end for d in scene_diffs), scene_diffs
 
 
-def test_mute3_vs_mute2_adds_slot2_mutes_and_bumps_scene_count() -> None:
+def test_mute3_vs_mute2_adds_slot2_mutes_and_updates_active_scene_byte() -> None:
     """Incremental capture: scene 3 mutes on top of scene 2 file."""
     _, base = decode_project((PROBES / "mute2-1-7-8-#.xy").read_bytes())
     _, var = decode_project((PROBES / "mute3-1-7-8-#.xy").read_bytes())

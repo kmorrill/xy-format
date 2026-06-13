@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .image_writer import GLOBAL_SCENE_COUNT, ImageProject, SCENE_SLOT0, SCENE_SLOT_SIZE
+from .image_writer import GLOBAL_ACTIVE_SCENE, ImageProject, SCENE_SLOT0, SCENE_SLOT_SIZE
 
 SCENE_MUTE_OFFSET = 16  # within 33-byte scene slot
 SCENE_MUTE_VALUE = 2  # device-confirmed muted byte (nonzero)
@@ -34,8 +34,8 @@ class TrackMixVolume:
 
 @dataclass(frozen=True)
 class SceneVolumeInspection:
-    scene_count: int
-    active_scene_ordinal: int
+    active_scene_raw: int
+    active_song_raw: int
     master_vol_byte: int
     master_vol_u32: int
     track_volumes: tuple[TrackMixVolume, ...]
@@ -54,6 +54,16 @@ class SceneVolumeInspection:
     def present_scene_count(self) -> int:
         """Count of populated scene rows inferred from scene slot flags."""
         return len(self.present_scene_slots)
+
+    @property
+    def active_scene_ordinal(self) -> int:
+        return self.active_scene_raw + 1
+
+    @property
+    def active_song_ordinal(self) -> int:
+        if self.active_song_raw == 0x10:
+            return 1
+        return self.active_song_raw + 1
 
 
 def mix_vol_byte_from_u32(u32: int) -> int:
@@ -106,8 +116,8 @@ def inspect_scene_volumes(project: ImageProject) -> SceneVolumeInspection:
             )
         )
     return SceneVolumeInspection(
-        scene_count=img[GLOBAL_SCENE_COUNT] + 1,
-        active_scene_ordinal=img[GLOBAL_SCENE_COUNT + 1],
+        active_scene_raw=img[GLOBAL_ACTIVE_SCENE],
+        active_song_raw=img[GLOBAL_ACTIVE_SCENE + 1],
         master_vol_byte=img[GLOBAL_MASTER_VOL_BYTE_OFFSET],
         master_vol_u32=master_u32,
         track_volumes=tuple(tracks),

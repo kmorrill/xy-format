@@ -9,7 +9,7 @@
 
 ## Workflows
 - **Contributor inspection workflow (2026-06): `docs/workflows/contributor_inspection_workflow.md`**
-- Device probe capture recipes: `src/app-*-probes/*/README.md`
+- Device probe capture recipes: `src/*-probes/*/README.md`
 - Device test naming: `docs/workflows/device_test_naming.md`
 - Inspector sweep: `docs/workflows/inspector_sweep.md`
 - Crash capture protocol: `docs/workflows/crash_capture.md`
@@ -97,6 +97,7 @@ Reference material:
 - Drum pan/fade inspection: `docs/logs/2026-06-12_drum_pan_fade_inspection.md`
 - Drum voice param read API: `docs/logs/2026-06-12_drum_voice_param_read_api.md`
 - Project config inspection: `docs/logs/2026-06-13_project_config_inspection.md`
+- Global header inspection: `docs/logs/2026-06-13_global_header_inspection.md`
 - Preset path structural (P1-B): `docs/logs/2026-06-12_preset_path_structural.md`
 - Scene volume inspection (P2-D): `docs/logs/2026-06-12_scene_volume_inspection.md`
 - Scene track mute inspection (P2-E): `docs/logs/2026-06-12_scene_track_mute_inspection.md`

@@ -45,15 +45,15 @@ Volumes are **not** in the 33-byte scene slots (`GLOBAL+0x95`).
 Hypothesis: scene `S` track `T` volume → struct **track `T + (S − 1)`** at
 `+0x38FB`. Confirmed for `(S,T) = (1,1)` and `(2,1)` only.
 
-`s2b` also sets `GLOBAL+0x06` scene count `0` → `1` (2 scenes) and allocates
-empty scene slot 2 (flags `0`).
+`s2b` also changes `GLOBAL+0x06` (later HDR probes identify this byte as the
+active scene slot, not a scene count) and allocates empty scene slot 2
+(flags `0`).
 
-Follow-up (2026-06-13): the raw global count byte is not a reliable populated
-row count by itself. In canonical two-scene fixtures, `s0b`, `s1b`, and `s5b`
-still read as raw count `1` while scene slot flags are `(1, 1, 0, ...)`;
-`s2b` reads raw count `2` with the same populated flags. Use
-`present_scene_slots` / `present_scene_count` for populated scene rows and keep
-`scene_count` as the raw global-byte-derived field.
+Follow-up (2026-06-13): the raw global byte is not a populated row count. In
+canonical two-scene fixtures, `s0b`, `s1b`, and `s5b` read `GLOBAL+0x06 = 1`
+while scene slot flags are `(1, 1, 0, ...)`; `s2b` reads `2` with the same
+populated flags. HDR probes close `GLOBAL+0x06` as active scene slot. Use
+`present_scene_slots` / `present_scene_count` for populated scene rows.
 
 ## Operator playback vs bytes
 

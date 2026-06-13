@@ -29,10 +29,11 @@ vectors (notes: +12 bytes each).
 | offset | field | evidence |
 |---|---|---|
 | 0x00 | tempo, u16 LE tenths of BPM (+ related byte at 0x04 region) | u4, u5 |
+| 0x02 | groove amount, signed i8 (`0` default; one detent = ±2 except extrema; min `0x81` = −127, max `0x7F` = +127) | HDR `hdr-grv-*` |
 | 0x03 | groove type enum (`0` shuffle, `1` half-shuffle, `2` danish, `3` bombora, `4` wobbly, `5` gaussian, `6` accents, `7` island nod, `8` disfunk, `9` roll over, `10` prophetic) | PCFG `prjconf-t-grv-*` |
-| 0x04 | metronome/click volume | u10 |
-| 0x06 | song/scene count-ish (songs: u13; scenes: 152/153 touch 0x06–0x07) | u13, u152 |
-| 0x07 | selected song/scene ordinal | u149, u151 |
+| 0x04 | metronome/click volume (`0x00` min/off, baseline `0xA8`, `0xFF` max); no separate on/off bit moved in HDR toggle probes | u10, HDR `hdr-mclk-*` |
+| 0x06 | active scene slot, zero-based (`0` scene 1, `1` scene 2, `2` scene 3) | HDR `hdr-arr-act*` |
+| 0x07 | active song slot, zero-based when explicitly selected (`0x01` = Song 2); fresh/default Song 1 reads `0x10` sentinel | HDR `hdr-arr-song*` |
 | 0x08 | project-config scene length mode (`0` longest, `1` shortest, `2` time signature) | PCFG `prjconf-g-slen-*` |
 | 0x1B | project transpose, signed i8 semitones (`0xE8` = −24, `0xFF` = −1, `0x18` = +24) | PCFG `prjconf-g-x*` |
 | 0x1C | time signature enum (`0x10` 3/4, `0x11` 4/4, `0x12` 5/4, `0x13` 6/8, `0x14` 7/8, `0x15` 12/8) | PCFG `prjconf-t-sig-*` |
@@ -48,8 +49,9 @@ vectors (notes: +12 bytes each).
 | 0x8D–0x90 | **master compressor** u32 (byte @ 0x90; default `0x0C`) | P2-A `f14`/`f15` |
 | 0x91–0x94 | **master volume** u32 (byte @ 0x94; max `0x7F` / `0x7FFFFFFF`) | P2-D `s5b` |
 
-(Scene records — the 33-byte structs of `record_structure.md` §4 — also
-live in the global region in scene-bearing files.)
+Scene records — the 33-byte structs of `record_structure.md` §4 — also
+live in the global region in scene-bearing files. Present scene count is
+derived from scene row flags, not from `0x06`.
 
 ## Track Struct (track-relative offsets; track base = header byte 0)
 
@@ -89,7 +91,7 @@ Engine swaps are size-preserving (param block fixed-size, u34).
 ## Footer (last 53 bytes)
 
 The 14-slot song table (`record_structure.md` §5):
-`[scene_count][scene_ids…][loop_word]` per song; song 2/3 edits land at
+`[scene_count][scene_ids...][loop_word]` per song; song 2/3 edits land at
 FOOTER+0x2/+0xA (u149, u151–153).
 
 ## Method

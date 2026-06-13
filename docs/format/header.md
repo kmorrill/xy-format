@@ -43,6 +43,11 @@ pin guide-visible decoded-image bytes that are not represented by the legacy
 scan above:
 
 - `0x08` scene length mode.
+- `0x02` signed groove amount.
+- `0x04` metronome/click volume. HDR toggle probes did not reveal a separate
+  on/off byte; off and volume-min both persist as `0x00`.
+- `0x06` active scene slot.
+- `0x07` active song slot.
 - `0x1B` signed global transpose.
 - `0x1C` time signature enum.
 - `0x4D–0x54` T1–T8 voice allocation.

@@ -110,8 +110,11 @@ class ImageProject:
 
     # --- global project settings (decoded_image_map.md §Global Header) ----
     GLOBAL_TEMPO = 0x00     # u16 LE, tenths of BPM
+    GLOBAL_GROOVE_AMOUNT = 0x02  # signed i8 groove amount
     GLOBAL_GROOVE = 0x03    # u8 groove type
     GLOBAL_CLICK = 0x04     # u8 metronome/click volume
+    GLOBAL_ACTIVE_SCENE = 0x06  # zero-based active scene slot
+    GLOBAL_ACTIVE_SONG = 0x07  # zero-based song slot; 0x10 is fresh Song 1 sentinel
     GLOBAL_SCENE_LENGTH = 0x08  # u8: 0=longest, 1=shortest, 2=time signature
     GLOBAL_TRANSPOSE = 0x1B  # signed i8, semitones -24..+24
     GLOBAL_TIME_SIGNATURE = 0x1C  # u8 enum, 0x11=4/4
@@ -126,8 +129,23 @@ class ImageProject:
     def set_groove(self, groove_type: int) -> None:
         self.image[self.GLOBAL_GROOVE] = groove_type & 0xFF
 
+    def set_groove_amount(self, amount: int) -> None:
+        from .project_config_inspection import encode_groove_amount
+
+        self.image[self.GLOBAL_GROOVE_AMOUNT] = encode_groove_amount(amount)
+
     def set_click_volume(self, volume: int) -> None:
         self.image[self.GLOBAL_CLICK] = volume & 0xFF
+
+    def set_active_scene(self, scene: int) -> None:
+        if not 1 <= scene <= 99:
+            raise ValueError("active scene must be 1..99")
+        self.image[self.GLOBAL_ACTIVE_SCENE] = scene - 1
+
+    def set_active_song(self, song: int) -> None:
+        if not 1 <= song <= 14:
+            raise ValueError("active song must be 1..14")
+        self.image[self.GLOBAL_ACTIVE_SONG] = song - 1
 
     def set_scene_length_mode(self, mode: int) -> None:
         if mode not in (0, 1, 2):
@@ -357,7 +375,7 @@ class ImageProject:
 #
 # Decoded-image facts used here (docs/format/decoded_image_map.md):
 #   scenes array: 33-byte slots at GLOBAL+0x95 (slot 0 = live selection;
-#       sel[16] + mute[16] + flags); GLOBAL+0x6 = scene_count - 1
+#       sel[16] + mute[16] + flags); GLOBAL+0x06 = active scene slot
 #   clones: a track with N patterns serializes leader struct (17,876 B,
 #       count byte = N) followed by N-1 clone structs = pattern_struct[1:]
 #   footer: 14 song slots [scene_count][scene_ids...][loop_off][00],
@@ -366,7 +384,8 @@ class ImageProject:
 
 SCENE_SLOT0 = 0x95
 SCENE_SLOT_SIZE = 33
-GLOBAL_SCENE_COUNT = 0x6
+GLOBAL_ACTIVE_SCENE = 0x6
+GLOBAL_SCENE_COUNT = GLOBAL_ACTIVE_SCENE  # legacy alias; this byte is active scene, not count
 FOOTER_SLOTS = 14
 STRIDE = 17876
 
@@ -446,7 +465,9 @@ def build_arrangement(
         g[SCENE_SLOT0 + 32] = 1  # flags
 
     if scenes:
-        g[GLOBAL_SCENE_COUNT] = len(scenes) - 1
+        # Legacy behavior: generated arrangements leave the active scene on the
+        # last supplied scene, matching the byte-exact j05/j06 fixtures.
+        g[GLOBAL_ACTIVE_SCENE] = len(scenes) - 1
         for k, row in enumerate(scenes, start=1):
             slot = SCENE_SLOT0 + k * SCENE_SLOT_SIZE
             mutes = scene_mutes[k - 1] if scene_mutes and k - 1 < len(scene_mutes) else []

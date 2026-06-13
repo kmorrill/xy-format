@@ -18,7 +18,7 @@ device-validated.
 | --- | --- | --- |
 | **E0** | Code path only — no fixture | module + unit test or corpus-only diff |
 | **E1** | Corpus diff | `src/one-off-changes-from-default/` or change log |
-| **E2** | Device probe + in-repo fixture | `src/app-*-probes/` + `tests/test_*` + dated log |
+| **E2** | Device probe + in-repo fixture | `src/*-probes/` + `tests/test_*` + dated log |
 | **E3** | Device load validated | E2 + operator pass note or `corpus_lab record` |
 
 Every `[x]` row below should cite at least **E1**; prefer **E2** for guide-visible
@@ -39,7 +39,7 @@ fields. Heuristic reads must say so and stay `[~]` until structural decode exist
 | `xy/master_eq_inspection.py` | `test_master_eq_inspection.py` | `2026-06-12_master_eq_inspection.md` | `2026-06-eq/` |
 | `xy/master_saturator_inspection.py` | `test_master_saturator_inspection.py` | `2026-06-12_master_saturator_inspection.md` | `2026-06-saturator/` |
 | `xy/sampler_sample_inspection.py` | `test_sampler_sample_inspection.py` | `2026-06-12_sampler_oneshot_inspection.md` | `2026-06-oneshot/` |
-| `xy/project_config_inspection.py` | `test_project_config_inspection.py` | `2026-06-13_project_config_inspection.md` | `2026-06-project-config/` |
+| `xy/project_config_inspection.py` | `test_project_config_inspection.py` | `2026-06-13_project_config_inspection.md`, `2026-06-13_global_header_inspection.md` | `2026-06-project-config/`, `2026-06-global-header/` |
 
 Contributor workflow: `docs/workflows/contributor_inspection_workflow.md`.
 
@@ -83,14 +83,17 @@ Field offsets: `docs/format/decoded_image_map.md`.
 - [x] Tempo (BPM, u16 tenths) — read: `tools/inspect_xy.py`; write: `ImageProject.set_tempo`
 - [x] Groove type enum — read/write: `xy/project_config_inspection.py`, `set_groove`,
   global `0x03`, PCFG `prjconf-t-grv-*`
-- [~] Groove amount — header bytes documented; not in image map — `docs/format/header.md`
+- [x] Groove amount — signed i8 at global `0x02`, `set_groove_amount`,
+  HDR `hdr-grv-*`
 - [x] Metronome click volume — `set_click_volume`
-- [~] Metronome on/off — partial — `opxy_user_guide_save_audit.md` § Tempo
+- [x] Metronome on/off persistence — HDR probes show no independent toggle byte;
+  off and volume-min both persist as click volume `0x00` at global `0x04`
 - [x] Per-track MIDI channel (T1–T16) — `set_midi_channel`,
   `xy/project_config_inspection.py`, global `0x55–0x64`, PCFG `prjconf-m-*`
 - [x] Master EQ low/mid/high — device-validated min/default/max with exact u32 spill
   lanes — `read_master_eq`, global `0x68/0x6C/0x70`, P2-F `eq0`–`eq8`
-- [~] Active song/scene selection — global `0x06–0x07` touched; semantics incomplete — `opxy_user_guide_save_audit.md` § Arrange
+- [x] Active scene/song selection — scene slot at global `0x06`, song slot at
+  global `0x07` (`0x10` fresh Song 1 sentinel), HDR `hdr-arr-*`
 - [x] Project-config scene length mode — `xy/project_config_inspection.py`,
   global `0x08`, PCFG `prjconf-g-slen-*`
 - [x] Project transpose — signed i8 at global `0x1B`, range −24..+24,
@@ -99,7 +102,8 @@ Field offsets: `docs/format/decoded_image_map.md`.
   `set_time_signature`, PCFG `prjconf-t-sig-*`
 - [x] Voice allocation / 24-voice priority — T1–T8 at global `0x4D–0x54`,
   `0` auto / `1`–`8` fixed, `set_voice_allocation`, PCFG `prjconf-v-*`
-- [ ] Internal project display name — gap
+- [x] Internal project display name — no decoded-image name field found; project
+  list name is external `.xy` filename, HDR decode search
 
 ## 3. Pre-track topology & pattern directory
 
@@ -260,7 +264,7 @@ Use this when promoting a field from decoded → **device-validated**:
 3. **Transfer** — MTP upload to OP-XY (`tools/mtp_upload.py` or app).
 4. **Load** — open on hardware; note pass/fail per expectation line.
 5. **Capture** — Save As on device; pull `.xy` back; add as fixture under
-   `src/app-*-probes/`.
+   `src/*-probes/`.
 6. **Verify** — `inspect_xy` + targeted tests; compare author bytes to capture
    where byte-exact writer tests exist (`tests/test_image_writer.py` pattern).
 

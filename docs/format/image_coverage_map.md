@@ -7,7 +7,7 @@
 > - Field pins & evidence: [`decoded_image_map.md`](decoded_image_map.md)
 > - Read/write/API status: [`parse_capability_checklist.md`](../parse_capability_checklist.md)
 > - Guide feature gaps: [`opxy_user_guide_save_audit.md`](opxy_user_guide_save_audit.md)
-> - Probe recipes: `src/app-*-probes/*/README.md`
+> - Probe recipes: `src/*-probes/*/README.md`
 
 **Baseline:** `unnamed 1.xy` · decoded size **289,521** bytes · firmware **1.1.4**
 unless noted.
@@ -67,13 +67,15 @@ block-beta
 
 | Range | Size | Status | What we know | Probe / API |
 | --- | ---: | --- | --- | --- |
-| `0x00`–`0x02` | 3 | **x** | Tempo u16 LE (tenths BPM) | `set_tempo`, P1 corpus |
+| `0x00`–`0x01` | 2 | **x** | Tempo u16 LE (tenths BPM) | `set_tempo`, P1 corpus |
+| `0x02` | 1 | **x** | Groove amount, signed i8 | HDR `hdr-grv-*` |
 | `0x03` | 1 | **x** | Groove type enum | `set_groove` |
-| `0x04` | 1 | **x** | Metronome click volume | `set_click_volume` |
+| `0x04` | 1 | **x** | Metronome click volume; off persists as volume 0 in HDR probes | `set_click_volume`, HDR `hdr-mclk-*` |
 | `0x05` | 1 | **?** | Co-changes in some captures; role open | — |
-| `0x06` | 1 | **~** | Scene count − 1 (`GLOBAL_SCENE_COUNT`) | `build_arrangement` |
-| `0x07` | 1 | **~** | Selected scene/song ordinal | scene/song probes |
-| `0x08`–`0x0E` | 7 | **~** | Groove amount, metronome on/off cluster (`header.md`) | metronome mute anomaly |
+| `0x06` | 1 | **x** | Active scene slot, zero-based | HDR `hdr-arr-act*` |
+| `0x07` | 1 | **x** | Active song slot, zero-based when explicit; `0x10` fresh Song 1 sentinel | HDR `hdr-arr-song*` |
+| `0x08` | 1 | **x** | Scene length mode | PCFG |
+| `0x09`–`0x0E` | 6 | **?** | No pinned guide-visible field yet | — |
 | `0x0F`–`0x11` | 3 | **~** | Song/scene UI selection cluster | `record_structure.md` §5 |
 | `0x12`–`0x54` | 67 | **?** | Sparse touches in corpus; no field map | inspector sweep |
 | `0x55`–`0x64` | 16 | **x** | Per-track MIDI channel (T1…T16) | `set_midi_channel` |
@@ -228,8 +230,8 @@ and **sampler zone internals**.
 | `2026-06-aux-tracks` | P3-A | T9–T16 structs | **todo** |
 | `2026-06-players` | P3-B | player state | **todo** |
 
-Operator capture recipes: `src/app-*-probes/*/README.md`.
-Promoted fixtures: `src/app-*-probes/`.
+Operator capture recipes: `src/*-probes/*/README.md`.
+Promoted fixtures: `src/*-probes/`.
 
 ---
 
@@ -253,7 +255,7 @@ When a probe lands:
 1. Add a row or upgrade **?** → **~** → **x** in this file.
 2. Pin offset + evidence in [`decoded_image_map.md`](decoded_image_map.md).
 3. Check API box in [`parse_capability_checklist.md`](../parse_capability_checklist.md).
-4. Link log under `docs/logs/` and fixture README under `src/app-*-probes/`.
+4. Link log under `docs/logs/` and fixture README under `src/*-probes/`.
 
 ---
 
@@ -261,7 +263,7 @@ When a probe lands:
 
 Audited 2026-06-12 against the format doc set. **Trust order** for offsets:
 
-1. Device probes + tests (`src/app-*-probes/`, `tests/test_*_inspection.py`)
+1. Device probes + tests (`src/*-probes/`, `tests/test_*_inspection.py`)
 2. [`decoded_image_map.md`](decoded_image_map.md)
 3. This file (coverage status only)
 4. Older topic docs — may lag
