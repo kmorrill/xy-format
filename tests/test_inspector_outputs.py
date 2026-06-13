@@ -17,6 +17,7 @@ DATA_DIR = ROOT / "src" / "one-off-changes-from-default"
 BASELINE_FILE = DATA_DIR / "unnamed 1.xy"
 MIXER_PROBES = ROOT / "src" / "app-mixer-probes" / "2026-06-static"
 SCENE_VOLUME_PROBES = ROOT / "src" / "app-scene-probes" / "2026-06-volumes"
+PROJECT_CONFIG_PROBES = ROOT / "src" / "app-project-config-probes" / "2026-06-project-config"
 
 
 def _label_to_filename(label: str) -> Path:
@@ -343,6 +344,15 @@ def test_inspector_prints_t10_plock_header():
     code, output, err = _run_inspector(path)
     assert code == 0, f"Inspector failed for {path.name}: {err}"
     assert "T10: T10 9-byte pid=0x39 values=15" in output
+
+
+def test_inspector_prints_project_config():
+    path = PROJECT_CONFIG_PROBES / "prjconf-v-mix-1234.xy"
+    code, output, err = _run_inspector(path)
+    assert code == 0, f"Inspector failed for {path.name}: {err}"
+    assert "[Project Config]" in output
+    assert "transpose=+0 scene_length=longest time_signature=4/4 groove=shuffle" in output
+    assert "voices T1=1 T2=2 T3=3 T4=4 T5=auto" in output
 
 
 NOTE_LINE_PATTERN = re.compile(r"^\s*• note\[\d+\]:.*?note=([A-G](?:#|b)?-?\d{1,2})\b")

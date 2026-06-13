@@ -112,6 +112,10 @@ class ImageProject:
     GLOBAL_TEMPO = 0x00     # u16 LE, tenths of BPM
     GLOBAL_GROOVE = 0x03    # u8 groove type
     GLOBAL_CLICK = 0x04     # u8 metronome/click volume
+    GLOBAL_SCENE_LENGTH = 0x08  # u8: 0=longest, 1=shortest, 2=time signature
+    GLOBAL_TRANSPOSE = 0x1B  # signed i8, semitones -24..+24
+    GLOBAL_TIME_SIGNATURE = 0x1C  # u8 enum, 0x11=4/4
+    GLOBAL_VOICES = 0x4D  # per-track voice allocation T1..T8, 0=auto
     GLOBAL_MIDI = 0x55      # per-track channel array (T1=0x55 .. T16=0x64)
     GLOBAL_EQ = (0x68, 0x6C, 0x70)  # master EQ low/mid/high, u32 each (default 0x40)
 
@@ -124,6 +128,28 @@ class ImageProject:
 
     def set_click_volume(self, volume: int) -> None:
         self.image[self.GLOBAL_CLICK] = volume & 0xFF
+
+    def set_scene_length_mode(self, mode: int) -> None:
+        if mode not in (0, 1, 2):
+            raise ValueError("scene length mode must be 0=longest, 1=shortest, 2=time signature")
+        self.image[self.GLOBAL_SCENE_LENGTH] = mode
+
+    def set_project_transpose(self, semitones: int) -> None:
+        from .project_config_inspection import encode_transpose
+
+        self.image[self.GLOBAL_TRANSPOSE] = encode_transpose(semitones)
+
+    def set_time_signature(self, raw: int) -> None:
+        if raw not in range(0x10, 0x16):
+            raise ValueError("time signature raw enum must be 0x10..0x15")
+        self.image[self.GLOBAL_TIME_SIGNATURE] = raw
+
+    def set_voice_allocation(self, track: int, voices: int | None) -> None:
+        from .project_config_inspection import encode_voice_allocation
+
+        if not 1 <= track <= 8:
+            raise ValueError("voice allocation track must be 1..8")
+        self.image[self.GLOBAL_VOICES + track - 1] = encode_voice_allocation(voices)
 
     def set_midi_channel(self, track: int, channel: int | None) -> None:
         """channel 1..16, or None = off (0xFF)."""

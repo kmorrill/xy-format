@@ -39,6 +39,7 @@ fields. Heuristic reads must say so and stay `[~]` until structural decode exist
 | `xy/master_eq_inspection.py` | `test_master_eq_inspection.py` | `2026-06-12_master_eq_inspection.md` | `2026-06-eq/` |
 | `xy/master_saturator_inspection.py` | `test_master_saturator_inspection.py` | `2026-06-12_master_saturator_inspection.md` | `2026-06-saturator/` |
 | `xy/sampler_sample_inspection.py` | `test_sampler_sample_inspection.py` | `2026-06-12_sampler_oneshot_inspection.md` | `2026-06-oneshot/` |
+| `xy/project_config_inspection.py` | `test_project_config_inspection.py` | `2026-06-13_project_config_inspection.md` | `2026-06-project-config/` |
 
 Contributor workflow: `docs/workflows/contributor_inspection_workflow.md`.
 
@@ -61,6 +62,7 @@ Contributor workflow: `docs/workflows/contributor_inspection_workflow.md`.
 | Scene volumes + mutes read | `xy/scene_volume_inspection.py` | partial write via `build_arrangement` |
 | Master EQ / saturator read | `xy/master_eq_inspection.py`, `xy/master_saturator_inspection.py` | partial (`set_master_eq`) |
 | Sampler one-shot read | `xy/sampler_sample_inspection.py` | gap |
+| Project config read | `xy/project_config_inspection.py` | partial (`set_groove`, `set_midi_channel`, `set_scene_length_mode`, `set_project_transpose`, `set_time_signature`, `set_voice_allocation`) |
 | Human report | `tools/inspect_xy.py` | — |
 
 Detailed guide cross-reference: `docs/format/opxy_user_guide_save_audit.md`.
@@ -79,17 +81,24 @@ Field offsets: `docs/format/decoded_image_map.md`.
 ## 2. Global / project header
 
 - [x] Tempo (BPM, u16 tenths) — read: `tools/inspect_xy.py`; write: `ImageProject.set_tempo`
-- [x] Groove type enum (subset named) — read/write: `set_groove`, `docs/format/header.md`
+- [x] Groove type enum — read/write: `xy/project_config_inspection.py`, `set_groove`,
+  global `0x03`, PCFG `prjconf-t-grv-*`
 - [~] Groove amount — header bytes documented; not in image map — `docs/format/header.md`
 - [x] Metronome click volume — `set_click_volume`
 - [~] Metronome on/off — partial — `opxy_user_guide_save_audit.md` § Tempo
-- [x] Per-track MIDI channel (T1–T16) — `set_midi_channel`, global `0x55–0x64`
+- [x] Per-track MIDI channel (T1–T16) — `set_midi_channel`,
+  `xy/project_config_inspection.py`, global `0x55–0x64`, PCFG `prjconf-m-*`
 - [x] Master EQ low/mid/high — device-validated min/default/max with exact u32 spill
   lanes — `read_master_eq`, global `0x68/0x6C/0x70`, P2-F `eq0`–`eq8`
 - [~] Active song/scene selection — global `0x06–0x07` touched; semantics incomplete — `opxy_user_guide_save_audit.md` § Arrange
-- [ ] Project transpose — gap
-- [ ] Time signature enum — gap
-- [ ] Voice allocation / 24-voice priority — gap
+- [x] Project-config scene length mode — `xy/project_config_inspection.py`,
+  global `0x08`, PCFG `prjconf-g-slen-*`
+- [x] Project transpose — signed i8 at global `0x1B`, range −24..+24,
+  `set_project_transpose`, PCFG `prjconf-g-x*`
+- [x] Time signature enum — global `0x1C`, `0x10` 3/4 through `0x15` 12/8,
+  `set_time_signature`, PCFG `prjconf-t-sig-*`
+- [x] Voice allocation / 24-voice priority — T1–T8 at global `0x4D–0x54`,
+  `0` auto / `1`–`8` fixed, `set_voice_allocation`, PCFG `prjconf-v-*`
 - [ ] Internal project display name — gap
 
 ## 3. Pre-track topology & pattern directory
@@ -220,7 +229,7 @@ Field offsets: `docs/format/decoded_image_map.md`.
 - [x] Profile-gated JSON build — `xy/profiles.py`, `tests/test_profiles.py`
 - [x] Corpus index/lab — `tools/corpus_lab.py`
 - [x] Round-trip verify — `tools/roundtrip_xy.py`
-- [x] Inspector CLI — presets, paths, drums, sampler, mixer, scenes, EQ, saturator, p-lock lanes —
+- [x] Inspector CLI — presets, paths, drums, sampler, mixer, scenes, EQ, saturator, p-lock lanes, project config —
   `tools/inspect_xy.py`, `docs/tools/inspect_xy.md`
 
 ## 15. Outside project `.xy`

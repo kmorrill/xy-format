@@ -112,6 +112,23 @@ from .preset_path_inspection import (  # noqa: F401
     inspect_preset_paths,
     inspect_preset_paths_bytes,
 )
+from .project_config_inspection import (  # noqa: F401
+    GROOVE_TYPE_NAMES,
+    MIDI_CHANNEL_TRACKS,
+    ProjectConfig,
+    SCENE_LENGTH_NAMES,
+    TIME_SIGNATURE_NAMES,
+    VOICE_ALLOCATION_TRACKS,
+    decode_midi_channel,
+    decode_transpose,
+    decode_voice_allocation,
+    encode_midi_channel,
+    encode_transpose,
+    encode_voice_allocation,
+    inspect_project_config,
+    inspect_project_config_bytes,
+    read_project_config,
+)
 from .sampler_sample_inspection import (  # noqa: F401
     LOOP_TYPE_INFINITE,
     LOOP_TYPE_OFF,

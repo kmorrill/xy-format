@@ -96,6 +96,7 @@ Reference material:
 - Round 0 `nt-z-fx` sample paths: `docs/logs/2026-06-12_round0_nt-z-fx_sample_paths.md`
 - Drum pan/fade inspection: `docs/logs/2026-06-12_drum_pan_fade_inspection.md`
 - Drum voice param read API: `docs/logs/2026-06-12_drum_voice_param_read_api.md`
+- Project config inspection: `docs/logs/2026-06-13_project_config_inspection.md`
 - Preset path structural (P1-B): `docs/logs/2026-06-12_preset_path_structural.md`
 - Scene volume inspection (P2-D): `docs/logs/2026-06-12_scene_volume_inspection.md`
 - Scene track mute inspection (P2-E): `docs/logs/2026-06-12_scene_track_mute_inspection.md`

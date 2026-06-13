@@ -29,11 +29,15 @@ vectors (notes: +12 bytes each).
 | offset | field | evidence |
 |---|---|---|
 | 0x00 | tempo, u16 LE tenths of BPM (+ related byte at 0x04 region) | u4, u5 |
-| 0x03 | groove type | u11, u12 |
+| 0x03 | groove type enum (`0` shuffle, `1` half-shuffle, `2` danish, `3` bombora, `4` wobbly, `5` gaussian, `6` accents, `7` island nod, `8` disfunk, `9` roll over, `10` prophetic) | PCFG `prjconf-t-grv-*` |
 | 0x04 | metronome/click volume | u10 |
 | 0x06 | song/scene count-ish (songs: u13; scenes: 152/153 touch 0x06–0x07) | u13, u152 |
 | 0x07 | selected song/scene ordinal | u149, u151 |
-| 0x55–0x64 | per-track MIDI channel array, 1 byte/track (T1=0x55 … T16=0x64) | u41, u54 |
+| 0x08 | project-config scene length mode (`0` longest, `1` shortest, `2` time signature) | PCFG `prjconf-g-slen-*` |
+| 0x1B | project transpose, signed i8 semitones (`0xE8` = −24, `0xFF` = −1, `0x18` = +24) | PCFG `prjconf-g-x*` |
+| 0x1C | time signature enum (`0x10` 3/4, `0x11` 4/4, `0x12` 5/4, `0x13` 6/8, `0x14` 7/8, `0x15` 12/8) | PCFG `prjconf-t-sig-*` |
+| 0x4D–0x54 | T1–T8 voice allocation, 1 byte/track (`0` auto, `1`–`8` fixed voices; project-wide UI cap 24) | PCFG `prjconf-v-*` |
+| 0x55–0x64 | per-track MIDI channel array, 1 byte/track (T1=0x55 … T16=0x64; `0xFF` off, `0x00`–`0x0F` = channel 1–16) | PCFG `prjconf-m-*` |
 | 0x64–0x67 | global prefix u32 (default `0x000000FF`; EQ max spill can set `0xFFFFFFFF`; purpose open) | P2-F `eq2`/`eq8` tail |
 | 0x68 / 0x6C / 0x70 | **master EQ** bass / mid / treble u32 (level byte @ field start; default `0x00000040`, min `0x00000000`, max target `0x0000007F`; previous-field spill can make earlier maxed bands `0xFFFFFF7F`) | u14–u16, P2-F `eq0`–`eq8` |
 | 0x74–0x77 | u32 @ 0x74 default `0x99999A40` — **not** the 4th EQ UI knob; power control rewrites band bytes only (`eq7`/`eq8`) | P2-F |
@@ -71,6 +75,7 @@ live in the global region in scene-bearing files.)
 | +0x3897 | M3 filter knobs (16 bytes) | u30 |
 | +0x38B7 | M4 values (16 bytes + extras) | u32, u33 |
 | +0x38D7 | filter envelope ADSR (16 bytes) | u27 |
+| +0x38F2 / +0x38F6 | T9–T16 project-config save side-effect (`0x00`→`0x40` in every PCFG variant; not the edited setting) | PCFG |
 | +0x3900–0x393B | modulation routing matrix (modwheel/aftertouch/pitchbend targets & amounts) | u83, u84 |
 | +0x3919 / +0x392F | velocity sensitivity / track high-pass filter | u82, u40 |
 | +0x3CBF | 2-byte UI-state (last-touched?) — co-changes with edits | u40, u66, u82 |

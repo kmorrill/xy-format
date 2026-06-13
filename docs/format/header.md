@@ -35,3 +35,18 @@
 ## Tooling
 - Reader utility: `docs/tools/read_xy_header.md`
 - Inspector workflow: `docs/workflows/inspector_sweep.md`
+
+## Decoded Project-Config Bytes
+
+Firmware 1.1.4 project-config probes (`src/app-project-config-probes/2026-06-project-config/`)
+pin guide-visible decoded-image bytes that are not represented by the legacy
+scan above:
+
+- `0x08` scene length mode.
+- `0x1B` signed global transpose.
+- `0x1C` time signature enum.
+- `0x4D–0x54` T1–T8 voice allocation.
+- `0x55–0x64` T1–T16 MIDI channel map.
+
+Use `xy/project_config_inspection.py` and `docs/format/decoded_image_map.md`
+as the authoritative map for these fields.

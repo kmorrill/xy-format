@@ -49,6 +49,7 @@ from xy.scene_volume_inspection import (  # noqa: E402
 )
 from xy.note_reader import read_event as _unified_read_event  # noqa: E402
 from xy.preset_path_inspection import inspect_preset_paths_bytes  # noqa: E402
+from xy.project_config_inspection import inspect_project_config_bytes  # noqa: E402
 from xy.project_inspection import inspect_project_bytes  # noqa: E402
 from xy.structs import (  # noqa: E402
     SENTINEL_BYTES,
@@ -1948,6 +1949,31 @@ def generate_report(path: Path, data: bytes) -> str:
             f"mid=0x{master_eq.mid.u32:08X} "
             f"high=0x{master_eq.high.u32:08X}"
         )
+        lines.append("")
+
+    try:
+        project_config = inspect_project_config_bytes(data)
+    except Exception:
+        project_config = None
+
+    if project_config:
+        voice_s = " ".join(
+            f"T{index + 1}={voices if voices is not None else 'auto'}"
+            for index, voices in enumerate(project_config.voice_allocations)
+        )
+        midi_s = " ".join(
+            f"T{index + 1}={channel if channel is not None else 'off'}"
+            for index, channel in enumerate(project_config.midi_channels)
+        )
+        lines.append("[Project Config]")
+        lines.append(
+            f"  transpose={project_config.transpose_semitones:+d} "
+            f"scene_length={project_config.scene_length} "
+            f"time_signature={project_config.time_signature} "
+            f"groove={project_config.groove_type}"
+        )
+        lines.append(f"  voices {voice_s}")
+        lines.append(f"  midi {midi_s}")
         lines.append("")
 
     try:

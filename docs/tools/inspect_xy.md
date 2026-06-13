@@ -18,12 +18,16 @@
 - Scene mutes: per-slot muted tracks when any mutes present (`read_scene_muted_tracks`).
 - Master EQ bands (`xy/master_eq_inspection.py`).
 - Master saturator (`xy/master_saturator_inspection.py`).
+- Project config: transpose, scene length, time signature, groove, T1–T8 voice
+  allocation, T1–T16 MIDI channels (`xy/project_config_inspection.py`).
+- P-lock lane summary for standard and known T10 9-byte p-lock headers.
 - Per-track scan and event summaries.
 - Legacy EQ/global snippets (older offsets).
 
 ## Usage
 - `python tools/inspect_xy.py 'src/app-mixer-probes/2026-06-static/f0-baseline-mix-default.xy'`
 - `python tools/inspect_xy.py 'src/app-preset-probes/2026-06-app-required/a1-t1-p9.xy'`
+- `python tools/inspect_xy.py 'src/app-project-config-probes/2026-06-project-config/prjconf-v-mix-1234.xy'`
 
 ## Notes
 - Pointer-tail and pointer-21 note decode is still incomplete; see `docs/issues/pointer_tail_decoding.md`.
