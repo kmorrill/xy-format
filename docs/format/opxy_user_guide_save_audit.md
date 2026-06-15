@@ -130,15 +130,15 @@ Guide refs: section 14.1 p.42; section 14.2 p.43; section 14.3 p.44; section 14.
 | Engine M1 params | Four current engine-specific parameters for Axis/Dissolve/EPiano/etc. | Decoded as 4-byte values starting at track `+0x3857`; labels are guide/engine-specific and not all value scaling is documented. |
 | Amp envelope | Attack/decay/sustain/release. | Decoded at track `+0x3877`, 16-byte ADSR block. |
 | Filter envelope | Attack/decay/sustain/release. | Decoded at track `+0x38D7`, 16-byte ADSR block. |
-| Play mode | Poly/mono/legato. | Partial. P-lock column is known (`Poly`), but the current-value offset/enum for the shift-M2 page is not clearly promoted. |
-| Portamento amount/type | Glide amount and preset-settings type. | Partial. Step-component portamento is decoded; p-lock column for porto exists; current-value/type fields are not fully mapped. |
-| Bend range | Pitch-bend range. | Partial. P-lock/current value relationship not fully documented. |
-| Preset volume / engine volume | Per-preset volume separate from track volume. | Partial. P-lock column for engine volume exists; current value offset/scale needs promotion. |
+| Play mode | Poly/mono/legato. | Partial. P-lock/current lane pinned at track `+0x3887` from `unnamed 122` CC28; exact enum labels still need a direct UI capture. |
+| Portamento amount/type | Glide amount and preset-settings type. | Partial. Current lane pinned at track `+0x388B` from `unnamed 122` CC29; portamento type remains unmapped. |
+| Bend range | Pitch-bend range. | Partial. Current lane pinned at track `+0x388F` from `unnamed 122` CC30; scaling/enum still needs UI confirmation. |
+| Preset volume / engine volume | Per-preset volume separate from track volume. | Partial. Current lane pinned at track `+0x3893` from `unnamed 122` CC31; scale follows the 0..0x7FFFFFFF fixed-point family. |
 | Filter type/on-off | SVF/ladder and filter enabled. | Decoded at track `+0x21` and `+0x25`; complete type enum still needs names beyond observed values. |
 | Filter knobs | Cutoff, resonance, envelope amount, key tracking. | Decoded at track `+0x3897`; p-lock columns also known. |
-| Track sends | Aux out, tape, FX I, FX II. | P-lock columns known (`Send Ext`, `Send Tape`, `Send FX I`, `Send FX II`); current mix/send values are partial. |
+| Track sends | Aux out, tape, FX I, FX II. | Partial. Current lanes pinned at track `+0x38A7/+0x38AB/+0x38AF/+0x38B3` from `unnamed 123` CC36-39; send tape is inferred by lane order because the baseline already matched the recorded max value. |
 | LFO type | Element/random/tremolo/value and prior M4 selectors. | Partial. M4/LFO type selector region starts at track `+0x1C`; exact enum and all subfunction storage is not complete. |
-| LFO params | Source/rate, amount, destination, parameter, shape/envelope/subfunctions. | Partial. M4 values live around track `+0x38B7`; modulation routing matrix at `+0x3900-0x393B`; exact destination map, signed scaling, shape/subfunction enums remain incomplete. |
+| LFO params | Source/rate, amount, destination, parameter, shape/envelope/subfunctions. | Partial. M4 values live at track `+0x38B7`; CC40/CC41 lanes are pinned at `+0x38B7/+0x38BB` from `unnamed 124`. Shape/type-specific state is likely near `+0x38D3..+0x38D6`, but enum labels remain incomplete. |
 | Preset settings: high pass | Basic high-pass. | Decoded at track `+0x392F`. |
 | Preset settings: velocity sensitivity | Velocity sensitivity. | Decoded at track `+0x3919`. |
 | Preset settings: tuning, tuning root, transpose, width | Microtonal/user tuning slot, root, transpose, stereo width. | Gap/partial. These settings are guide-visible but not mapped to stable fields. |
@@ -159,7 +159,7 @@ guide-visible aux semantics are still the largest project-format gap.
 | T10 Punch-in FX | Percussion/melodic mode, punch effect assignments/recorded triggers. | Gap/partial. Track notes/p-locks can exist; punch-specific params are not mapped. |
 | T11 External MIDI | MIDI channel, bank, program, eight assignable CC controls. | Partial. Notes and p-locks are generic; external-track channel/bank/program/CC assignment fields are not promoted. |
 | T12 External CV | CV/gate behavior and track params. | Gap/partial. |
-| T13 External Audio | Input level/filters/sends. | Gap/partial. |
+| T13 External Audio | Input level/drive/filters/sends. | Gap/partial. `unnamed 126` captures CC12 input on T13; there is no source-corpus CC13 drive capture yet. |
 | T14 Tape | Tape parameters and sends. | Gap/partial. |
 | T15/T16 FX I/II | FX type and parameters. | Partial. Aux track identity and params are structurally decoded; exact type enums/parameter scaling for chorus/delay/distortion/lofi/phaser/reverb need full tables. |
 
@@ -184,10 +184,10 @@ Guide refs: section 17.1 p.70; section 17.2 p.71; section 17.3 p.72; section 17.
 
 | Function | What should save | Current decode |
 |---|---|---|
-| Track volume | Per-track level. | Partial. P-lock column 0 is volume and CC7 mapping is known; current static level offset/scale is not clearly promoted. |
-| Track pan | Per-track pan. | Partial. P-lock column 41 is pan and CC10 mapping is known; current static pan offset/scale is not clearly promoted. |
+| Track volume | Per-track level. | Partial. Current lane pinned at track `+0x38FB` from `unnamed 99` and `unnamed 124`; p-lock column 0 is also known. |
+| Track pan | Per-track pan. | Partial. Current lane pinned at track `+0x38F7` from `unnamed 99` and `unnamed 124`; p-lock column 41 is also known. |
 | Track mute | Per-track mute/live mix state. | Partial. Scene mute is decoded; CC9 did not record as p-lock. Static mixer mute location is not promoted. |
-| Sends | Ext/tape/FX I/FX II sends. | Partial. P-lock columns known; current static send values are not fully mapped. |
+| Sends | Ext/tape/FX I/FX II sends. | Partial. Current lanes pinned at track `+0x38A7/+0x38AB/+0x38AF/+0x38B3`; p-lock columns are also known. |
 | Master EQ | Low/mid/high. | Decoded globally at `0x68`, `0x6C`, `0x70`. |
 | Master EQ blend | Blend between neutral and adjusted EQ. | Partial. Strong candidate at global `0x74` from manual alignment; baseline/corpus default is mostly `0x40`. Needs one direct EQ-blend capture. |
 | Saturator | Low/mid/high/blend or related color controls. | Partial. Strong candidate cluster begins at global `0x75`; the 32-byte span through `0x94` fits eight Mix M3/M4 controls. Individual lanes need direct captures. |

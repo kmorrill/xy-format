@@ -202,6 +202,21 @@ matching the capture notes. The old raw-space "param_id" bytes and
   the pre-count zero gap begins.
 - Engine parameter cells: 4-byte values from +0x3857 (current values;
   preset load rewrites them — copy from a corpus donor per preset).
+- Current-value mirrors for several shift/mix lanes are now pinned from the
+  CC-map captures:
+  - M2 shift lanes at `+0x3887/+0x388B/+0x388F/+0x3893` =
+    poly/play mode, portamento, pitch-bend range, engine volume
+    (`unnamed 122`, CC28-31).
+  - M3 shift lanes at `+0x38A7/+0x38AB/+0x38AF/+0x38B3` =
+    send ext, send tape, send FX I, send FX II (`unnamed 123`, CC36-39;
+    send-tape lane inferred by order because baseline already matched the
+    recorded value).
+  - M4 visible/CC lanes at `+0x38B7/+0x38BB` = LFO CC40/CC41 current values
+    (`unnamed 124`; UI labels depend on LFO/track type).
+  - Mixer lanes at `+0x38F7/+0x38FB` = pan and track volume (`unnamed 99` and
+    `unnamed 124`).
+  - LFO tail `+0x38D3..+0x38D6` is the strongest current candidate for
+    shape/type-specific shift state (`unnamed 33`; exact enum pending).
 
 ### Sample table (drum/sampler) — structure decoded
 

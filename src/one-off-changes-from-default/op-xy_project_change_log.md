@@ -97,7 +97,7 @@ This document lists all changes made to OP-XY project files relative to their de
 ## Mix and Master Adjustments
 - **unnamed_14** — Turned EQ leftmost setting (low range) to zero
 - **unnamed_16** — Turned rightmost EQ setting (high-end) to zero
-- **unnamed_15** — Created a new empty song for mid-range
+- **unnamed_15** — Turned EQ middle setting (mid range) to zero
 
 ## Track Sound Design Parameters
 - **unnamed_34** — Changed track 1 to have axis synth with no preset from engine picker

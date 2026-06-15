@@ -67,13 +67,13 @@ Each baseline track/pattern struct is `0x45D4` bytes before note-vector growth.
 | `+0x3857..+0x3866` | 16 | decoded | M1 / engine parameter cells, four 4-byte values. |
 | `+0x3867..+0x3876` | 16 | opaque | `track.m1_to_amp_gap`: candidate for M1 shift params 5-8, engine hidden params, or UI mirrors. |
 | `+0x3877..+0x3886` | 16 | decoded | Amp envelope ADSR. |
-| `+0x3887..+0x3896` | 16 | opaque | `track.amp_to_filter_gap`: candidate for amp-envelope shift params, curves, velocity sensitivity mirror, or engine volume. |
+| `+0x3887..+0x3896` | 16 | partial | `track.amp_to_filter_gap`: four M2 shift/current lanes. `+0x3887/+0x388B/+0x388F/+0x3893` map to poly/play mode, portamento, pitch-bend range, and engine volume from CC28-31 captures. |
 | `+0x3897..+0x38A6` | 16 | decoded | Filter knob block. |
-| `+0x38A7..+0x38B6` | 16 | opaque | `track.filter_to_lfo_gap`: candidate for filter shift params, filter mode tails, drive, or Z-filter state. |
-| `+0x38B7..+0x38C6` | 16 | decoded | M4/LFO visible values. |
-| `+0x38C7..+0x38D6` | 16 | opaque | `track.lfo_to_filter_env_gap`: strong candidate for LFO hidden/shift params; captures point to shape-like state near `+0x38D3`. |
+| `+0x38A7..+0x38B6` | 16 | partial | `track.filter_to_lfo_gap`: four M3 shift/current send lanes. `+0x38A7/+0x38AB/+0x38AF/+0x38B3` map to send ext, send tape, send FX I, and send FX II from CC36-39 captures; send tape is inferred by lane order because baseline already matched the recorded value. |
+| `+0x38B7..+0x38C6` | 16 | partial | M4/LFO visible values. First two lanes are pinned as CC40/CC41 current values; exact UI labels vary by LFO/track type. |
+| `+0x38C7..+0x38D6` | 16 | partial | `track.lfo_to_filter_env_gap`: LFO hidden/shift params. `+0x38D3..+0x38D6` is the strongest shape/type-specific candidate from `unnamed 33`; exact enum pending. |
 | `+0x38D7..+0x38E6` | 16 | decoded | Filter envelope ADSR. |
-| `+0x38E7..+0x38FF` | 25 | opaque | `track.post_filter_env_gap`: candidate for modulation matrix header, pitchbend/velocity defaults, or high-pass preamble. |
+| `+0x38E7..+0x38FF` | 25 | partial | `track.post_filter_env_gap`: last two 4-byte lanes are mixer current values: `+0x38F7` pan and `+0x38FB` volume. Earlier bytes remain opaque. |
 | `+0x3900..+0x393B` | 60 | partial | Mod routing matrix. Velocity sensitivity and track high-pass are known; exact row/field names and signed amount encoding still need completion. |
 | `+0x393C..+0x3956` | 27 | opaque | `track.pre_sample_gap`: candidate for final preset performance flags, filter tails, sampler-mode flags, or sample-table header. |
 | `+0x3957..+0x453E` | 3,048 | partial | Non-overlapping sample/region table bytes before the preset label. Slot paths and several drum sampler params are decoded; tonal sampler and multisampler semantics are still incomplete. |
@@ -123,8 +123,9 @@ Corpus scan signal:
    tonal sampler start/end/loop/gain and drum sampler pan/fade/crossfade.
 2. Decode `slot.bytes_05_06`, `slot.byte_01`, and `slot.byte_04` with minimal
    one-knob/one-slot captures.
-3. Decode the 16-byte page gaps around M1, amp, filter, and LFO. These likely
-   explain hidden shift parameters and current-value mirrors.
+3. Finish the remaining page-gap labels: M2 shift lanes, M3 send lanes, and
+   mixer pan/volume are now pinned, but M1 tail, LFO type-specific tails, and
+   early filter-env tail bytes remain open.
 4. Finish the modulation routing matrix row names and signed amount encoding.
 5. Treat `track.post_plock_value_gap` and `global.eq_gap` as lower priority
    until a targeted device edit moves them consistently.

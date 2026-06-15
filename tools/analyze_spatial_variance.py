@@ -128,16 +128,16 @@ REGIONS: tuple[Region, ...] = (
         "track",
         0x3887,
         0x3896,
-        "Gap between amp ADSR and filter knob block.",
-        "Candidate for amp-envelope shift params, curves, velocity sensitivity mirror, engine volume.",
+        "M2 shift/current-value tail between amp ADSR and filter knobs.",
+        "CC28-31 captures map the four 4-byte lanes to poly/play mode, portamento, pitch-bend range, and engine volume.",
     ),
     Region(
         "track.filter_to_lfo_gap",
         "track",
         0x38A7,
         0x38B6,
-        "Gap between filter knobs and LFO params.",
-        "Candidate for filter shift params, filter mode tails, drive, Z-filter state.",
+        "M3 shift/current-value tail between filter knobs and LFO params.",
+        "CC36-39 captures map the four 4-byte lanes to send ext, send tape, send FX I, and send FX II.",
     ),
     Region(
         "track.lfo_to_filter_env_gap",
@@ -145,7 +145,7 @@ REGIONS: tuple[Region, ...] = (
         0x38C7,
         0x38D6,
         "Gap between LFO params and filter envelope.",
-        "Strong candidate for LFO hidden/shift params; captures point to shape near +0x38D3.",
+        "Strong candidate for LFO hidden/shift params; captures point to shape/type-specific state near +0x38D3.",
     ),
     Region(
         "track.post_filter_env_gap",
@@ -153,7 +153,7 @@ REGIONS: tuple[Region, ...] = (
         0x38E7,
         0x38FF,
         "Gap before modulation routing matrix.",
-        "Candidate for modulation matrix header, pitchbend/velocity defaults, high-pass preamble.",
+        "Last two 4-byte lanes are mixer pan and volume mirrors; earlier bytes remain opaque.",
     ),
     Region(
         "track.mod_routing_matrix",

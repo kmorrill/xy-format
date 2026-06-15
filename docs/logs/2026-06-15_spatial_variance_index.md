@@ -46,7 +46,7 @@ This is a corpus index for not-fully-decoded regions in the decoded OP-XY projec
 - `slot.bytes_05_06`: high-broad-variance, 137 unique bodies, 2/2 variable bytes. Speculation: Need captures to identify which byte maps to which shift control.
 - `slot.byte_01`: medium-structured-variance, 55 unique bodies, 1/1 variable bytes. Speculation: Candidate for low key, velocity low, slot enable, or alignment.
 - `track.sample_table_pre_label`: medium-structured-variance, 53 unique bodies, 3048/3048 variable bytes. Speculation: Sample paths and many slot params live here; semantics vary across drum/sampler/multisampler.
-- `track.amp_to_filter_gap`: medium-structured-variance, 52 unique bodies, 16/16 variable bytes. Speculation: Candidate for amp-envelope shift params, curves, velocity sensitivity mirror, engine volume.
+- `track.amp_to_filter_gap`: medium-structured-variance, 52 unique bodies, 16/16 variable bytes. Speculation: CC28-31 captures map the four 4-byte lanes to poly/play mode, portamento, pitch-bend range, and engine volume.
 - `slot.byte_04`: medium-structured-variance, 49 unique bodies, 1/1 variable bytes. Speculation: Candidate for velocity high, region enable, group, or loop flag.
 - `track.plock_activation_slab`: medium-structured-variance, 45 unique bodies, 145/1024 variable bytes. Speculation: Remaining bytes probably parameter masks, current selection, or inactive lane flags.
 - `track.mod_routing_matrix`: medium-structured-variance, 44 unique bodies, 60/60 variable bytes. Speculation: Need exact row/field names and signed amount encoding for every controller target.
@@ -268,9 +268,9 @@ Top labels: `bass/shoulder`=2875, `pluck/beach bum`=2830, `drum/boop`=2797, `dru
 
 ### `track.amp_to_filter_gap`
 
-Gap between amp ADSR and filter knob block.
+M2 shift/current-value tail between amp ADSR and filter knobs.
 
-Speculation: Candidate for amp-envelope shift params, curves, velocity sensitivity mirror, engine volume.
+Speculation: CC28-31 captures map the four 4-byte lanes to poly/play mode, portamento, pitch-bend range, and engine volume.
 
 Observations: `29493`; unique region bodies: `52`; variable bytes: `16` / `16`.
 
@@ -293,9 +293,9 @@ Top labels: `bass/shoulder`=2875, `pluck/beach bum`=2830, `drum/boop`=2797, `dru
 
 ### `track.filter_to_lfo_gap`
 
-Gap between filter knobs and LFO params.
+M3 shift/current-value tail between filter knobs and LFO params.
 
-Speculation: Candidate for filter shift params, filter mode tails, drive, Z-filter state.
+Speculation: CC36-39 captures map the four 4-byte lanes to send ext, send tape, send FX I, and send FX II.
 
 Observations: `29493`; unique region bodies: `41`; variable bytes: `16` / `16`.
 
@@ -320,7 +320,7 @@ Top labels: `bass/shoulder`=2875, `pluck/beach bum`=2830, `drum/boop`=2797, `dru
 
 Gap between LFO params and filter envelope.
 
-Speculation: Strong candidate for LFO hidden/shift params; captures point to shape near +0x38D3.
+Speculation: Strong candidate for LFO hidden/shift params; captures point to shape/type-specific state near +0x38D3.
 
 Observations: `29493`; unique region bodies: `35`; variable bytes: `16` / `16`.
 
@@ -345,7 +345,7 @@ Top labels: `bass/shoulder`=2875, `pluck/beach bum`=2830, `drum/boop`=2797, `dru
 
 Gap before modulation routing matrix.
 
-Speculation: Candidate for modulation matrix header, pitchbend/velocity defaults, high-pass preamble.
+Speculation: Last two 4-byte lanes are mixer pan and volume mirrors; earlier bytes remain opaque.
 
 Observations: `29493`; unique region bodies: `35`; variable bytes: `25` / `25`.
 
