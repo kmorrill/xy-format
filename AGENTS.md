@@ -18,6 +18,8 @@
 - Stable reference limits: `docs/reference/opxy_limits.md`
 - MIDI CC reference: `docs/reference/opxy_midi_cc_map.md`
 - Format reference (canonical): `docs/format/`
+- Spatial coverage ledger: `docs/format/spatial_coverage_ledger.md`
+  (contiguous decoded-vs-opaque map of global, track, and sample-slot regions)
 - Engineering implementation notes: `docs/engineering/`
 - Companion musical-generation repo: `/Users/kevinmorrill/Documents/op-xy-live`
   - Use its `docs/op-xy-file-map-decoded-vs-mystery.md` for a worked generated-song file map.
@@ -48,6 +50,8 @@
 - Codec `xy/rle.py` round-trips 245/246 corpus files byte-exact.
 - Decoded field map: `docs/format/decoded_image_map.md` (global header,
   16 track structs, scene structs, song-table footer, drum-voice slots).
+- Decoded spatial ledger: `docs/format/spatial_coverage_ledger.md` (which
+  contiguous regions are decoded, partial, or still opaque).
 - The whole "compositional serializer / descriptor scheme / preamble
   state machine / event type" apparatus was RLE artifacts; the full arc
   is in `docs/state_of_understanding.md`.
@@ -74,6 +78,7 @@
 - Inspector sweep: `docs/workflows/inspector_sweep.md`
 - Corpus index/query: `docs/tools/corpus_lab.md`
 - Two-file structural diffs: `docs/tools/corpus_compare.md`
+- Opaque-region variance index: `docs/tools/analyze_spatial_variance.md`
 - Hypothesis checks: `docs/tools/hypothesis_tests.md`
 - Inspector usage: `docs/tools/inspect_xy.md`
 - Header reader usage: `docs/tools/read_xy_header.md`

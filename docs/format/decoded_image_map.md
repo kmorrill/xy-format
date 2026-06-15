@@ -6,6 +6,9 @@
 > from a corpus-wide join of decoded diffs × the one-off change log
 > (2026-06-09). Offsets are for baseline `unnamed 1.xy`
 > (decoded size 289,521 bytes) unless marked track-relative.
+>
+> For a contiguous decoded-vs-opaque byte map, see
+> `docs/format/spatial_coverage_ledger.md`.
 
 ## Image Layout
 

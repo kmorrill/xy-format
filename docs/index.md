@@ -21,6 +21,7 @@ User-facing:
 - Inspector: `docs/tools/inspect_xy.md` (`tools/inspect_xy.py`)
 - JSON spec compiler: `docs/tools/build_xy_from_json.md` (`tools/build_xy_from_json.py`)
 - Corpus index/query: `docs/tools/corpus_lab.md` (`tools/corpus_lab.py`)
+- Spatial variance analyzer: `docs/tools/analyze_spatial_variance.md` (`tools/analyze_spatial_variance.py`)
 - Header reader: `docs/tools/read_xy_header.md` (`tools/read_xy_header.py`)
 - MTP upload (device file management): `docs/tools/mtp_upload.md` (`tools/mtp_upload.py`)
 - Scene/song token patching: `tools/patch_scene_song_tokens.py`
@@ -54,6 +55,7 @@ Reference material:
   (serialization model, record grammar, tail bytes, pre-track scene RLE —
   supersedes the descriptor/preamble framing in older docs)
 - **Decoded image map (RAM struct fields)**: `docs/format/decoded_image_map.md`
+- **Spatial coverage ledger (decoded vs opaque ranges)**: `docs/format/spatial_coverage_ledger.md`
 - OP-XY user guide save audit: `docs/format/opxy_user_guide_save_audit.md`
 - Header: `docs/format/header.md`
 - Pre-track / pattern directory: `docs/format/pretrack_pattern_directory.md`
@@ -124,3 +126,4 @@ Reference material:
 - Scene probes `88`-`92` (long-form + preamble coupling): `docs/logs/2026-03-03_scene_probe_88_92_longform_and_preamble.md`
 - Manual resave selection-state probe: `docs/logs/2026-03-03_manual_resave_selection_state_probe.md`
 - Selection audit pack B (`01`-`15`) results: `docs/logs/2026-03-03_selection_audit_pack_b_results.md`
+- Spatial variance index over opaque regions: `docs/logs/2026-06-15_spatial_variance_index.md`

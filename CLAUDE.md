@@ -16,7 +16,10 @@
 
 - `docs/format/record_structure.md` - canonical RLE and record model.
 - `docs/format/decoded_image_map.md` - canonical decoded-image field map.
+- `docs/format/spatial_coverage_ledger.md` - contiguous map of decoded,
+  partial, and opaque byte ranges.
 - `docs/engineering/authoring.md` - canonical image-authoring workflow using `xy/rle.py` and `xy/image_writer.py`.
 - `docs/state_of_understanding.md` - dated belief ledger; read before changing format claims.
+- `docs/tools/analyze_spatial_variance.md` - corpus scanner for prioritizing
+  opaque decoded-image regions.
 - `AGENTS.md` - repo map, operating norms, and device-validation rules.
-
