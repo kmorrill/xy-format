@@ -33,7 +33,9 @@ vectors (notes: +12 bytes each).
 | 0x06 | song/scene count-ish (songs: u13; scenes: 152/153 touch 0x06–0x07) | u13, u152 |
 | 0x07 | selected song/scene ordinal | u149, u151 |
 | 0x55–0x64 | per-track MIDI channel array, 1 byte/track (T1=0x55 … T16=0x64) | u41, u54 |
-| 0x68 / 0x6C / 0x70 | master EQ low / mid / high (4-byte fields) | u14, u15, u16 |
+| 0x68 / 0x6C / 0x70 | master EQ low / mid / high (first byte in 4-byte lanes) | u14, u15, u16 |
+| 0x74 | probable master EQ blend byte | manual alignment + corpus variance |
+| 0x75–0x94 | probable master mix/saturator cluster (8 x 4-byte fixed-point-ish values) | manual alignment + corpus variance |
 
 (Scene records — the 33-byte structs of `record_structure.md` §4 — also
 live in the global region in scene-bearing files.)

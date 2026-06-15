@@ -43,7 +43,7 @@ Primary repo references:
 | Instrument | engine, preset, M1 params, envelopes, filter, LFO, preset settings | Main regions decoded; several shift/subfunction values are partial. |
 | Auxiliary tracks | Brain, Punch-in FX, External MIDI/CV/Audio, Tape, FX I/II | Track structs exist; many aux-specific parameter labels/enums are gaps. |
 | Arrange | pattern switching/copying, scenes, mutes, song chains, loop | Core scenes/songs decoded; scene-stored volumes are a gap. |
-| Mix | track levels, pans, sends, EQ, saturator, master/compressor | Many p-lock/current-value columns known; current mix-page/master fields are partial. |
+| Mix | track levels, pans, sends, EQ, saturator, master/compressor | Many p-lock/current-value columns known; master EQ and likely master mix/saturator cluster are partial. |
 | Sample | one-shot, drum sampler, multisampler, sample folder assignments | Drum voice table mostly decoded; one-shot/multisampler and slicing internals are gaps. |
 | COM/system | multi-out, Bluetooth MIDI, system settings, devices, controller mode | Mostly outside `.xy`; any project-specific MIDI channel overlaps project settings. |
 | MIDI CC | CC 7/9/10/12-47/80-86/90 | Reference labels documented; storage coverage varies by target. |
@@ -189,8 +189,9 @@ Guide refs: section 17.1 p.70; section 17.2 p.71; section 17.3 p.72; section 17.
 | Track mute | Per-track mute/live mix state. | Partial. Scene mute is decoded; CC9 did not record as p-lock. Static mixer mute location is not promoted. |
 | Sends | Ext/tape/FX I/FX II sends. | Partial. P-lock columns known; current static send values are not fully mapped. |
 | Master EQ | Low/mid/high. | Decoded globally at `0x68`, `0x6C`, `0x70`. |
-| Saturator | Low/mid/high/blend or related color controls. | Gap. No stable offsets promoted. |
-| Master compressor/output | Compressor amount and master/output level. | Gap/partial. No canonical field map. |
+| Master EQ blend | Blend between neutral and adjusted EQ. | Partial. Strong candidate at global `0x74` from manual alignment; baseline/corpus default is mostly `0x40`. Needs one direct EQ-blend capture. |
+| Saturator | Low/mid/high/blend or related color controls. | Partial. Strong candidate cluster begins at global `0x75`; the 32-byte span through `0x94` fits eight Mix M3/M4 controls. Individual lanes need direct captures. |
+| Master compressor/output | Compressor amount and master/output level. | Partial. Likely shares global `0x75..0x94` with saturator and percussion/melodic master levels. Individual lanes need direct captures. |
 
 ### Sample Mode
 

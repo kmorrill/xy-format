@@ -19,7 +19,8 @@ This is a corpus index for not-fully-decoded regions in the decoded OP-XY projec
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `global.pre_scene_cluster` | global | `0x0008..0x0054` | 77 | 920 | 22 | 46 (59.7%) | 0.0% | medium-structured-variance |
 | `global.eq_gap` | global | `0x0065..0x0067` | 3 | 920 | 6 | 3 (100.0%) | 97.6% | medium-narrow-variance |
-| `global.pre_scene_slab_gap` | global | `0x0074..0x0094` | 33 | 920 | 7 | 32 (97.0%) | 0.0% | medium-narrow-variance |
+| `global.eq_blend_candidate` | global | `0x0074..0x0074` | 1 | 920 | 3 | 1 (100.0%) | 1.6% | medium-narrow-variance |
+| `global.master_mix_cluster` | global | `0x0075..0x0094` | 32 | 920 | 7 | 31 (96.9%) | 0.0% | medium-narrow-variance |
 | `track.low_preset_state` | track | `0x0026..0x029F` | 634 | 29493 | 16 | 26 (4.1%) | 0.0% | medium-narrow-variance |
 | `track.post_plock_value_gap` | track | `0x17A0..0x2C4D` | 5294 | 29493 | 3 | 10 (0.2%) | 100.0% | low-mostly-zero |
 | `track.plock_activation_slab` | track | `0x2C4E..0x304D` | 1024 | 29493 | 45 | 145 (14.2%) | 99.7% | medium-structured-variance |
@@ -87,13 +88,25 @@ Observations: `920`; unique region bodies: `6`; variable bytes: `3` / `3`.
 | `+0x0066` | 4 | 13 | 0x00=907, 0x99=8, 0xFF=4, 0x19=1 |
 | `+0x0065` | 3 | 15 | 0x00=905, 0x99=9, 0xFF=6 |
 
-### `global.pre_scene_slab_gap`
+### `global.eq_blend_candidate`
 
-Thirty-three bytes before the scene-record slab.
+Likely fourth master EQ byte after low/mid/high.
 
-Speculation: Suspiciously one scene-record length; maybe live-selection alternate state or scene prologue.
+Speculation: Manual lists EQ blend after low/mid/high; byte defaults to 0x40 in the baseline.
 
-Observations: `920`; unique region bodies: `7`; variable bytes: `32` / `33`.
+Observations: `920`; unique region bodies: `3`; variable bytes: `1` / `1`.
+
+| Offset | Distinct values | Nonzero obs | Top values |
+| --- | ---: | ---: | --- |
+| `+0x0074` | 3 | 905 | 0x40=894, 0x00=15, 0xFF=11 |
+
+### `global.master_mix_cluster`
+
+Thirty-two-byte cluster before the scene-record slab.
+
+Speculation: Likely eight packed/fixed-point master controls: saturator low/mid/high/blend plus percussion/melodic/compressor/master level.
+
+Observations: `920`; unique region bodies: `7`; variable bytes: `31` / `32`.
 
 | Offset | Distinct values | Nonzero obs | Top values |
 | --- | ---: | ---: | --- |

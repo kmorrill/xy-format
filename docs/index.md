@@ -127,3 +127,4 @@ Reference material:
 - Manual resave selection-state probe: `docs/logs/2026-03-03_manual_resave_selection_state_probe.md`
 - Selection audit pack B (`01`-`15`) results: `docs/logs/2026-03-03_selection_audit_pack_b_results.md`
 - Spatial variance index over opaque regions: `docs/logs/2026-06-15_spatial_variance_index.md`
+- Struct layout hypothesis from manual surfaces: `docs/logs/2026-06-15_struct_layout_hypothesis.md`

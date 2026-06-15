@@ -31,8 +31,9 @@ boundaries, not raw RLE byte positions.
 | `0x0008..0x0054` | 77 | opaque | `global.pre_scene_cluster`: likely selected track/pattern, UI focus, edit mode, transport/project flags. |
 | `0x0055..0x0064` | 16 | decoded | Per-track MIDI channel array. |
 | `0x0065..0x0067` | 3 | opaque | `global.eq_gap`: mostly zero; possible transpose, key/scale, sync, or compact project flags. |
-| `0x0068..0x0073` | 12 | decoded | Master EQ low, mid, high as 4-byte values. |
-| `0x0074..0x0094` | 33 | opaque | `global.pre_scene_slab_gap`: same length as one scene record; likely scene prologue or alternate live-selection state. |
+| `0x0068..0x0073` | 12 | decoded | Master EQ low, mid, high. Device captures change the first byte of each 4-byte lane. |
+| `0x0074..0x0074` | 1 | partial | `global.eq_blend_candidate`: likely master EQ blend, matching the fourth EQ control in the manual. Baseline is `0x40`. |
+| `0x0075..0x0094` | 32 | partial | `global.master_mix_cluster`: likely eight 4-byte fixed-point-ish master controls from Mix M3/M4: saturator low/mid/high/blend plus percussion/melodic/compressor/master level. |
 | `0x0095..0x0D78` | 3,300 | partial | Scene-record slab, apparently 100 x 33-byte scene-like records in the baseline layout. Scene/song semantics are partly decoded in `docs/format/scenes_songs.md`. |
 
 Corpus scan signal:
@@ -41,9 +42,12 @@ Corpus scan signal:
   across 920 files, with 46/77 variable bytes.
 - `global.eq_gap` is low priority despite 3/3 variable bytes because 97.6% of
   observations are all zero.
-- `global.pre_scene_slab_gap` has only 7 unique bodies despite 32/33 variable
-  bytes, so it looks like a small fixed state family rather than arbitrary
-  payload.
+- `global.eq_blend_candidate` has only 3 unique values and is `0x40` in 894
+  of 920 files, consistent with a centered/default EQ blend byte.
+- `global.master_mix_cluster` has only 7 unique bodies despite 31/32 variable
+  bytes. The baseline aligns cleanly as eight 32-bit fractional values if read
+  from `0x0075`, which fits the eight manual-visible master controls on Mix
+  M3/M4 better than the older "scene prologue" theory.
 
 ## Track Struct
 
@@ -124,6 +128,54 @@ Corpus scan signal:
 4. Finish the modulation routing matrix row names and signed amount encoding.
 5. Treat `track.post_plock_value_gap` and `global.eq_gap` as lower priority
    until a targeted device edit moves them consistently.
+
+## Struct-Writer Hypothesis
+
+The decoded image now looks less like a handcrafted file format and more like a
+mostly packed firmware state dump:
+
+```c
+struct ProjectImage {
+    ProjectHeader header;        // tempo, groove, project settings, MIDI, master mix
+    Scene scenes[100];           // 33-byte scene records
+    TrackPattern pattern[];      // variable count: one struct per track pattern
+    SongFooter songs;            // 14 compact song slots
+};
+```
+
+Within `TrackPattern`, sound pages appear as fixed page structs with visible
+four-knob values followed by small companion tails:
+
+```c
+struct SoundState {
+    u8 lower_preset_state[0x27A];
+    u16 plock_value[64][42];
+    u8 mostly_empty_or_reserved[0x14AE];
+    u8 plock_mask[64][8];
+    u8 plock_master;
+    u8 plock_tail[8];
+    StepComponent step_component[64];
+    u8 preset_identity[0x400];
+    Page4 m1;
+    u8 m1_tail[16];
+    Page4 amp_env;
+    u8 amp_tail[16];
+    Page4 filter;
+    u8 filter_tail[16];
+    Page4 lfo;
+    u8 lfo_tail[16];
+    Page4 filter_env;
+    u8 mod_header_or_tail[25];
+    ModRoute mod_routes[?];
+    SampleSlot sample_slots[24];
+};
+```
+
+This explains why the 16-byte gaps around M1, amp, filter, and LFO are dense
+and structured: they are probably not padding. They are likely shift controls,
+hidden subfunction values, current-value mirrors, or engine-specific page tails.
+The OP-XY manual's shift/subfunction controls provide the best capture targets
+for those tails.
 
 ## Corpus Index
 

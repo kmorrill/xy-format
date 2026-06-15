@@ -60,12 +60,20 @@ REGIONS: tuple[Region, ...] = (
         "Could be transpose, key/scale, sync, or compact project flags.",
     ),
     Region(
-        "global.pre_scene_slab_gap",
+        "global.eq_blend_candidate",
         "global",
         0x0074,
+        0x0074,
+        "Likely fourth master EQ byte after low/mid/high.",
+        "Manual lists EQ blend after low/mid/high; byte defaults to 0x40 in the baseline.",
+    ),
+    Region(
+        "global.master_mix_cluster",
+        "global",
+        0x0075,
         0x0094,
-        "Thirty-three bytes before the scene-record slab.",
-        "Suspiciously one scene-record length; maybe live-selection alternate state or scene prologue.",
+        "Thirty-two-byte cluster before the scene-record slab.",
+        "Likely eight packed/fixed-point master controls: saturator low/mid/high/blend plus percussion/melodic/compressor/master level.",
     ),
     Region(
         "track.low_preset_state",
