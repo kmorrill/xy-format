@@ -19,6 +19,10 @@
 - MIDI CC reference: `docs/reference/opxy_midi_cc_map.md`
 - Format reference (canonical): `docs/format/`
 - Engineering implementation notes: `docs/engineering/`
+- Companion musical-generation repo: `/Users/kevinmorrill/Documents/op-xy-live`
+  - Use its `docs/op-xy-file-map-decoded-vs-mystery.md` for a worked generated-song file map.
+  - Use its `docs/op-xy-project-sound-state-capture-plan.md` for sampler/preset project-state capture batches.
+  - Keep byte-level format truth here; keep high-level track/preset/drum-generation abstractions there.
 - ImHex + ImHex Patterns brief: `docs/engineering/imhex_imhex_patterns_brief.md`
 - Crash catalog: `docs/debug/crashes.md`
 - Active issues: `docs/issues/index.md`
