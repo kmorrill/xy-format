@@ -11,7 +11,9 @@ modification-time order. Original names are preserved in this manifest.
 | `smp03_t7_sample_loaded_saved_preset.xy` | `~/Desktop/unnamed3.xy` | Same sample after saving preset `snapshot/2026-06-15 (1)`. |
 | `smp04_reload_saved_preset_fresh_project.xy` | `~/Desktop/unnamed pre1.xy` | Fresh project with the saved sampler preset reloaded. |
 | `smp06_project_loop_only.xy` | `~/Desktop/unnamed chg.xy` | Reloaded preset with loop/window controls changed in the project. |
+| `smp07_t7_unique_sampler_preset_loaded.xy` | `~/Desktop/unnamed x.xy` | Fresh project with generated preset `snapshot/t7-map-unique` loaded on Track 7. |
 | `presets/smp_default_2026-06-15.preset/` | `~/Desktop/2026-06-15 (1).preset/` | Saved preset folder, including `patch.json` and bundled WAV. |
+| `presets/t7-map-unique.preset/` | `~/Desktop/t7-map-unique.preset/` | Generated alignment preset with unique q16 values for M2/M3/M4/filter/mod-routing and unique sampler window values. |
 
 The source WAV is mono 16-bit PCM at 44.1 kHz with 98,807 frames
 (`2.2405 s`). `patch.json` records:
@@ -68,3 +70,27 @@ values:
 
 This strongly suggests the audible sampler bug belongs to the project-local
 pre-slot window block, not only to the preset folder or the sample-table path.
+
+## Unique Preset Alignment Capture
+
+`smp07_t7_unique_sampler_preset_loaded.xy` confirms that OP-XY copies a large
+part of sampler `patch.json` into project-local Track 7 state when a preset is
+loaded:
+
+| Preset field family | Project track offsets | Encoding |
+| --- | --- | --- |
+| amp envelope ADSR | `+0x3877..+0x3883` | q16 (`patch value << 16`) |
+| portamento amount, bend range, engine volume | `+0x388B..+0x3893` | q16 |
+| FX params 0-4, 6-7 | `+0x3897..+0x38B3` | q16; lane 5 becomes `0x7FFFFFFF` in this capture |
+| LFO params 0-7 | `+0x38B7..+0x38D3` | q16 |
+| filter envelope ADSR | `+0x38D7..+0x38E3` | q16 |
+| modwheel, aftertouch, pitchbend targets/amounts | `+0x38FF..+0x3913` | q16 |
+| velocity sensitivity, portamento type, width, highpass | `+0x3917..+0x392F` | q16 |
+| velocity target/amount | `+0x3933..+0x3937` | q16 |
+| sampler frame/window values | `+0x393F..+0x394F` | raw frame counts |
+
+The same capture also proves a negative case: `patch.json engine.params`
+does **not** populate the tonal sampler's `+0x3857..+0x3876` M1 block. Those
+eight lanes remained `0x40000000` centered defaults even though the generated
+preset had deliberately unique values. For tonal sampler audibility, use the
+pre-slot sampler window block rather than `engine.params`.

@@ -55,13 +55,13 @@ live in the global region in scene-bearing files.)
 | +0x21 | filter type (SVF/Ladder) | u28 |
 | +0x25 | filter on/off | u29 |
 | +0x3057 + 16×(step−1) | **step-component slot, 16 bytes per step**, one byte per component type within the slot (portamento +9, bend +10, tonality +11, jump +12, param +13, conditional +14, …) | u8/u9, u59–u77 |
-| +0x3857 | engine parameter block: 4-byte values (param1 +0x3857, param4 +0x3863, …) | u23–u25, u96 |
+| +0x3857 | engine parameter block: eight 4-byte q16-ish values for synth engines; tonal sampler keeps these centered at `0x40000000` even when preset `engine.params` are unique | u23–u25, u96, 2026-06-15 unique sampler preset |
 | +0x3877 | M2 amp envelope ADSR (16 bytes) | u26 |
-| +0x3897 | M3 filter knobs (16 bytes) | u30 |
-| +0x38B7 | M4 values (16 bytes + extras) | u32, u33 |
+| +0x3897 | M3 filter/FX knobs: at least eight 4-byte lanes in sampler presets; unique capture maps params 0-4 and 6-7, while lane 5 serialized as `0x7FFFFFFF` | u30, 2026-06-15 unique sampler preset |
+| +0x38B7 | M4/LFO values: eight 4-byte q16 lanes in sampler presets | u32, u33, 2026-06-15 unique sampler preset |
 | +0x38D7 | filter envelope ADSR (16 bytes) | u27 |
-| +0x3900–0x393B | modulation routing matrix (modwheel/aftertouch/pitchbend targets & amounts) | u83, u84 |
-| +0x3919 / +0x392F | velocity sensitivity / track high-pass filter | u82, u40 |
+| +0x38FF–0x393B | modulation/performance matrix: modwheel, aftertouch, pitchbend, velocity target/amount, velocity sensitivity, portamento type, width, high-pass | u83, u84, 2026-06-15 unique sampler preset |
+| +0x3917 / +0x392F | velocity sensitivity / track high-pass filter | u82, u40 |
 | +0x3CBF | 2-byte UI-state (last-touched?) — co-changes with edits | u40, u66, u82 |
 | ~+0x456F | **note event area**: `[count u8]` + 12-byte note records `{u32 tick; u32 gate; u8 note; u8 vel; u8 flags[2]}` (tick 480/16th, gate 240 = default). Micro-timing lives in `tick` (non-grid values, u79/u87), not the flags. `flags[1]` always 0 in corpus; `flags[0]` 0 for programmed notes, 2 on some MIDI-recorded drum notes (n110); firmware **does** read them (device probe 07: `flags[0]=127` caused a note retrigger), but out-of-range values misbehave — writer emits 0,0 (device default). | u81 decode; corpus scan; probe 07 |
 | end | trailing zero region (raw-space "tail byte" = its run extension) | — |
@@ -226,7 +226,9 @@ slot header at `+0x3957` (`3c 00 3c 80 00 00 00 00`) and the sample path
 string starts at `+0x395F`.
 
 Tonal sampler project-local window values are stored just before that table,
-inside `track+0x393F..+0x3956`:
+inside `track+0x393F..+0x3956`. The 2026-06-15 unique preset capture confirms
+these values are copied from preset `regions[0]` when a sampler preset is
+loaded, except `+0x3953`, which remains derived/unknown:
 
 | track offset | captured meaning |
 |---|---|
@@ -236,6 +238,11 @@ inside `track+0x393F..+0x3956`:
 | +0x394B | loop start |
 | +0x394F | loop end |
 | +0x3953 | unresolved helper/derived value |
+
+Do not use tonal sampler `patch.json engine.params` as sample-window state:
+the unique capture intentionally set non-default `engine.params`, but
+`track+0x3857..+0x3876` remained centered defaults. Generated projects should
+author the pre-slot window block directly.
 
 Preset name field follows the table. (The "amb kit" sampler corpus referenced
 in older notes is not present in the repo; slot internals can be mapped from
