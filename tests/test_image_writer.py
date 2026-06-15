@@ -6,11 +6,15 @@ event types, or preamble rules involved.
 """
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from xy.image_writer import ImageProject
+from xy.rle import decode_project
 
 BASE = "src/one-off-changes-from-default/unnamed 1.xy"
+SIG_RE = re.compile(rb"\x00\x00\x00[\x00-\x0f]\xff\x00\xfc\x00", re.S)
 
 
 def build(edits):
@@ -21,6 +25,31 @@ def build(edits):
 
 def real(name: str) -> bytes:
     return open(f"src/one-off-changes-from-default/{name}", "rb").read()
+
+
+def _decoded(data: bytes) -> bytes:
+    return decode_project(data)[1]
+
+
+def _leader_starts(image: bytes) -> list[int]:
+    starts = [m.start() - 3 for m in SIG_RE.finditer(image)]
+    leaders: list[int] = []
+    idx = 0
+    while idx < len(starts) and len(leaders) < 16:
+        start = starts[idx]
+        leaders.append(start)
+        count = image[start]
+        if not 1 <= count <= 9:
+            count = 1
+        idx += count
+    if len(leaders) < 16 and len(starts) >= 16:
+        leaders = starts[:16]
+    return leaders
+
+
+def _track_u32(image: bytes, track: int, offset: int) -> int:
+    start = _leader_starts(image)[track - 1]
+    return int.from_bytes(image[start + offset : start + offset + 4], "little")
 
 
 def test_replicates_unnamed_2_single_note_step1():
@@ -172,6 +201,76 @@ def test_convenience_methods_replicate_device_captures(target, edit):
     p = ImageProject.from_file(BASE)
     edit(p)
     assert p.to_bytes() == real(target)
+
+
+def test_m2_shift_current_lanes_match_cc_map_capture():
+    cap = _decoded(real("unnamed 122.xy"))
+    p = ImageProject.from_file(BASE)
+    p.set_m2_shift(5, play_mode=_track_u32(cap, 5, 0x3887))
+    p.set_m2_shift(6, portamento=_track_u32(cap, 6, 0x388B))
+    p.set_m2_shift(7, pitch_bend_range=_track_u32(cap, 7, 0x388F))
+    p.set_m2_shift(8, engine_volume=_track_u32(cap, 8, 0x3893))
+    ours = _decoded(p.to_bytes())
+
+    assert _track_u32(ours, 5, 0x3887) == _track_u32(cap, 5, 0x3887) == 0x7FFFFFFF
+    assert _track_u32(ours, 6, 0x388B) == _track_u32(cap, 6, 0x388B) == 0x7FFFFFFF
+    assert _track_u32(ours, 7, 0x388F) == _track_u32(cap, 7, 0x388F) == 0x7FFFFFFF
+    assert _track_u32(ours, 8, 0x3893) == _track_u32(cap, 8, 0x3893) == 0x7FFFFFFF
+
+
+def test_send_current_lanes_match_cc_map_capture():
+    cap = _decoded(real("unnamed 123.xy"))
+    p = ImageProject.from_file(BASE)
+    p.set_sends(5, ext=_track_u32(cap, 5, 0x38A7))
+    p.set_sends(6, tape=_track_u32(cap, 6, 0x38AB))
+    p.set_sends(7, fx1=_track_u32(cap, 7, 0x38AF))
+    p.set_sends(8, fx2=_track_u32(cap, 8, 0x38B3))
+    ours = _decoded(p.to_bytes())
+
+    assert _track_u32(ours, 5, 0x38A7) == _track_u32(cap, 5, 0x38A7) == 0x7FFFFFFF
+    assert _track_u32(ours, 6, 0x38AB) == _track_u32(cap, 6, 0x38AB) == 0x7FFFFFFF
+    assert _track_u32(ours, 7, 0x38AF) == _track_u32(cap, 7, 0x38AF) == 0x7FFFFFFF
+    assert _track_u32(ours, 8, 0x38B3) == _track_u32(cap, 8, 0x38B3) == 0x7FFFFFFF
+
+
+def test_lfo_current_lanes_and_mix_lanes_match_cc_map_capture():
+    cap = _decoded(real("unnamed 124.xy"))
+    p = ImageProject.from_file(BASE)
+    p.set_lfo_current(1, cc40=_track_u32(cap, 1, 0x38B7))
+    p.set_lfo_current(2, cc41=_track_u32(cap, 2, 0x38BB))
+    p.set_track_mix(3, volume=_track_u32(cap, 3, 0x38FB))
+    p.set_track_mix(5, pan=_track_u32(cap, 5, 0x38F7))
+    ours = _decoded(p.to_bytes())
+
+    assert _track_u32(ours, 1, 0x38B7) == _track_u32(cap, 1, 0x38B7) == 0x7FFFFFFF
+    assert _track_u32(ours, 2, 0x38BB) == _track_u32(cap, 2, 0x38BB) == 0x7FFFFFFF
+    assert _track_u32(ours, 3, 0x38FB) == _track_u32(cap, 3, 0x38FB) == 0x7FFFFFFF
+    assert _track_u32(ours, 5, 0x38F7) == _track_u32(cap, 5, 0x38F7) == 0x7FFFFFFF
+
+
+def test_track_mix_can_write_non_max_volume_capture():
+    cap = _decoded(real("unnamed 99.xy"))
+    p = ImageProject.from_file(BASE)
+    p.set_track_mix(
+        3,
+        pan=_track_u32(cap, 3, 0x38F7),
+        volume=_track_u32(cap, 3, 0x38FB),
+    )
+    ours = _decoded(p.to_bytes())
+
+    assert _track_u32(ours, 3, 0x38F7) == 0x7FFFFFFF
+    assert _track_u32(ours, 3, 0x38FB) == 0x64C99326
+    assert _track_u32(ours, 3, 0x38FB) == _track_u32(cap, 3, 0x38FB)
+
+
+def test_current_lane_setters_reject_out_of_range_u32_values():
+    p = ImageProject.from_file(BASE)
+    with pytest.raises(ValueError):
+        p.set_track_mix(3, volume=-1)
+    with pytest.raises(ValueError):
+        p.set_sends(3, fx1=0x1_0000_0000)
+    with pytest.raises(TypeError):
+        p.set_lfo_current(3, cc40=True)
 
 
 def test_set_plock_writes_u16_cell():

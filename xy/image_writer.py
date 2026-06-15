@@ -115,6 +115,14 @@ class ImageProject:
     GLOBAL_MIDI = 0x55      # per-track channel array (T1=0x55 .. T16=0x64)
     GLOBAL_EQ = (0x68, 0x6C, 0x70)  # master EQ low/mid/high, u32 each (default 0x40)
 
+    @staticmethod
+    def _u32(value: int, *, where: str = "value") -> bytes:
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise TypeError(f"{where} must be an integer")
+        if not 0 <= value <= 0xFFFFFFFF:
+            raise ValueError(f"{where} must be a u32")
+        return value.to_bytes(4, "little")
+
     def set_tempo(self, bpm: float) -> None:
         v = round(bpm * 10)
         self.image[self.GLOBAL_TEMPO : self.GLOBAL_TEMPO + 2] = v.to_bytes(2, "little")
@@ -132,7 +140,7 @@ class ImageProject:
     def set_master_eq(self, low: int | None = None, mid: int | None = None, high: int | None = None) -> None:
         for off, val in zip(self.GLOBAL_EQ, (low, mid, high)):
             if val is not None:
-                self.image[off : off + 4] = val.to_bytes(4, "little")
+                self.image[off : off + 4] = self._u32(val, where="master EQ value")
 
     # --- per-track sound / engine (track-relative offsets) ----------------
     TRK_SCALE = 0x06
@@ -141,6 +149,26 @@ class ImageProject:
     TRK_FILTER_TYPE = 0x21
     TRK_FILTER_ON = 0x25
     TRK_PARAMS = 0x3857     # 4 engine params, u32 each
+    TRK_M2_SHIFT = {
+        "play_mode": 0x3887,          # CC28 current lane
+        "portamento": 0x388B,         # CC29 current lane
+        "pitch_bend_range": 0x388F,   # CC30 current lane
+        "engine_volume": 0x3893,      # CC31 current lane
+    }
+    TRK_SENDS = {
+        "ext": 0x38A7,    # CC36 current lane
+        "tape": 0x38AB,   # CC37 current lane; inferred by lane order
+        "fx1": 0x38AF,    # CC38 current lane
+        "fx2": 0x38B3,    # CC39 current lane
+    }
+    TRK_LFO_CURRENT = {
+        "cc40": 0x38B7,
+        "cc41": 0x38BB,
+    }
+    TRK_MIX = {
+        "pan": 0x38F7,     # CC10 current lane
+        "volume": 0x38FB,  # CC7 current lane
+    }
     TRK_STEPCOMP = 0x3057   # 16 B per step
     TRK_PLOCK = 0x2A0       # 84 B per step row, u16 cells
     # encoded track-scale byte (0x01=½× .. 0x0E=16×); pass raw for others.
@@ -176,8 +204,100 @@ class ImageProject:
     def set_engine_param(self, track: int, index: int, value: int) -> None:
         """index 1..4; value is the device's internal (fixed-point) u32."""
         o = self.track_start(track) + self.TRK_PARAMS + (index - 1) * 4
-        self.image[o : o + 4] = value.to_bytes(4, "little")
+        self.image[o : o + 4] = self._u32(value, where=f"track {track} engine param {index}")
         self.mark_edited(track)
+
+    def _write_track_u32(self, track: int, offset: int, value: int, *, where: str) -> None:
+        o = self.track_start(track) + offset
+        self.image[o : o + 4] = self._u32(value, where=where)
+        self.mark_edited(track)
+
+    def set_m2_shift(
+        self,
+        track: int,
+        *,
+        play_mode: int | None = None,
+        portamento: int | None = None,
+        pitch_bend_range: int | None = None,
+        engine_volume: int | None = None,
+    ) -> None:
+        """Set M2 shift/current lanes.
+
+        Values are raw device u32 lanes. Captures pin these as CC28-31:
+        play/poly mode, portamento, pitch-bend range, and preset/engine
+        volume. Exact UI enum scaling for play/bend is still being decoded.
+        """
+        values = {
+            "play_mode": play_mode,
+            "portamento": portamento,
+            "pitch_bend_range": pitch_bend_range,
+            "engine_volume": engine_volume,
+        }
+        for name, value in values.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_M2_SHIFT[name],
+                    value,
+                    where=f"track {track} M2 {name}",
+                )
+
+    def set_sends(
+        self,
+        track: int,
+        *,
+        ext: int | None = None,
+        tape: int | None = None,
+        fx1: int | None = None,
+        fx2: int | None = None,
+    ) -> None:
+        """Set static/current send levels for ext, tape, FX I, and FX II."""
+        for name, value in {"ext": ext, "tape": tape, "fx1": fx1, "fx2": fx2}.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_SENDS[name],
+                    value,
+                    where=f"track {track} send {name}",
+                )
+
+    def set_lfo_current(
+        self,
+        track: int,
+        *,
+        cc40: int | None = None,
+        cc41: int | None = None,
+    ) -> None:
+        """Set the two pinned M4/LFO current-value lanes.
+
+        The CC-map capture labels these as CC40/CC41; their UI labels depend
+        on track/LFO type, so the writer keeps the neutral CC lane names.
+        """
+        for name, value in {"cc40": cc40, "cc41": cc41}.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_LFO_CURRENT[name],
+                    value,
+                    where=f"track {track} LFO current {name}",
+                )
+
+    def set_track_mix(
+        self,
+        track: int,
+        *,
+        pan: int | None = None,
+        volume: int | None = None,
+    ) -> None:
+        """Set static/current mixer pan and volume lanes."""
+        for name, value in {"pan": pan, "volume": volume}.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_MIX[name],
+                    value,
+                    where=f"track {track} mix {name}",
+                )
 
     def set_filter(self, track: int, *, type: int | None = None, enabled: bool | None = None) -> None:
         s = self.track_start(track)
@@ -268,11 +388,20 @@ class ImageProject:
         if direction is not None:
             self.image[s + self.DRUM_DIRECTION] = 1 if direction else 0
         if start is not None:
-            self.image[s + self.DRUM_START : s + self.DRUM_START + 4] = start.to_bytes(4, "little")
+            self.image[s + self.DRUM_START : s + self.DRUM_START + 4] = self._u32(
+                start,
+                where=f"track {track} drum voice {voice} start",
+            )
         if end is not None:
-            self.image[s + self.DRUM_END : s + self.DRUM_END + 4] = end.to_bytes(4, "little")
+            self.image[s + self.DRUM_END : s + self.DRUM_END + 4] = self._u32(
+                end,
+                where=f"track {track} drum voice {voice} end",
+            )
         if gain is not None:
-            self.image[s + self.DRUM_GAIN : s + self.DRUM_GAIN + 4] = gain.to_bytes(4, "little")
+            self.image[s + self.DRUM_GAIN : s + self.DRUM_GAIN + 4] = self._u32(
+                gain,
+                where=f"track {track} drum voice {voice} gain",
+            )
         self.mark_edited(track)
 
     # --- preset / instrument assignment -----------------------------------

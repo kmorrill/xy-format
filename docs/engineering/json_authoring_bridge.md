@@ -26,6 +26,14 @@ This repo now has a JSON-to-`.xy` compile path via:
   - pass through `descriptor_strategy` (`strict` or `heuristic_v1`) for multi-pattern form.
 - Optional header patch:
   - `tempo_tenths`, `groove_type`, `groove_amount`, `metronome_level`.
+- `project_to_json` also emits underscore-prefixed diagnostic sections:
+  - `_decoded_global_state` for decoded-image master EQ and candidate master
+    mix bytes.
+  - `_decoded_track_state` for per-track current values: engine params,
+    amp/filter envelopes, filter knobs, M2 shift lanes, sends, pinned LFO
+    current lanes, and mixer pan/volume.
+  - These diagnostics are ignored by `parse_build_spec`; they are for
+    inspection/debugging until promoted into validated editable spec fields.
 
 ## Profiles (required on new specs)
 
@@ -72,5 +80,7 @@ inserts `"profile": "…"` immediately after `"mode"`.
 
 ## Near-Term Extensions
 - Add optional event-type override only where backed by preset evidence.
+- Promote validated decoded-image sound fields (`set_m2_shift`, `set_sends`,
+  `set_lfo_current`, `set_track_mix`) into first-class JSON spec patches.
 - Add step-component/p-lock sections once pointer-tail decode reaches stable coverage.
 - Add scaffold presets so agents can select topology-safe templates by name.

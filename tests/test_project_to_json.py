@@ -75,6 +75,36 @@ def test_extraction_output_parses_as_valid_buildspec() -> None:
     assert spec.multi_tracks  # tracks were extracted
 
 
+def test_extracts_decoded_current_value_diagnostics() -> None:
+    path = CORPUS / "unnamed 124.xy"
+    payload = project_to_json(path.read_bytes(), template_path=path)
+
+    assert "_decoded_global_state" in payload
+    assert payload["_decoded_global_state"]["master_eq"]["low"]["offset"] == "0x00068"
+
+    tracks = {entry["track"]: entry for entry in payload["_decoded_track_state"]}
+    assert len(tracks) == 16
+    assert tracks[1]["current_values"]["lfo_current"]["cc40"]["u32"] == 0x7FFFFFFF
+    assert tracks[2]["current_values"]["lfo_current"]["cc41"]["u32"] == 0x7FFFFFFF
+    assert tracks[3]["current_values"]["mix"]["volume"]["u32"] == 0x7FFFFFFF
+    assert tracks[5]["current_values"]["mix"]["pan"]["u32"] == 0x7FFFFFFF
+
+    # Diagnostics are underscore-prefixed and must not break BuildSpec parsing.
+    spec = parse_build_spec(payload, base_dir=REPO_ROOT)
+    assert spec.profile == payload["profile"]
+
+
+def test_decoded_track_diagnostics_skip_multi_pattern_clones() -> None:
+    path = CORPUS / "j06_all16_p9_blank.xy"
+    payload = project_to_json(path.read_bytes(), template_path=path)
+    decoded = payload["_decoded_track_state"]
+
+    assert [entry["track"] for entry in decoded] == list(range(1, 17))
+    assert decoded[0]["u8"]["pattern_count"] == 9
+    assert decoded[7]["u8"]["pattern_count"] == 9
+    assert decoded[8]["u8"]["pattern_count"] == 1
+
+
 # ── Round-trip ──────────────────────────────────────────────────────
 
 

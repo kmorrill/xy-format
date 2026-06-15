@@ -15,15 +15,18 @@ What's decoded today (matching the current profile catalog):
 - Header transport: tempo, groove type/amount, metronome level
 - Per-track notes on pattern 1 (the top-level track block) for every
   single-pattern track, via ``xy/note_reader.read_event``
+- Diagnostic decoded-image state under ``_decoded_global_state`` and
+  ``_decoded_track_state``: master EQ, engine parameters, envelopes,
+  filter knobs, sends, pinned LFO current lanes, and mixer pan/volume
 
 What's **not** decoded (stays opaque in the scaffold):
 - Multi-pattern clone bodies (patterns 2..N live in the overflow
   region; reading them needs the block-rotation walker which is not
   yet wired to this path)
 - Scene and song state
-- Engine parameters, envelopes, filter, LFO, preset references
-- Step components, parameter locks
-- Mix/master controls
+- Preset references as editable BuildSpec fields
+- Step components, parameter locks as editable BuildSpec fields
+- Full LFO/sampler/mix-master enum semantics
 
 For the fields it doesn't decode, the round-trip story is: edit the
 JSON's decoded fields, keep ``template`` pointing at the original
@@ -33,19 +36,86 @@ template's undecoded bytes.
 
 from __future__ import annotations
 
-from dataclasses import asdict
+import re
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from .container import XYContainer, XYProject
 from .note_reader import read_track_notes
 from .profiles import PROFILES, infer_profile
+from .rle import decode_project
 
 
 SUPPORTED_SPEC_VERSION = 1
 BASELINE_PRE_TRACK_LEN = 0x7C  # 124: the baseline single-pattern length
 DESCRIPTOR_V56_OFFSET = 0x56
 DESCRIPTOR_V57_OFFSET = 0x57
+SIG_RE = re.compile(rb"\x00\x00\x00[\x00-\x0f]\xff\x00\xfc\x00", re.S)
+
+GLOBAL_EQ = {
+    "low": 0x68,
+    "mid": 0x6C,
+    "high": 0x70,
+}
+GLOBAL_EQ_BLEND_CANDIDATE = 0x74
+GLOBAL_MASTER_MIX_CLUSTER_CANDIDATE = (0x75, 0x95)
+
+TRACK_U8_FIELDS = {
+    "pattern_count": 0x00,
+    "pattern_steps": 0x01,
+    "scale_byte": 0x06,
+    "engine_id": 0x14,
+    "m4_page": 0x20,
+    "filter_type": 0x21,
+    "filter_enabled": 0x25,
+}
+
+TRACK_U32_GROUPS = {
+    "engine_params": {
+        "param1": 0x3857,
+        "param2": 0x385B,
+        "param3": 0x385F,
+        "param4": 0x3863,
+    },
+    "amp_envelope": {
+        "attack": 0x3877,
+        "decay": 0x387B,
+        "sustain": 0x387F,
+        "release": 0x3883,
+    },
+    "m2_shift": {
+        "play_mode": 0x3887,
+        "portamento": 0x388B,
+        "pitch_bend_range": 0x388F,
+        "engine_volume": 0x3893,
+    },
+    "filter": {
+        "cutoff": 0x3897,
+        "resonance": 0x389B,
+        "env_amount": 0x389F,
+        "key_tracking": 0x38A3,
+    },
+    "sends": {
+        "ext": 0x38A7,
+        "tape": 0x38AB,
+        "fx1": 0x38AF,
+        "fx2": 0x38B3,
+    },
+    "lfo_current": {
+        "cc40": 0x38B7,
+        "cc41": 0x38BB,
+    },
+    "filter_envelope": {
+        "attack": 0x38D7,
+        "decay": 0x38DB,
+        "sustain": 0x38DF,
+        "release": 0x38E3,
+    },
+    "mix": {
+        "pan": 0x38F7,
+        "volume": 0x38FB,
+    },
+}
 
 
 def _looks_multi_pattern(project: XYProject) -> bool:
@@ -89,6 +159,89 @@ def _note_to_dict(note) -> Dict:
     if note.gate_ticks:
         out["gate_ticks"] = note.gate_ticks
     return out
+
+
+def _u32(image: bytes, offset: int) -> int:
+    return int.from_bytes(image[offset : offset + 4], "little")
+
+
+def _hex_offset(offset: int) -> str:
+    return f"0x{offset:05X}"
+
+
+def _track_struct_starts(image: bytes) -> List[int]:
+    """Return the 16 leader track starts in decoded-image space.
+
+    Multi-pattern projects insert clone structs between leaders. The first
+    byte of each leader stores pattern count, so we can skip clone structs
+    and still report the current state for tracks 1..16.
+    """
+    starts = [m.start() - 3 for m in SIG_RE.finditer(image)]
+    leaders: List[int] = []
+    idx = 0
+    while idx < len(starts) and len(leaders) < 16:
+        start = starts[idx]
+        leaders.append(start)
+        pattern_count = image[start] if start < len(image) else 1
+        if not 1 <= pattern_count <= 9:
+            pattern_count = 1
+        idx += pattern_count
+
+    # Fall back to raw detected order for unusual/older corpus files whose
+    # leader count byte does not let us walk all tracks.
+    if len(leaders) < 16 and len(starts) >= 16:
+        leaders = starts[:16]
+    return leaders
+
+
+def _decoded_global_state(image: bytes) -> Dict:
+    start, end = GLOBAL_MASTER_MIX_CLUSTER_CANDIDATE
+    return {
+        "master_eq": {
+            name: {
+                "offset": _hex_offset(offset),
+                "u32": _u32(image, offset),
+            }
+            for name, offset in GLOBAL_EQ.items()
+        },
+        "eq_blend_candidate": {
+            "offset": _hex_offset(GLOBAL_EQ_BLEND_CANDIDATE),
+            "u8": image[GLOBAL_EQ_BLEND_CANDIDATE],
+        },
+        "master_mix_cluster_candidate": {
+            "range": f"{_hex_offset(start)}..{_hex_offset(end - 1)}",
+            "hex": image[start:end].hex(),
+        },
+    }
+
+
+def _decoded_track_state(image: bytes) -> List[Dict]:
+    starts = _track_struct_starts(image)
+    decoded: List[Dict] = []
+    for track, start in enumerate(starts[:16], start=1):
+        entry: Dict = {
+            "track": track,
+            "offset": _hex_offset(start),
+            "u8": {
+                name: image[start + rel]
+                for name, rel in TRACK_U8_FIELDS.items()
+                if start + rel < len(image)
+            },
+            "current_values": {},
+        }
+        current_values = entry["current_values"]
+        for group, fields in TRACK_U32_GROUPS.items():
+            current_values[group] = {
+                name: {
+                    "offset": _hex_offset(start + rel),
+                    "track_relative_offset": _hex_offset(rel),
+                    "u32": _u32(image, start + rel),
+                }
+                for name, rel in fields.items()
+                if start + rel + 4 <= len(image)
+            }
+        decoded.append(entry)
+    return decoded
 
 
 def _extract_track_patterns(
@@ -151,6 +304,7 @@ def project_to_json(
     project = XYProject.from_bytes(xy_bytes)
     container = XYContainer.from_bytes(xy_bytes)
     header = container.header
+    _, image = decode_project(xy_bytes)
 
     # Multi-pattern projects store patterns 2..N in overflow blocks
     # that our top-level-blocks-only extraction can't reach. Emitting
@@ -175,6 +329,9 @@ def project_to_json(
     # Always include ``tracks`` (possibly empty) so ``parse_build_spec``
     # doesn't trip on the field being absent.
     payload["tracks"] = tracks
+    payload["_decoded_global_state"] = _decoded_global_state(image)
+    payload["_decoded_track_state"] = _decoded_track_state(image)
+
     # If multi-pattern, note the limitation in a ``_notes`` key the
     # reader can surface. (``_``-prefixed keys are ignored by the
     # BuildSpec parser.)
