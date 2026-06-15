@@ -75,7 +75,7 @@ Each baseline track/pattern struct is `0x45D4` bytes before note-vector growth.
 | `+0x38D7..+0x38E6` | 16 | decoded | Filter envelope ADSR. |
 | `+0x38E7..+0x38FF` | 25 | partial | `track.post_filter_env_gap`: last two 4-byte lanes are mixer current values: `+0x38F7` pan and `+0x38FB` volume. Earlier bytes remain opaque. |
 | `+0x3900..+0x393B` | 60 | partial | Mod routing matrix. Velocity sensitivity and track high-pass are known; exact row/field names and signed amount encoding still need completion. |
-| `+0x393C..+0x3956` | 27 | opaque | `track.pre_sample_gap`: candidate for final preset performance flags, filter tails, sampler-mode flags, or sample-table header. |
+| `+0x393C..+0x3956` | 27 | partial | `track.pre_sample_gap`: tonal sampler project-local sample/window block is pinned at `+0x393F..+0x3953` from the 2026-06-15 sampler captures: framecount, sample/window start, sample/window end, loop start, loop end, plus one unresolved helper at `+0x3953`. |
 | `+0x3957..+0x453E` | 3,048 | partial | Non-overlapping sample/region table bytes before the preset label. Slot paths and several drum sampler params are decoded; tonal sampler and multisampler semantics are still incomplete. |
 | `+0x453F..+0x456E` | 48 | decoded | Preset path string / label. |
 | `+0x456F..+0x456F` | 1 | decoded | Note count byte. |
@@ -96,9 +96,9 @@ starts at `+0x3957 + 0x80*v`.
 | `+0x05..+0x06` | 2 | partial | Provisional pan/fade/crossfade-adjacent signed bytes. Need paired captures to identify which is which across sampler engines. |
 | `+0x07` | 1 | decoded for drum sampler | Direction: forward/backward. |
 | `+0x08..+0x67` | 96 | partial | Sample path string plus padding/engine-specific region metadata. |
-| `+0x68..+0x6B` | 4 | partial | Drum sampler sample start; tonal sampler may use a different normalized/unit interpretation. |
+| `+0x68..+0x6B` | 4 | partial | Drum sampler sample start. Tonal sampler project-window state is now known to use the pre-slot block at track `+0x393F..+0x3956`, not this slot-tail field in the captured one-zone case. |
 | `+0x6C..+0x6F` | 4 | opaque | Candidate loop start, region length, or engine-specific numeric field. |
-| `+0x70..+0x73` | 4 | partial | Drum sampler sample end; tonal sampler may store project-local start/end mirrors differently. |
+| `+0x70..+0x73` | 4 | partial | Drum sampler sample end. Tonal sampler project-window state is now known to use the pre-slot block at track `+0x393F..+0x3956`, not this slot-tail field in the captured one-zone case. |
 | `+0x74..+0x7B` | 8 | opaque | Candidate loop end, fade/crossfade, or sampler playback window fields. |
 | `+0x7C..+0x7F` | 4 | partial | Drum sampler gain; other sampler engines may reuse the tail differently. |
 

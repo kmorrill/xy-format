@@ -220,12 +220,26 @@ matching the capture notes. The old raw-space "param_id" bytes and
 
 ### Sample table (drum/sampler) — structure decoded
 
-**24 slots × 128 bytes at track+0x395F** (= the 24-key drum limit),
-sample path string inside each slot, per-sample params in the remaining
-slot bytes (tune/level/envelope fields not yet itemized). Preset name
-field follows the table. (The "amb kit" sampler corpus referenced in
-older notes is not present in the repo; slot internals can be mapped
-from baseline + kit-change one-offs when needed.)
+The nominal sample/region table starts at **track+0x3957**. In the
+2026-06-15 tonal sampler captures, one-zone sampler state uses an 8-byte
+slot header at `+0x3957` (`3c 00 3c 80 00 00 00 00`) and the sample path
+string starts at `+0x395F`.
+
+Tonal sampler project-local window values are stored just before that table,
+inside `track+0x393F..+0x3956`:
+
+| track offset | captured meaning |
+|---|---|
+| +0x393F | frame count |
+| +0x3943 | sample/window start |
+| +0x3947 | sample/window end |
+| +0x394B | loop start |
+| +0x394F | loop end |
+| +0x3953 | unresolved helper/derived value |
+
+Preset name field follows the table. (The "amb kit" sampler corpus referenced
+in older notes is not present in the repo; slot internals can be mapped from
+baseline + kit-change one-offs when needed.)
 
 ### Drum sampler table — per-voice parameter slot (device-decoded)
 
