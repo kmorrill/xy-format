@@ -61,6 +61,17 @@ Thumbs.db
 # Local source-material imports (do not commit)
 raw/
 
+# Local scratch/generated reverse-engineering outputs
+.tmp/
+output/
+
+# Local device/cloud config snapshots
+config.json
+devices.json
+snapshot.json
+tuya-raw.json
+fingerbot_*_config.json
+
 # Vim / Emacs swap
 *.swp
 *.swo
