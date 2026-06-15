@@ -50,6 +50,7 @@ def test_profile_registry_has_expected_entries():
         "bootstrap_t1_t8_p9",
         "scene_song_tokens",
         "scene_assignments",
+        "sound_state",
     }
 
 
@@ -177,6 +178,52 @@ def test_bootstrap_t1_t8_p9_rejects_aux_tracks():
         validate_against_profile(spec, "bootstrap_t1_t8_p9")
 
 
+def test_sound_state_accepts_pure_sound_edits():
+    spec = parse_build_spec(
+        {
+            "version": 1,
+            "mode": "multi_pattern",
+            "template": TEMPLATE_REL,
+            "profile": "sound_state",
+            "sound_state": {
+                "tracks": [
+                    {"track": 3, "mix": {"volume": 0x7FFFFFFF}},
+                ],
+            },
+        },
+        base_dir=ROOT,
+    )
+    validate_against_profile(spec, "sound_state")
+
+
+def test_header_only_rejects_sound_state():
+    spec = parse_build_spec(
+        {
+            "version": 1,
+            "mode": "multi_pattern",
+            "template": TEMPLATE_REL,
+            "profile": "header_only",
+            "header": {"tempo_tenths": 1200},
+            "sound_state": {"tracks": [{"track": 3, "mix": {"pan": 0}}]},
+        },
+        base_dir=ROOT,
+    )
+    with pytest.raises(ValueError, match="sound_state patches"):
+        validate_against_profile(spec, "header_only")
+
+
+def test_sound_state_profile_rejects_note_changes():
+    spec = parse_build_spec(
+        _base_spec_dict(
+            profile="sound_state",
+            sound_state={"tracks": [{"track": 3, "mix": {"volume": 1}}]},
+        ),
+        base_dir=ROOT,
+    )
+    with pytest.raises(ValueError, match="does not allow note/pattern changes"):
+        validate_against_profile(spec, "sound_state")
+
+
 # ── infer_profile ─────────────────────────────────────────────────────
 
 
@@ -206,6 +253,19 @@ def test_infer_profile_bootstrap_takes_precedence_over_strict():
         base_dir=ROOT,
     )
     assert infer_profile(spec) == "bootstrap_t1_t8_p9"
+
+
+def test_infer_profile_sound_state():
+    spec = parse_build_spec(
+        {
+            "version": 1,
+            "mode": "multi_pattern",
+            "template": TEMPLATE_REL,
+            "sound_state": {"tracks": [{"track": 3, "mix": {"volume": 1}}]},
+        },
+        base_dir=ROOT,
+    )
+    assert infer_profile(spec) == "sound_state"
 
 
 def test_infer_profile_returns_none_for_unmatched_spec():

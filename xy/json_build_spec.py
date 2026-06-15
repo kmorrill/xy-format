@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .container import TrackBlock, XYContainer, XYHeader, XYProject
+from .image_writer import ImageProject
 from .note_events import Note
 from .profiles import PROFILES, infer_profile, validate_against_profile
 from .project_builder import append_notes_to_tracks, build_multi_pattern_project
@@ -64,6 +65,46 @@ class SceneSongPatch:
 
 
 @dataclass(frozen=True)
+class SoundTrackPatch:
+    track: int
+    engine_id: Optional[int] = None
+    engine_params: Dict[str, int] = field(default_factory=dict)
+    amp_envelope: Dict[str, int] = field(default_factory=dict)
+    m2_shift: Dict[str, int] = field(default_factory=dict)
+    filter_type: Optional[int] = None
+    filter_enabled: Optional[bool] = None
+    filter_knobs: Dict[str, int] = field(default_factory=dict)
+    sends: Dict[str, int] = field(default_factory=dict)
+    lfo_current: Dict[str, int] = field(default_factory=dict)
+    filter_envelope: Dict[str, int] = field(default_factory=dict)
+    mix: Dict[str, int] = field(default_factory=dict)
+
+    def has_changes(self) -> bool:
+        return (
+            self.engine_id is not None
+            or bool(self.engine_params)
+            or bool(self.amp_envelope)
+            or bool(self.m2_shift)
+            or self.filter_type is not None
+            or self.filter_enabled is not None
+            or bool(self.filter_knobs)
+            or bool(self.sends)
+            or bool(self.lfo_current)
+            or bool(self.filter_envelope)
+            or bool(self.mix)
+        )
+
+
+@dataclass(frozen=True)
+class SoundStatePatch:
+    master_eq: Dict[str, int] = field(default_factory=dict)
+    tracks: List[SoundTrackPatch] = field(default_factory=list)
+
+    def has_changes(self) -> bool:
+        return bool(self.master_eq) or any(track.has_changes() for track in self.tracks)
+
+
+@dataclass(frozen=True)
 class BuildSpec:
     version: int
     mode: str
@@ -75,6 +116,7 @@ class BuildSpec:
     scene_song: SceneSongPatch = field(default_factory=SceneSongPatch)
     scene_assignments: Dict[int, Dict[int, int]] = field(default_factory=dict)
     song_arrangement: List[int] = field(default_factory=list)
+    sound_state: SoundStatePatch = field(default_factory=SoundStatePatch)
     multi_tracks: List[MultiTrackSpec] = field(default_factory=list)
     # ``profile`` names the validated build recipe. ``None`` means the spec
     # was authored before profiles existed (legacy spec); the compiler will
@@ -263,6 +305,148 @@ def _parse_song_arrangement(raw: object) -> List[int]:
     return parsed
 
 
+def _parse_u32_group(raw: object, *, where: str, allowed: set[str]) -> Dict[str, int]:
+    if raw is None:
+        return {}
+    obj = _require_dict(raw, where=where)
+    parsed: Dict[str, int] = {}
+    for key, value in obj.items():
+        if key not in allowed:
+            valid = ", ".join(sorted(allowed))
+            raise ValueError(f"{where}.{key} is not supported; valid keys: {valid}")
+        parsed[key] = _int_in_range(value, where=f"{where}.{key}", low=0, high=2**32 - 1)
+    return parsed
+
+
+def _parse_sound_filter(raw: object, *, where: str) -> tuple[Optional[int], Optional[bool], Dict[str, int]]:
+    if raw is None:
+        return None, None, {}
+    obj = _require_dict(raw, where=where)
+    allowed = {"type", "enabled", "cutoff", "resonance", "env_amount", "key_tracking"}
+    for key in obj:
+        if key not in allowed:
+            valid = ", ".join(sorted(allowed))
+            raise ValueError(f"{where}.{key} is not supported; valid keys: {valid}")
+
+    filter_type = None
+    if "type" in obj:
+        filter_type = _int_in_range(obj["type"], where=f"{where}.type", low=0, high=255)
+
+    filter_enabled = None
+    if "enabled" in obj:
+        if not isinstance(obj["enabled"], bool):
+            raise ValueError(f"{where}.enabled must be a boolean")
+        filter_enabled = obj["enabled"]
+
+    knobs = {
+        key: _int_in_range(obj[key], where=f"{where}.{key}", low=0, high=2**32 - 1)
+        for key in ("cutoff", "resonance", "env_amount", "key_tracking")
+        if key in obj
+    }
+    return filter_type, filter_enabled, knobs
+
+
+def _parse_sound_state_patch(raw: object) -> SoundStatePatch:
+    if raw is None:
+        return SoundStatePatch()
+    obj = _require_dict(raw, where="sound_state")
+
+    allowed_top = {"master_eq", "tracks"}
+    for key in obj:
+        if key not in allowed_top:
+            valid = ", ".join(sorted(allowed_top))
+            raise ValueError(f"sound_state.{key} is not supported; valid keys: {valid}")
+
+    master_eq = _parse_u32_group(
+        obj.get("master_eq"),
+        where="sound_state.master_eq",
+        allowed={"low", "mid", "high"},
+    )
+
+    tracks_raw = obj.get("tracks", [])
+    tracks_values = _require_list(tracks_raw, where="sound_state.tracks")
+    tracks: List[SoundTrackPatch] = []
+    seen_tracks: set[int] = set()
+    allowed_track_keys = {
+        "track",
+        "engine_id",
+        "engine_params",
+        "amp_envelope",
+        "m2_shift",
+        "filter",
+        "sends",
+        "lfo_current",
+        "filter_envelope",
+        "mix",
+    }
+    for idx, raw_track in enumerate(tracks_values):
+        where = f"sound_state.tracks[{idx}]"
+        track_obj = _require_dict(raw_track, where=where)
+        for key in track_obj:
+            if key not in allowed_track_keys:
+                valid = ", ".join(sorted(allowed_track_keys))
+                raise ValueError(f"{where}.{key} is not supported; valid keys: {valid}")
+        track = _int_in_range(track_obj.get("track"), where=f"{where}.track", low=1, high=16)
+        if track in seen_tracks:
+            raise ValueError(f"duplicate sound_state track {track}")
+        seen_tracks.add(track)
+
+        engine_id = None
+        if "engine_id" in track_obj:
+            engine_id = _int_in_range(track_obj["engine_id"], where=f"{where}.engine_id", low=0, high=255)
+        filter_type, filter_enabled, filter_knobs = _parse_sound_filter(
+            track_obj.get("filter"),
+            where=f"{where}.filter",
+        )
+        parsed = SoundTrackPatch(
+            track=track,
+            engine_id=engine_id,
+            engine_params=_parse_u32_group(
+                track_obj.get("engine_params"),
+                where=f"{where}.engine_params",
+                allowed={"param1", "param2", "param3", "param4"},
+            ),
+            amp_envelope=_parse_u32_group(
+                track_obj.get("amp_envelope"),
+                where=f"{where}.amp_envelope",
+                allowed={"attack", "decay", "sustain", "release"},
+            ),
+            m2_shift=_parse_u32_group(
+                track_obj.get("m2_shift"),
+                where=f"{where}.m2_shift",
+                allowed={"play_mode", "portamento", "pitch_bend_range", "engine_volume"},
+            ),
+            filter_type=filter_type,
+            filter_enabled=filter_enabled,
+            filter_knobs=filter_knobs,
+            sends=_parse_u32_group(
+                track_obj.get("sends"),
+                where=f"{where}.sends",
+                allowed={"ext", "tape", "fx1", "fx2"},
+            ),
+            lfo_current=_parse_u32_group(
+                track_obj.get("lfo_current"),
+                where=f"{where}.lfo_current",
+                allowed={"cc40", "cc41"},
+            ),
+            filter_envelope=_parse_u32_group(
+                track_obj.get("filter_envelope"),
+                where=f"{where}.filter_envelope",
+                allowed={"attack", "decay", "sustain", "release"},
+            ),
+            mix=_parse_u32_group(
+                track_obj.get("mix"),
+                where=f"{where}.mix",
+                allowed={"pan", "volume"},
+            ),
+        )
+        if not parsed.has_changes():
+            raise ValueError(f"{where} must contain at least one sound_state edit")
+        tracks.append(parsed)
+
+    return SoundStatePatch(master_eq=master_eq, tracks=tracks)
+
+
 def parse_build_spec(data: object, *, base_dir: Path) -> BuildSpec:
     obj = _require_dict(data, where="spec")
 
@@ -371,6 +555,7 @@ def parse_build_spec(data: object, *, base_dir: Path) -> BuildSpec:
         scene_song=_parse_scene_song_patch(obj.get("scene_song")),
         scene_assignments=_parse_scene_assignments(obj.get("scene_assignments")),
         song_arrangement=_parse_song_arrangement(obj.get("song_arrangement")),
+        sound_state=_parse_sound_state_patch(obj.get("sound_state")),
         multi_tracks=multi_tracks,
         profile=profile_raw,
     )
@@ -430,6 +615,43 @@ def _apply_song_arrangement(project: XYProject, arrangement: List[int]) -> XYPro
     new_t16_body = write_t16_scene_list(t16.body, song_scene_ids_0based)
     new_t16 = TrackBlock(index=15, preamble=t16.preamble, body=new_t16_body)
     return XYProject(project.pre_track, list(project.tracks[:15]) + [new_t16])
+
+
+def apply_sound_state_patch(data: bytes, patch: SoundStatePatch) -> bytes:
+    if not patch.has_changes():
+        return data
+
+    project = ImageProject.from_bytes(data)
+    if patch.master_eq:
+        project.set_master_eq(
+            low=patch.master_eq.get("low"),
+            mid=patch.master_eq.get("mid"),
+            high=patch.master_eq.get("high"),
+        )
+
+    for track in patch.tracks:
+        if track.engine_id is not None:
+            project.set_engine(track.track, track.engine_id)
+        if track.engine_params:
+            project.set_engine_params(track.track, **track.engine_params)
+        if track.amp_envelope:
+            project.set_amp_envelope(track.track, **track.amp_envelope)
+        if track.m2_shift:
+            project.set_m2_shift(track.track, **track.m2_shift)
+        if track.filter_type is not None or track.filter_enabled is not None:
+            project.set_filter(track.track, type=track.filter_type, enabled=track.filter_enabled)
+        if track.filter_knobs:
+            project.set_filter_knobs(track.track, **track.filter_knobs)
+        if track.sends:
+            project.set_sends(track.track, **track.sends)
+        if track.lfo_current:
+            project.set_lfo_current(track.track, **track.lfo_current)
+        if track.filter_envelope:
+            project.set_filter_envelope(track.track, **track.filter_envelope)
+        if track.mix:
+            project.set_track_mix(track.track, **track.mix)
+
+    return project.to_bytes()
 
 
 def _enforce_profile(spec: BuildSpec) -> None:
@@ -524,7 +746,8 @@ def build_xy_bytes(spec: BuildSpec) -> bytes:
     if spec.song_arrangement:
         project = _apply_song_arrangement(project, spec.song_arrangement)
 
-    return apply_header_patch(project.to_bytes(), spec.header)
+    data = apply_sound_state_patch(project.to_bytes(), spec.sound_state)
+    return apply_header_patch(data, spec.header)
 
 
 def _apply_bootstrap_t1_t8_p9(

@@ -25,6 +25,52 @@ Field-semantics sweeps in decoded space (`tools/analysis/decoded_diff.py`
    not in the corpus, but `set_preset` already copies the whole table,
    so this is only for exposing per-voice tweaks — not a blocker.
 
+## Active File-Format TODOs
+
+These are the next best steps after promoting decoded sound state into
+editable JSON. Keep them ordered; device captures are the scarce resource.
+
+1. **Sampler / tonal sampler project-state captures**
+   - Starting point: one known sample that is audible after manual load.
+   - Capture variants: preset save only; project save after loading preset;
+     project save after changing start/end/loop/gain; one audible hand-fixed
+     control file.
+   - Goal: determine whether project track structs override preset sample
+     params and map tonal sampler start/end/loop/gain slot-tail bytes.
+2. **LFO enum and subfunction captures**
+   - Priority: LFO type enum at/near `track+0x1C`, then destination,
+     parameter, shape/sub-mode, rate/depth.
+   - Candidate hidden/subfunction region: `track+0x38C7..+0x38D6`,
+     especially `+0x38D3..+0x38D6`.
+   - Goal: convert raw `lfo_current.cc40/cc41` and hidden tails into
+     user-facing LFO labels and options.
+3. **Master mix cluster**
+   - Region: global `0x75..0x94`, likely Mix M3/M4 controls.
+   - Capture each master saturator/compressor/output/percussion/melodic
+     control at min/max from a fresh baseline.
+   - Goal: promote this cluster from candidate bytes into named
+     `sound_state.master_*` fields.
+4. **Reusable region-variance index tool**
+   - Build a CLI around the current ad hoc scripts, e.g.
+     `tools/analyze_region_variance.py --region track:+0x38A7:+0x38B6`.
+   - Output unique values, per-file deltas, track-relative maps, lane
+     grouping, and source/device vs generated provenance.
+5. **Visual spatial map artifacts**
+   - Generate a machine-readable map of decoded/partial/opaque ranges.
+   - Target formats: Markdown/CSV/JSON first; ImHex or Kaitai-style pattern
+     after the map stabilizes.
+6. **Generated-project validation**
+   - Add regression checks for generated songs/packs: preset path strings,
+     engine IDs, sample paths, nonzero audible sampler windows/gain,
+     metronome off, and mapped drum sample slots.
+   - Goal: catch the exact mapping regressions seen during generated-song
+     work before files reach the device.
+7. **Capture templates for device work**
+   - Maintain a short "next 10 captures" doc with starting file, exact knob
+     movement, expected filename, target byte region, and priority if only
+     two or three captures can be made.
+   - Goal: maximize learning per manual device save.
+
 ## Tier 2 — Enum-value probes (cheap device looks, only as needed)
 
 One tiny probe file + a glance at the device UI each:

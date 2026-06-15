@@ -18,6 +18,8 @@ What's decoded today (matching the current profile catalog):
 - Diagnostic decoded-image state under ``_decoded_global_state`` and
   ``_decoded_track_state``: master EQ, engine parameters, envelopes,
   filter knobs, sends, pinned LFO current lanes, and mixer pan/volume
+- Editable ``sound_state`` with the same decoded sound values, suitable for
+  feeding back through ``xy/json_build_spec.py``
 
 What's **not** decoded (stays opaque in the scaffold):
 - Multi-pattern clone bodies (patterns 2..N live in the overflow
@@ -244,6 +246,47 @@ def _decoded_track_state(image: bytes) -> List[Dict]:
     return decoded
 
 
+def _sound_state_from_image(image: bytes) -> Dict:
+    starts = _track_struct_starts(image)
+    tracks: List[Dict] = []
+    for track, start in enumerate(starts[:16], start=1):
+        values = {
+            group: {
+                name: _u32(image, start + rel)
+                for name, rel in fields.items()
+                if start + rel + 4 <= len(image)
+            }
+            for group, fields in TRACK_U32_GROUPS.items()
+        }
+        filter_values = dict(values["filter"])
+        if start + TRACK_U8_FIELDS["filter_type"] < len(image):
+            filter_values["type"] = image[start + TRACK_U8_FIELDS["filter_type"]]
+        if start + TRACK_U8_FIELDS["filter_enabled"] < len(image):
+            filter_values["enabled"] = bool(image[start + TRACK_U8_FIELDS["filter_enabled"]])
+
+        track_entry: Dict = {
+            "track": track,
+            "engine_id": image[start + TRACK_U8_FIELDS["engine_id"]],
+            "engine_params": values["engine_params"],
+            "amp_envelope": values["amp_envelope"],
+            "m2_shift": values["m2_shift"],
+            "filter": filter_values,
+            "sends": values["sends"],
+            "lfo_current": values["lfo_current"],
+            "filter_envelope": values["filter_envelope"],
+            "mix": values["mix"],
+        }
+        tracks.append(track_entry)
+
+    return {
+        "master_eq": {
+            name: _u32(image, offset)
+            for name, offset in GLOBAL_EQ.items()
+        },
+        "tracks": tracks,
+    }
+
+
 def _extract_track_patterns(
     project: XYProject,
 ) -> List[Dict]:
@@ -329,6 +372,7 @@ def project_to_json(
     # Always include ``tracks`` (possibly empty) so ``parse_build_spec``
     # doesn't trip on the field being absent.
     payload["tracks"] = tracks
+    payload["sound_state"] = _sound_state_from_image(image)
     payload["_decoded_global_state"] = _decoded_global_state(image)
     payload["_decoded_track_state"] = _decoded_track_state(image)
 
@@ -382,6 +426,13 @@ def _infer_profile_from_payload(payload: Dict) -> str:
         def has_changes(self) -> bool:
             return False
 
+    class _FakeSoundState:
+        def __init__(self, raw: Dict | None) -> None:
+            self.raw = raw or {}
+
+        def has_changes(self) -> bool:
+            return bool(self.raw.get("master_eq")) or bool(self.raw.get("tracks"))
+
     class _FakeTrackEntry:
         def __init__(self, track: int, patterns: List) -> None:
             self.track = track
@@ -397,6 +448,7 @@ def _infer_profile_from_payload(payload: Dict) -> str:
             self.scene_song = _FakeSceneSong()
             self.scene_assignments = {}
             self.song_arrangement = []
+            self.sound_state = _FakeSoundState(payload.get("sound_state"))
             self.descriptor_strategy = "strict"
             self.topology_policy = "none"
             self.multi_tracks = [

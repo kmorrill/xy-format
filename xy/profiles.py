@@ -132,6 +132,11 @@ def _validate_header_only(spec: "BuildSpec") -> None:
         "use profile=scene_assignments instead",
     )
     _require(
+        not spec.sound_state.has_changes(),
+        "profile=header_only does not allow sound_state patches; "
+        "use profile=sound_state instead",
+    )
+    _require(
         spec.topology_policy == "none",
         "profile=header_only requires topology_policy=none",
     )
@@ -264,6 +269,40 @@ def _validate_scene_assignments(spec: "BuildSpec") -> None:
     )
 
 
+# ── sound_state ───────────────────────────────────────────────────────
+
+
+def _validate_sound_state(spec: "BuildSpec") -> None:
+    _require(
+        spec.sound_state.has_changes(),
+        "profile=sound_state requires at least one sound_state edit",
+    )
+    _require(
+        _no_track_changes(spec),
+        "profile=sound_state does not allow note/pattern changes; "
+        "use a note/multi-pattern profile and include sound_state there",
+    )
+    _require(
+        not spec.scene_song.has_changes(),
+        "profile=sound_state does not allow scene_song patches; "
+        "use profile=scene_song_tokens and include sound_state there",
+    )
+    _require(
+        not spec.scene_assignments,
+        "profile=sound_state does not allow scene_assignments; "
+        "use profile=scene_assignments and include sound_state there",
+    )
+    _require(
+        not spec.song_arrangement,
+        "profile=sound_state does not allow song_arrangement; "
+        "use profile=scene_assignments and include sound_state there",
+    )
+    _require(
+        spec.topology_policy == "none",
+        "profile=sound_state requires topology_policy=none",
+    )
+
+
 # ── Registry ──────────────────────────────────────────────────────────
 
 
@@ -328,6 +367,19 @@ PROFILES: Dict[str, Profile] = {
         ),
         validate=_validate_scene_assignments,
     ),
+    "sound_state": Profile(
+        name="sound_state",
+        description=(
+            "Decoded-image sound-state patch for master EQ and per-track "
+            "engine params, envelopes, filter, sends, LFO current lanes, "
+            "and mix pan/volume."
+        ),
+        evidence=(
+            "docs/format/decoded_image_map.md current-value lanes; "
+            "tests/test_image_writer.py current-lane capture regressions"
+        ),
+        validate=_validate_sound_state,
+    ),
 }
 
 
@@ -370,6 +422,7 @@ def infer_profile(spec: "BuildSpec") -> Optional[str]:
         "scene_song_tokens",
         "multi_pattern_strict",
         "single_pattern_notes",
+        "sound_state",
         "header_only",
     )
     for name in ordered:

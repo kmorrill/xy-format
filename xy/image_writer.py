@@ -42,6 +42,13 @@ class ImageProject:
         p._rescan()
         return p
 
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "ImageProject":
+        header, image = decode_project(data)
+        p = cls(header, bytearray(image))
+        p._rescan()
+        return p
+
     def _rescan(self) -> None:
         self._starts = [m.start() - 3 for m in SIG_RE.finditer(self.image)]
 
@@ -149,6 +156,12 @@ class ImageProject:
     TRK_FILTER_TYPE = 0x21
     TRK_FILTER_ON = 0x25
     TRK_PARAMS = 0x3857     # 4 engine params, u32 each
+    TRK_AMP_ENV = {
+        "attack": 0x3877,
+        "decay": 0x387B,
+        "sustain": 0x387F,
+        "release": 0x3883,
+    }
     TRK_M2_SHIFT = {
         "play_mode": 0x3887,          # CC28 current lane
         "portamento": 0x388B,         # CC29 current lane
@@ -161,9 +174,21 @@ class ImageProject:
         "fx1": 0x38AF,    # CC38 current lane
         "fx2": 0x38B3,    # CC39 current lane
     }
+    TRK_FILTER_KNOBS = {
+        "cutoff": 0x3897,
+        "resonance": 0x389B,
+        "env_amount": 0x389F,
+        "key_tracking": 0x38A3,
+    }
     TRK_LFO_CURRENT = {
         "cc40": 0x38B7,
         "cc41": 0x38BB,
+    }
+    TRK_FILTER_ENV = {
+        "attack": 0x38D7,
+        "decay": 0x38DB,
+        "sustain": 0x38DF,
+        "release": 0x38E3,
     }
     TRK_MIX = {
         "pan": 0x38F7,     # CC10 current lane
@@ -207,6 +232,19 @@ class ImageProject:
         self.image[o : o + 4] = self._u32(value, where=f"track {track} engine param {index}")
         self.mark_edited(track)
 
+    def set_engine_params(
+        self,
+        track: int,
+        *,
+        param1: int | None = None,
+        param2: int | None = None,
+        param3: int | None = None,
+        param4: int | None = None,
+    ) -> None:
+        for index, value in enumerate((param1, param2, param3, param4), start=1):
+            if value is not None:
+                self.set_engine_param(track, index, value)
+
     def _write_track_u32(self, track: int, offset: int, value: int, *, where: str) -> None:
         o = self.track_start(track) + offset
         self.image[o : o + 4] = self._u32(value, where=where)
@@ -240,6 +278,54 @@ class ImageProject:
                     self.TRK_M2_SHIFT[name],
                     value,
                     where=f"track {track} M2 {name}",
+                )
+
+    def set_amp_envelope(
+        self,
+        track: int,
+        *,
+        attack: int | None = None,
+        decay: int | None = None,
+        sustain: int | None = None,
+        release: int | None = None,
+    ) -> None:
+        """Set M2 amp envelope ADSR current lanes."""
+        for name, value in {
+            "attack": attack,
+            "decay": decay,
+            "sustain": sustain,
+            "release": release,
+        }.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_AMP_ENV[name],
+                    value,
+                    where=f"track {track} amp envelope {name}",
+                )
+
+    def set_filter_knobs(
+        self,
+        track: int,
+        *,
+        cutoff: int | None = None,
+        resonance: int | None = None,
+        env_amount: int | None = None,
+        key_tracking: int | None = None,
+    ) -> None:
+        """Set M3 filter knob current lanes."""
+        for name, value in {
+            "cutoff": cutoff,
+            "resonance": resonance,
+            "env_amount": env_amount,
+            "key_tracking": key_tracking,
+        }.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_FILTER_KNOBS[name],
+                    value,
+                    where=f"track {track} filter {name}",
                 )
 
     def set_sends(
@@ -280,6 +366,30 @@ class ImageProject:
                     self.TRK_LFO_CURRENT[name],
                     value,
                     where=f"track {track} LFO current {name}",
+                )
+
+    def set_filter_envelope(
+        self,
+        track: int,
+        *,
+        attack: int | None = None,
+        decay: int | None = None,
+        sustain: int | None = None,
+        release: int | None = None,
+    ) -> None:
+        """Set filter envelope ADSR current lanes."""
+        for name, value in {
+            "attack": attack,
+            "decay": decay,
+            "sustain": sustain,
+            "release": release,
+        }.items():
+            if value is not None:
+                self._write_track_u32(
+                    track,
+                    self.TRK_FILTER_ENV[name],
+                    value,
+                    where=f"track {track} filter envelope {name}",
                 )
 
     def set_track_mix(

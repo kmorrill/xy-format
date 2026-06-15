@@ -14,6 +14,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from xy.json_build_spec import build_xy_bytes, parse_build_spec
 from xy.project_to_json import project_to_json
+from xy.rle import decode_project
 
 
 CORPUS = REPO_ROOT / "src" / "one-off-changes-from-default"
@@ -50,17 +51,19 @@ def test_extracts_notes_for_single_pattern_file() -> None:
     assert note_pitches == [0x3C, 0x3E, 0x40, 0x41, 0x43, 0x45]
 
 
-def test_multi_pattern_file_falls_back_to_header_only() -> None:
+def test_multi_pattern_file_extracts_sound_state_but_not_clone_notes() -> None:
     # Any scaffold-style multi-pattern file should produce a
-    # header_only profile because project_to_json doesn't yet walk
-    # clone bodies.
+    # sound_state profile because project_to_json now emits editable sound
+    # fields, but still doesn't walk clone note bodies.
     path = CORPUS / "j06_all16_p9_blank.xy"
     payload = project_to_json(path.read_bytes(), template_path=path)
-    assert payload["profile"] == "header_only"
+    assert payload["profile"] == "sound_state"
     # ``tracks`` is emitted as an empty list so parse_build_spec
     # doesn't trip on a missing field; the profile validator
     # enforces the "no tracks" constraint.
     assert payload["tracks"] == []
+    assert payload["sound_state"]["tracks"][0]["track"] == 1
+    assert payload["sound_state"]["tracks"][0]["engine_params"]["param1"] >= 0
     assert "_notes" in payload
     assert any("multi-pattern" in note.lower() for note in payload["_notes"])
 
@@ -88,6 +91,11 @@ def test_extracts_decoded_current_value_diagnostics() -> None:
     assert tracks[2]["current_values"]["lfo_current"]["cc41"]["u32"] == 0x7FFFFFFF
     assert tracks[3]["current_values"]["mix"]["volume"]["u32"] == 0x7FFFFFFF
     assert tracks[5]["current_values"]["mix"]["pan"]["u32"] == 0x7FFFFFFF
+    sound_tracks = {entry["track"]: entry for entry in payload["sound_state"]["tracks"]}
+    assert sound_tracks[1]["lfo_current"]["cc40"] == 0x7FFFFFFF
+    assert sound_tracks[2]["lfo_current"]["cc41"] == 0x7FFFFFFF
+    assert sound_tracks[3]["mix"]["volume"] == 0x7FFFFFFF
+    assert sound_tracks[5]["mix"]["pan"] == 0x7FFFFFFF
 
     # Diagnostics are underscore-prefixed and must not break BuildSpec parsing.
     spec = parse_build_spec(payload, base_dir=REPO_ROOT)
@@ -136,9 +144,9 @@ def test_roundtrip_preserves_tempo_edit() -> None:
     assert reread["header"]["tempo_tenths"] == 1450
 
 
-def test_multi_pattern_header_only_roundtrip_preserves_template_state() -> None:
-    # For a multi-pattern file, only header round-trips. Topology
-    # comes from the template and should survive the round-trip.
+def test_multi_pattern_sound_state_roundtrip_preserves_template_state() -> None:
+    # For a multi-pattern file, sound/header state round-trips. Topology
+    # still comes from the template and should survive the round-trip.
     path = CORPUS / "j06_all16_p9_blank.xy"
     original = path.read_bytes()
     payload = project_to_json(original, template_path=path)
@@ -146,13 +154,13 @@ def test_multi_pattern_header_only_roundtrip_preserves_template_state() -> None:
     payload["header"]["tempo_tenths"] = 1000  # 100.0 BPM
     spec = parse_build_spec(payload, base_dir=REPO_ROOT)
     rebuilt = build_xy_bytes(spec)
-    # Tempo should have changed; file size and structure should not.
-    assert len(rebuilt) == len(original)
+    # Tempo should have changed; decoded image size/structure should not.
+    assert len(decode_project(rebuilt)[1]) == len(decode_project(original)[1])
     # Re-extract and confirm header edit applied.
     reread = project_to_json(rebuilt, template_path=path)
     assert reread["header"]["tempo_tenths"] == 1000
-    # The template state (multi-pattern) should still be detected.
-    assert reread["profile"] == "header_only"
+    # The extracted editable sound state should still be detected.
+    assert reread["profile"] == "sound_state"
 
 
 # ── CLI ─────────────────────────────────────────────────────────────

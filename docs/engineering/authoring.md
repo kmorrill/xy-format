@@ -73,13 +73,12 @@ lanes. They do not create automation. To create step automation, use
 `set_plock`/`automate_param`, which also writes the firmware's per-step and
 master automation flags.
 
-`xy/project_to_json.py` now emits decoded-image diagnostics under
-`_decoded_global_state` and `_decoded_track_state`. These underscore-prefixed
-sections expose master EQ, engine params, envelope blocks, filter knobs, sends,
-pinned LFO lanes, and mixer pan/volume for inspection. They are intentionally
-not first-class editable `BuildSpec` fields yet; the JSON compiler still keeps
-unknown/partially decoded state in the template unless a validated writer path
-is called directly.
+`xy/project_to_json.py` now emits an editable `sound_state` section plus
+decoded-image diagnostics under `_decoded_global_state` and
+`_decoded_track_state`. The editable section carries master EQ, engine params,
+envelope blocks, filter knobs, sends, pinned LFO lanes, and mixer pan/volume.
+The underscore-prefixed diagnostics keep byte offsets and candidate regions for
+inspection; they are ignored by the BuildSpec parser.
 
 ### `build_arrangement` (multi-pattern / scenes / songs)
 

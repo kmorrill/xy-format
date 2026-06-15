@@ -26,6 +26,17 @@ This repo now has a JSON-to-`.xy` compile path via:
   - pass through `descriptor_strategy` (`strict` or `heuristic_v1`) for multi-pattern form.
 - Optional header patch:
   - `tempo_tenths`, `groove_type`, `groove_amount`, `metronome_level`.
+- Optional `sound_state` patch:
+  - `master_eq.low/mid/high`.
+  - Per-track `engine_id`, `engine_params.param1..param4`,
+    `amp_envelope.attack/decay/sustain/release`,
+    `m2_shift.play_mode/portamento/pitch_bend_range/engine_volume`,
+    `filter.type/enabled/cutoff/resonance/env_amount/key_tracking`,
+    `sends.ext/tape/fx1/fx2`, `lfo_current.cc40/cc41`,
+    `filter_envelope.attack/decay/sustain/release`, and
+    `mix.pan/volume`.
+  - Values are raw decoded-image u32 lanes unless noted (`engine_id`,
+    `filter.type`, and `filter.enabled`).
 - `project_to_json` also emits underscore-prefixed diagnostic sections:
   - `_decoded_global_state` for decoded-image master EQ and candidate master
     mix bytes.
@@ -33,7 +44,8 @@ This repo now has a JSON-to-`.xy` compile path via:
     amp/filter envelopes, filter knobs, M2 shift lanes, sends, pinned LFO
     current lanes, and mixer pan/volume.
   - These diagnostics are ignored by `parse_build_spec`; they are for
-    inspection/debugging until promoted into validated editable spec fields.
+    inspection/debugging and for preserving offset context alongside editable
+    `sound_state`.
 
 ## Profiles (required on new specs)
 
@@ -50,6 +62,7 @@ the authoritative registry.
 | `bootstrap_t1_t8_p9` | 8-track × 9-pattern strict topology from `unnamed 1`/`j06`. Safe mitigation for sparse-topology crashes. | `docs/issues/sparse_topology_stability.md` |
 | `scene_song_tokens` | Pre-track and Track16 token patches for scene/song control. Scaffold must have matching pre-track shape. | `docs/format/scenes_songs.md` §§4–6 |
 | `scene_assignments` | Scene pattern-map / song arrangement rewrite on a decoded scene-family scaffold (tag-record or matrix). | `docs/format/scenes_songs.md` §§15, 17; `xy/scene_patcher.py` |
+| `sound_state` | Decoded-image sound-state patch with no note/scene changes. May also be included alongside note/scene profiles. | `docs/format/decoded_image_map.md`; current-lane tests in `tests/test_image_writer.py` |
 
 ### Migrating legacy specs
 
@@ -80,7 +93,5 @@ inserts `"profile": "…"` immediately after `"mode"`.
 
 ## Near-Term Extensions
 - Add optional event-type override only where backed by preset evidence.
-- Promote validated decoded-image sound fields (`set_m2_shift`, `set_sends`,
-  `set_lfo_current`, `set_track_mix`) into first-class JSON spec patches.
 - Add step-component/p-lock sections once pointer-tail decode reaches stable coverage.
 - Add scaffold presets so agents can select topology-safe templates by name.

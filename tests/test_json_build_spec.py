@@ -19,6 +19,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from xy.container import XYContainer, XYProject
+from xy.image_writer import ImageProject
 from xy.json_build_spec import (
     build_xy_bytes,
     load_build_spec,
@@ -63,6 +64,17 @@ def _nine_patterns(notes_by_pattern: dict[int, list[dict]]) -> list[object]:
     for pattern_idx, notes in notes_by_pattern.items():
         patterns[pattern_idx - 1] = notes
     return patterns
+
+
+def _track_u32(raw: bytes, track: int, offset: int) -> int:
+    project = ImageProject.from_bytes(raw)
+    start = project.track_start(track)
+    return int.from_bytes(project.image[start + offset : start + offset + 4], "little")
+
+
+def _global_u32(raw: bytes, offset: int) -> int:
+    project = ImageProject.from_bytes(raw)
+    return int.from_bytes(project.image[offset : offset + 4], "little")
 
 
 def test_one_pattern_per_track_compiles_and_activates_track() -> None:
@@ -1003,3 +1015,111 @@ def test_header_patch_applies_all_supported_fields() -> None:
     assert container.header.groove_type == 2
     assert container.header.groove_amount == 77
     assert container.header.metronome_level == 64
+
+
+def test_sound_state_profile_applies_decoded_track_fields() -> None:
+    spec = parse_build_spec(
+        {
+            "version": 1,
+            "mode": "multi_pattern",
+            "template": TEMPLATE_REL,
+            "profile": "sound_state",
+            "sound_state": {
+                "master_eq": {"low": 0, "mid": 0x12345678},
+                "tracks": [
+                    {
+                        "track": 3,
+                        "engine_id": 0x12,
+                        "engine_params": {"param1": 0x01020304, "param4": 0x05060708},
+                        "amp_envelope": {"attack": 0x11111111},
+                        "m2_shift": {"engine_volume": 0x22222222},
+                        "filter": {
+                            "type": 2,
+                            "enabled": False,
+                            "cutoff": 0x33333333,
+                            "resonance": 0x44444444,
+                        },
+                        "sends": {"fx1": 0x55555555},
+                        "lfo_current": {"cc40": 0x66666666},
+                        "filter_envelope": {"release": 0x77777777},
+                        "mix": {"pan": 0x7FFFFFFF, "volume": 0x64C99326},
+                    }
+                ],
+            },
+        },
+        base_dir=ROOT,
+    )
+
+    raw = build_xy_bytes(spec)
+    project = ImageProject.from_bytes(raw)
+    t3 = project.track_start(3)
+
+    assert _global_u32(raw, 0x68) == 0
+    assert _global_u32(raw, 0x6C) == 0x12345678
+    assert project.image[t3 + 0x14] == 0x12
+    assert project.image[t3 + 0x21] == 2
+    assert project.image[t3 + 0x25] == 0
+    assert _track_u32(raw, 3, 0x3857) == 0x01020304
+    assert _track_u32(raw, 3, 0x3863) == 0x05060708
+    assert _track_u32(raw, 3, 0x3877) == 0x11111111
+    assert _track_u32(raw, 3, 0x3893) == 0x22222222
+    assert _track_u32(raw, 3, 0x3897) == 0x33333333
+    assert _track_u32(raw, 3, 0x389B) == 0x44444444
+    assert _track_u32(raw, 3, 0x38AF) == 0x55555555
+    assert _track_u32(raw, 3, 0x38B7) == 0x66666666
+    assert _track_u32(raw, 3, 0x38E3) == 0x77777777
+    assert _track_u32(raw, 3, 0x38F7) == 0x7FFFFFFF
+    assert _track_u32(raw, 3, 0x38FB) == 0x64C99326
+
+
+def test_sound_state_can_overlay_single_pattern_notes() -> None:
+    spec = parse_build_spec(
+        {
+            "version": 1,
+            "mode": "multi_pattern",
+            "profile": "single_pattern_notes",
+            "template": TEMPLATE_REL,
+            "tracks": [_minimal_track_spec(3)],
+            "sound_state": {
+                "tracks": [
+                    {"track": 3, "mix": {"volume": 0x7FFFFFFF}},
+                ],
+            },
+        },
+        base_dir=ROOT,
+    )
+
+    raw = build_xy_bytes(spec)
+    project = XYProject.from_bytes(raw)
+
+    assert project.tracks[2].type_byte == 0x07
+    assert b"\x21\x01" in project.tracks[2].body
+    assert _track_u32(raw, 3, 0x38FB) == 0x7FFFFFFF
+
+
+def test_sound_state_rejects_unknown_keys_and_bad_values() -> None:
+    with pytest.raises(ValueError, match="sound_state.tracks\\[0\\].mix.loudness"):
+        parse_build_spec(
+            {
+                "version": 1,
+                "mode": "multi_pattern",
+                "template": TEMPLATE_REL,
+                "sound_state": {
+                    "tracks": [{"track": 3, "mix": {"loudness": 1}}],
+                },
+            },
+            base_dir=ROOT,
+        )
+
+    with pytest.raises(ValueError, match="sound_state.tracks\\[0\\].mix.volume"):
+        parse_build_spec(
+            {
+                "version": 1,
+                "mode": "multi_pattern",
+                "template": TEMPLATE_REL,
+                "sound_state": {
+                    "tracks": [{"track": 3, "mix": {"volume": 0x1_0000_0000}}],
+                },
+            },
+            base_dir=ROOT,
+        )
