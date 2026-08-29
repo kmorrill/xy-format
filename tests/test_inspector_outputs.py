@@ -15,6 +15,7 @@ INSPECTOR = ROOT / "tools" / "inspect_xy.py"
 CHANGE_LOG = ROOT / "src" / "one-off-changes-from-default" / "op-xy_project_change_log.md"
 DATA_DIR = ROOT / "src" / "one-off-changes-from-default"
 BASELINE_FILE = DATA_DIR / "unnamed 1.xy"
+SONG_FIXTURE = DATA_DIR / "unnamed 155.xy"
 MIXER_PROBES = ROOT / "src" / "mixer-probes" / "2026-06-static"
 SCENE_VOLUME_PROBES = ROOT / "src" / "scene-probes" / "2026-06-volumes"
 PROJECT_CONFIG_PROBES = ROOT / "src" / "project-config-probes" / "2026-06-project-config"
@@ -95,6 +96,16 @@ ALL_CASES = list(change_log_cases())
 
 BASELINE_CODE, BASELINE_OUT, BASELINE_ERR = _run_inspector(BASELINE_FILE)
 assert BASELINE_CODE == 0, f"Baseline inspector run failed: {BASELINE_ERR}"
+
+
+def test_inspector_reports_all_song_footer_slots_and_nondefault_chain():
+    code, output, err = _run_inspector(SONG_FIXTURE)
+
+    assert code == 0, err
+    song_lines = [line for line in output.splitlines() if line.startswith("  Song ")]
+    assert len(song_lines) == 14
+    assert "Song 02: scenes=1→2→3 loop=on raw=0x00 reserved=0x00" in output
+    assert "Song 14: scenes=1 loop=on raw=0x00 reserved=0x00" in output
 
 
 @pytest.mark.parametrize("case", ALL_CASES, ids=lambda case: case["label"])

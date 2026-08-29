@@ -303,6 +303,8 @@ class ImageProject:
     GLOBAL_SAT_CLIP = 0x79
     GLOBAL_SAT_TONE = 0x7D
     GLOBAL_SAT_MIX = 0x81
+    SONG_SLOT_COUNT = 14
+    SONG_MAX_CHAIN = 96
 
     @staticmethod
     def _u32(value: int, *, where: str = "value") -> bytes:
@@ -336,6 +338,56 @@ class ImageProject:
         if not 1 <= song <= 14:
             raise ValueError("active song must be 1..14")
         self.image[self.GLOBAL_ACTIVE_SONG] = song - 1
+
+    def _footer_start(self) -> int:
+        patterns = pattern_starts_from_image(
+            self.image, track_base_from_header(self.header)
+        )
+        if not patterns:
+            raise ValueError("could not locate song footer after Track 16")
+        last = patterns[-1]
+        return last + TRACK_STRIDE + self.image[last + OFF_NOTE_COUNT] * NOTE_SIZE
+
+    def _song_slot_length_at(self, offset: int) -> int:
+        if not 0 <= offset < len(self.image):
+            raise ValueError("song footer ends before the requested slot")
+        count = self.image[offset]
+        length = 1 + count + 2
+        if count > self.SONG_MAX_CHAIN or offset + length > len(self.image):
+            raise ValueError("song footer slot is not structurally valid")
+        return length
+
+    def _song_slot_offset(self, song: int) -> int:
+        if not 1 <= song <= self.SONG_SLOT_COUNT:
+            raise ValueError(f"song must be 1..{self.SONG_SLOT_COUNT}")
+        offset = self._footer_start()
+        for _ in range(1, song):
+            offset += self._song_slot_length_at(offset)
+        self._song_slot_length_at(offset)
+        return offset
+
+    def get_song_chain(self, song: int = 1) -> tuple[list[int], bool]:
+        """Return a 0-based scene chain and loop state for one song slot."""
+        offset = self._song_slot_offset(song)
+        count = self.image[offset]
+        chain = list(self.image[offset + 1 : offset + 1 + count])
+        return chain, self.image[offset + 1 + count] == 0
+
+    def set_song_chain(
+        self, song: int, scene_chain: list[int], *, loop: bool = True
+    ) -> None:
+        """Rewrite any of the 14 variable-length song footer slots."""
+        if len(scene_chain) > self.SONG_MAX_CHAIN:
+            raise ValueError(
+                f"OP-XY songs support at most {self.SONG_MAX_CHAIN} scenes"
+            )
+        if any(not 0 <= scene < 99 for scene in scene_chain):
+            raise ValueError("song scene ids must be 0..98")
+        offset = self._song_slot_offset(song)
+        old_length = self._song_slot_length_at(offset)
+        slot = bytes([len(scene_chain), *scene_chain, 0 if loop else 1, 0])
+        self.image[offset : offset + old_length] = slot
+        self._rescan()
 
     def set_scene_length_mode(self, mode: int) -> None:
         if mode not in (0, 1, 2):

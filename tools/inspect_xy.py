@@ -49,6 +49,7 @@ from xy.scene_volume_inspection import (  # noqa: E402
     inspect_scene_volumes_bytes,
     read_scene_muted_tracks,
 )
+from xy.song_footer_inspection import inspect_song_footer  # noqa: E402
 from xy.preset_path_inspection import inspect_preset_paths_bytes  # noqa: E402
 from xy.project_config_inspection import inspect_project_config_bytes  # noqa: E402
 from xy.project_inspection import inspect_project_bytes  # noqa: E402
@@ -1878,6 +1879,21 @@ def generate_report(path: Path, data: bytes) -> str:
         if mute_lines:
             lines.append("[Scene Mutes]")
             lines.extend(mute_lines)
+            lines.append("")
+
+        try:
+            song_slots = inspect_song_footer(scene_project)
+        except ValueError:
+            song_slots = ()
+        if song_slots:
+            lines.append("[Song Footer]")
+            for slot in song_slots:
+                scenes = "→".join(str(scene) for scene in slot.scene_chain) or "-"
+                loop = "on" if slot.loop else "off"
+                lines.append(
+                    f"  Song {slot.song:02d}: scenes={scenes} loop={loop} "
+                    f"raw=0x{slot.loop_raw:02X} reserved=0x{slot.reserved:02X}"
+                )
             lines.append("")
 
     try:

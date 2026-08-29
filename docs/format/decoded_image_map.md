@@ -117,7 +117,7 @@ Engine swaps are size-preserving (param block fixed-size, u34).
 ## Footer (firmware-dependent, ends at EOF)
 
 The 14-slot song table (`record_structure.md` §5):
-`[scene_count][scene_ids...][loop_word]` per song; song 2/3 edits land at
+`[scene_count][scene_ids...][loop][reserved]` per song; song 2/3 edits land at
 FOOTER+0x2/+0xA (u149, u151–153).
 
 ## Method

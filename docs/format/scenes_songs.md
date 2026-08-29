@@ -44,19 +44,27 @@ canonically.
 scene_mutes=[[muted_track, ...], ...]
 ```
 
-## Song 1 Chain
+## Song Footer
 
-The song footer stores fixed-size song slots. The current writer supports Song
-1 chaining via:
+The footer stores 14 variable-length song slots:
+
+```text
+[scene count][0-based scene IDs...][loop byte][reserved byte]
+```
+
+The device fixtures establish `0` as loop on, `1` as loop off, and `0` for the
+reserved byte. `ImageProject.get_song_chain(song)` reads any slot and
+`set_song_chain(song, ...)` rewrites it while preserving following slots.
+
+The arrangement builder supports Song 1 chaining via:
 
 ```python
 song_chain=[scene_id, ...]
 song_loop=True
 ```
 
-The first byte is the chain length, followed by 0-based scene IDs and loop
-control bytes. The user guide advertises fewer visible songs than the footer
-capacity; visible-slot reconciliation remains a minor limit/documentation item.
+The user guide advertises fewer visible songs than the 14 serialized slots;
+visible-slot reconciliation remains a minor limit/documentation item.
 
 ## Validation
 

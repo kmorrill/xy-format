@@ -150,7 +150,8 @@ On firmware `0x11`/`0x13`, the file ends with a **14-slot song table**
 runs exactly to EOF:
 
 ```
-song_slot := [scene_count u8][scene_idx u8 × count (0-based)][loop_word 2B]
+song_slot := [scene_count u8][scene_idx u8 × count (0-based)]
+             [loop u8: 0=on, 1=off][reserved u8: 0]
 empty        00 00 00         (zero scenes plus loop u16)
 ```
 
