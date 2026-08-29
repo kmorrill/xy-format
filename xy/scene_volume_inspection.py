@@ -10,6 +10,7 @@ from .image_writer import (
     SCENE_SLOT0,
     SCENE_SLOT_SIZE,
     pattern_starts_from_image,
+    track_base_from_header,
 )
 
 SCENE_MUTE_OFFSET = 16  # within 33-byte scene slot
@@ -103,7 +104,9 @@ def inspect_scene_volumes_bytes(data: bytes) -> SceneVolumeInspection:
 
 def inspect_scene_volumes(project: ImageProject) -> SceneVolumeInspection:
     img = project.image
-    storage_starts = pattern_starts_from_image(img)
+    storage_starts = pattern_starts_from_image(
+        img, track_base_from_header(project.header)
+    )
     if len(storage_starts) < 16:
         storage_starts = [project.track_start(track) for track in range(1, 17)]
     master_u32 = int.from_bytes(
@@ -141,7 +144,9 @@ def read_scene_track_volume(
     project: ImageProject, scene: int, track: int
 ) -> TrackMixVolume:
     storage = scene_volume_storage_track(scene, track)
-    storage_starts = pattern_starts_from_image(project.image)
+    storage_starts = pattern_starts_from_image(
+        project.image, track_base_from_header(project.header)
+    )
     if not storage_starts:
         storage_starts = [project.track_start(t) for t in range(1, 17)]
     if storage > len(storage_starts):

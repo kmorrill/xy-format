@@ -5,7 +5,13 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Literal
 
-from .image_writer import TRACK_STRIDE, pattern_starts_from_image
+from .image_writer import (
+    MAX_PATTERNS_PER_TRACK,
+    TRACK_BASE0,
+    TRACK_STRIDE,
+    pattern_starts_from_image,
+    track_base_from_header,
+)
 from .rle import decode_project
 
 
@@ -83,12 +89,14 @@ class ProjectInspection:
 
 
 def inspect_project_bytes(data: bytes) -> ProjectInspection:
-    _header, image = decode_project(data)
-    return inspect_project_image(image)
+    header, image = decode_project(data)
+    return inspect_project_image(image, track_base=track_base_from_header(header))
 
 
-def inspect_project_image(image: bytes) -> ProjectInspection:
-    starts = pattern_starts_from_image(image)
+def inspect_project_image(
+    image: bytes, *, track_base: int = TRACK_BASE0
+) -> ProjectInspection:
+    starts = pattern_starts_from_image(image, track_base)
     tracks: list[TrackInspection] = []
     cursor = 0
 
@@ -99,7 +107,7 @@ def inspect_project_image(image: bytes) -> ProjectInspection:
 
         leader_start = starts[cursor]
         pattern_count = image[leader_start] if leader_start < len(image) else 0
-        if not 1 <= pattern_count <= 9:
+        if not 1 <= pattern_count <= MAX_PATTERNS_PER_TRACK:
             pattern_count = 1
 
         track_starts = starts[cursor : cursor + pattern_count]
