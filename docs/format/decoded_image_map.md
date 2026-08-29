@@ -204,15 +204,37 @@ Per-step lock rows at **track+0x2A0**, **84 bytes per step** (×64),
 cell(step, param) = track + 0x2A0 + 84·(step−1) + 2·param_col
 ```
 
-**Automation requires flags** (decoded 2026-06-10 from `unnamed 35` +
-device-passed `plock_drum_t2`). The value cell alone is inert; the
-firmware also reads:
-- per-step active flag at `track+0x2C4E + 8·(step−1)` = `0x01` — GLOBAL
-  per step (any param; param1 and param2 captures share these offsets),
+**Automation requires masks** (decoded from `unnamed 35`, `unnamed 115`,
+and the CC capture series `unnamed 121`–`126`). The value cell alone is
+inert; the firmware also reads:
+- an 8-byte per-step lane mask at `track+0x2C4E + 8·(step−1)`. Value-table
+  columns 1–41 map to mask bits 0–40; column 0 (volume) maps to bit 41,
 - a per-track master flag at `track+0x304E` = `0x01`.
 `ImageProject.automate_param()` / `set_plock()` write all three.
 (A UI current-value header at `track+0x24C + 2·col` and the resting
 engine value mirror the lane but are cosmetic, not needed for playback.)
+
+Firmware 1.1.25 native sequence-shift captures establish that the 64×84
+value table behaves as a sparse carry/cache curve, not as 64 ordinary rows
+that can be rotated destructively. Entering a Step 7 value of `0x7000` also
+wrote `0x6FFF` into the unarmed Step 6 cell. Shifting the sequence left copied
+those values into Steps 5 and 6 while retaining Step 7's `0x7000`; only the
+lane mask moved from Step 7 to Step 6. The firmware also cleared the
+lane's UI current-value cache. Accordingly, `set_plock()` seeds the predecessor
+carry cell and `rotate_pattern()` copies non-zero curve cells to their shifted
+destinations without clearing their sources, while rotating lane-mask and
+step-component rows normally.
+
+The curve has a non-circular boundary at Step 1. A firmware 1.1.25 Track 3
+synth-engine control showed that Step 1 reads the lane current-value cache;
+wrapping a synthetic predecessor into the pattern's final step made the source
+display `0` while the shifted Step 2 destination displayed `12`. Device-native
+right-shift bytes likewise retain `0x1000` in Steps 1 and 2 with no final-step
+carry. `set_plock()` therefore writes the current-value cache for every newly
+authored lock, but only seeds a predecessor row for Steps 2–64. A corrected
+four-pattern project then passed all Track 3 front-panel checks: `12` at the
+Step 1 source and shifted Step 2 destination, and `87` at the Step 7 source
+and shifted Step 6 destination.
 
 Verified with the device-passed `plock_drum_t2.xy` (alternating
 256/32767 on known steps, uniform 84 stride) and the cc_map captures.

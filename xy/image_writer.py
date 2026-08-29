@@ -1170,45 +1170,195 @@ class ImageProject:
         self.image[s : s + len(data)] = data
         self.mark_edited(track)
 
-    def set_step_component(self, track: int, step: int, component: str, value: int) -> None:
+    def set_step_component(
+        self,
+        track: int,
+        step: int,
+        component: str,
+        value: int,
+        *,
+        pattern: int = 1,
+    ) -> None:
         """Enable a step component (1-based step) and set its value byte."""
         bit = self.STEP_COMPONENTS[component]
-        s = self.track_start(track) + self.TRK_STEPCOMP + (step - 1) * 16
+        s = self.pattern_start(track, pattern) + self.TRK_STEPCOMP + (step - 1) * 16
         mask = int.from_bytes(self.image[s : s + 2], "little") | (1 << bit)
         self.image[s : s + 2] = mask.to_bytes(2, "little")
         self.image[s + 2 + bit] = value & 0xFF
-        self.mark_edited(track)
+        self.mark_pattern_edited(track, pattern)
 
-    def clear_step_components(self, track: int, step: int) -> None:
-        s = self.track_start(track) + self.TRK_STEPCOMP + (step - 1) * 16
+    def clear_step_components(self, track: int, step: int, *, pattern: int = 1) -> None:
+        s = self.pattern_start(track, pattern) + self.TRK_STEPCOMP + (step - 1) * 16
         self.image[s : s + 16] = b"\x00" * 16
-        self.mark_edited(track)
+        self.mark_pattern_edited(track, pattern)
 
-    # Automation requires more than the value cell: the firmware reads a
-    # per-step "this step has automation" flag (GLOBAL per step, not per
-    # param — confirmed across unnamed 35 param1 and plock_drum_t2 param2)
-    # and a per-track master flag, or the value lane is inert.
-    PLOCK_STEP_FLAG = 0x2C4E   # +8*(step-1), value 0x01
+    # Automation requires more than the value cell: the firmware reads an
+    # eight-byte per-step lane mask and a per-track master flag, or the value
+    # lane is inert. Value-table column 1 maps to mask bit 0, through column 41
+    # to bit 40; the volume lane in column 0 maps to bit 41.
+    PLOCK_CURRENT = 0x024C     # +2*column, UI current-value cache
+    PLOCK_STEP_MASK = 0x2C4E   # +8*(step-1), 42-bit lane mask
+    PLOCK_STEP_FLAG = PLOCK_STEP_MASK  # compatibility alias
     PLOCK_MASTER = 0x304E      # 0x01 once per automated track
 
-    def set_plock(self, track: int, step: int, param: str, value: int) -> None:
+    @staticmethod
+    def _plock_mask_bit(column: int) -> int:
+        return 41 if column == 0 else column - 1
+
+    def set_plock(
+        self,
+        track: int,
+        step: int,
+        param: str,
+        value: int,
+        *,
+        pattern: int = 1,
+    ) -> None:
         """Lock `param` to `value` (u16) on `step` (1-based). Also arms the
         per-step + master automation flags so the lock actually plays."""
-        s = self.track_start(track)
+        s = self.pattern_start(track, pattern)
         off = self.PLOCK_PARAMS[param]
+        column = off // 2
+        mask_bit = self._plock_mask_bit(column)
         cell = s + self.TRK_PLOCK + (step - 1) * 84 + off
-        self.image[cell : cell + 2] = (value & 0xFFFF).to_bytes(2, "little")
-        self.image[s + self.PLOCK_STEP_FLAG + (step - 1) * 8] = 0x01
-        self.image[s + self.PLOCK_MASTER] = 0x01
-        self.mark_edited(track)
+        active_steps = self.image[s + OFF_PATTERN_STEPS]
+        if not 1 <= step <= active_steps:
+            raise ValueError(f"p-lock step must be in 1..{active_steps}")
 
-    def automate_param(self, track: int, param: str, step_values: dict[int, int]) -> None:
+        raw_value = value & 0xFFFF
+
+        # A grid-entered lock after step 1 also leaves a carry value on the
+        # preceding unarmed step.  The firmware consults this sparse curve
+        # when displaying/playing the armed destination.  Step 1 is the
+        # non-circular boundary: it uses the lane's current-value cache and
+        # does not wrap a carry into the pattern's last step.  Firmware 1.1.25
+        # capture: step 7 = 0x7000, preceding step 6 = 0x6FFF.
+        if step > 1:
+            previous_step = step - 1
+            previous_cell = s + self.TRK_PLOCK + (previous_step - 1) * 84 + off
+            previous_mask_start = (
+                s + self.PLOCK_STEP_MASK + (previous_step - 1) * 8
+            )
+            previous_mask = int.from_bytes(
+                self.image[previous_mask_start : previous_mask_start + 8],
+                "little",
+            )
+            previous_value = self.image[previous_cell : previous_cell + 2]
+            previous_lane_armed = previous_mask & (1 << mask_bit)
+            if not previous_lane_armed and previous_value == b"\x00\x00":
+                carry = max(0, raw_value - 1)
+                self.image[previous_cell : previous_cell + 2] = carry.to_bytes(
+                    2, "little"
+                )
+
+        self.image[cell : cell + 2] = raw_value.to_bytes(2, "little")
+        current = s + self.PLOCK_CURRENT + off
+        self.image[current : current + 2] = raw_value.to_bytes(2, "little")
+        mask_byte = s + self.PLOCK_STEP_MASK + (step - 1) * 8 + mask_bit // 8
+        self.image[mask_byte] |= 1 << (mask_bit % 8)
+        self.image[s + self.PLOCK_MASTER] = 0x01
+        self.mark_pattern_edited(track, pattern)
+
+    def automate_param(
+        self,
+        track: int,
+        param: str,
+        step_values: dict[int, int],
+        *,
+        pattern: int = 1,
+    ) -> None:
         """Automate `param` across steps. `step_values` maps 1-based step ->
-        u16 value. Writes the value lane + per-step flags + master flag —
+        u16 value. Writes the value lane + per-step mask + master flag —
         the device automation structure (matches unnamed 35 / plock_drum_t2).
         Values are the device's internal fixed-point (e.g. 0..0x7FFF)."""
         for step, v in step_values.items():
-            self.set_plock(track, step, param, v)
+            self.set_plock(track, step, param, v, pattern=pattern)
+
+    def rotate_pattern(self, track: int, steps: int, *, pattern: int = 1) -> None:
+        """Rotate triggers, p-locks, and components as one coherent pattern.
+
+        Positive values rotate right/later; negative values rotate left/earlier.
+        Only active steps participate, so inactive rows beyond a shortened
+        pattern keep their preserved device state.
+        """
+        if not isinstance(steps, int) or isinstance(steps, bool):
+            raise TypeError("rotation steps must be an integer")
+        s = self.pattern_start(track, pattern)
+        active_steps = self.image[s + OFF_PATTERN_STEPS]
+        if not 1 <= active_steps <= 64:
+            raise ValueError("pattern length must be 1..64 steps")
+        shift = steps % active_steps
+        if shift == 0:
+            return
+
+        pattern_ticks = active_steps * STEP_TICKS
+        count = self.image[s + OFF_NOTE_COUNT]
+        note_start = s + OFF_NOTE_COUNT + 1
+        records: list[bytes] = []
+        for index in range(count):
+            offset = note_start + index * NOTE_SIZE
+            record = bytearray(self.image[offset : offset + NOTE_SIZE])
+            tick = int.from_bytes(record[0:4], "little", signed=True)
+            rotated_tick = (tick + steps * STEP_TICKS) % pattern_ticks
+            record[0:4] = rotated_tick.to_bytes(4, "little")
+            records.append(bytes(record))
+        records.sort(key=lambda record: int.from_bytes(record[0:4], "little"))
+        self.image[note_start : note_start + count * NOTE_SIZE] = b"".join(records)
+
+        def rotate_rows(relative: int, row_size: int) -> None:
+            begin = s + relative
+            rows = [
+                bytes(
+                    self.image[
+                        begin + index * row_size : begin + (index + 1) * row_size
+                    ]
+                )
+                for index in range(active_steps)
+            ]
+            rotated = rows[-shift:] + rows[:-shift]
+            self.image[begin : begin + active_steps * row_size] = b"".join(rotated)
+
+        # P-lock values form a sparse carry/cache curve rather than ordinary
+        # step rows.  A native OP-XY sequence shift copies each non-zero cell
+        # to its shifted destination but does not clear the source cell.  The
+        # separately rotated lane masks decide which cells are actual locks.
+        # An armed zero is a real value and must overwrite its destination;
+        # unarmed zero cells remain empty so they do not erase retained carry.
+        plock_begin = s + self.TRK_PLOCK
+        plock_rows = [
+            bytes(
+                self.image[
+                    plock_begin + index * 84 : plock_begin + (index + 1) * 84
+                ]
+            )
+            for index in range(active_steps)
+        ]
+        armed_columns: set[int] = set()
+        for index, row in enumerate(plock_rows):
+            destination = (index + shift) % active_steps
+            destination_start = plock_begin + destination * 84
+            mask_start = s + self.PLOCK_STEP_MASK + index * 8
+            lane_mask = int.from_bytes(
+                self.image[mask_start : mask_start + 8], "little"
+            )
+            for column in range(42):
+                value = row[column * 2 : column * 2 + 2]
+                armed = lane_mask & (1 << self._plock_mask_bit(column))
+                if value != b"\x00\x00" or armed:
+                    target = destination_start + column * 2
+                    self.image[target : target + 2] = value
+                    if armed:
+                        armed_columns.add(column)
+
+        # Native sequence shift clears the per-lane UI current-value cache;
+        # the shifted sparse curve remains authoritative.
+        for column in armed_columns:
+            current = s + self.PLOCK_CURRENT + column * 2
+            self.image[current : current + 2] = b"\x00\x00"
+
+        rotate_rows(self.PLOCK_STEP_MASK, 8)
+        rotate_rows(self.TRK_STEPCOMP, 16)
+        self.mark_pattern_edited(track, pattern)
 
     # --- drum-voice parameters (decoded from device capture + manual) -----
     # 24 voice slots, 128 B each, at track+0x3957 (the drum sampler table).

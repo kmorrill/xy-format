@@ -141,6 +141,7 @@ Field offsets: `docs/format/decoded_image_map.md`.
 
 - [x] 64×84-byte table, 42 u16 columns — `xy/plocks.py`
 - [x] Param name → column mapping (vol, params, ADSR, sends, LFO, pan, …) — `PLOCK_PARAMS`, `ImageProject.set_plock`
+- [x] 8-byte per-step lane mask; columns 1–41 → bits 0–40, volume column 0 → bit 41 — `ImageProject.set_plock`
 - [x] Automation across steps — `ImageProject.automate_param`
 - [~] Static current-value offsets for mix params (vs p-lock-only) — partial — `docs/format/opxy_user_guide_save_audit.md` § Mix
 
