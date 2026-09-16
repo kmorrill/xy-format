@@ -61,7 +61,7 @@ Each baseline track/pattern struct is `0x45D4` bytes before note-vector growth.
 | `+0x0026..+0x029F` | 634 | opaque | `track.low_preset_state`: low preset/track state copied by `set_preset`; likely play mode, width, portamento, bend range, engine switches, routing defaults, UI mirrors. |
 | `+0x02A0..+0x179F` | 5,376 | decoded | P-lock value rows: 64 steps x 84 bytes, 42 u16 parameter columns per row. |
 | `+0x17A0..+0x2C4D` | 5,294 | mostly empty | `track.post_plock_value_gap`: almost always zero; sparse nonzero bytes cluster near `+0x2BFE/+0x2C06/...` every 8 bytes, suggesting p-lock fringe state rather than a large unknown payload. |
-| `+0x2C4E..+0x304D` | 1,024 | partial | P-lock activation/mask slab. First byte every 8 bytes is the known per-step active flag. Remaining bytes likely parameter masks, selected lane state, or inactive-lane flags. |
+| `+0x2C4E..+0x304D` | 1,024 | partial | P-lock lane-mask slab. Each step has an 8-byte mask: value columns 1–41 map to bits 0–40 and volume column 0 maps to bit 41. The remaining 22 bits are unassigned. |
 | `+0x304E..+0x304E` | 1 | decoded | P-lock master flag. |
 | `+0x304F..+0x3056` | 8 | opaque | `track.post_plock_master_gap`: likely automation summary bytes or selected p-lock lane state. |
 | `+0x3057..+0x3456` | 1,024 | decoded | Step components: 64 slots x 16 bytes. |

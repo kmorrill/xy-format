@@ -137,7 +137,7 @@ track unless noted.
 | --- | --- | --- | --- |
 | `+0x024C` | 2×cols | **ui** | P-lock “current value” header (cosmetic) |
 | `+0x02A0` | 64×84 | **x** | P-lock table (64 steps × 42 u16 cols) | `xy/plocks.py` |
-| `+0x2C4E` | 8×64 | **x** | Per-step automation active flags |
+| `+0x2C4E` | 8×64 | **x** | Per-step p-lock lane masks (42 assigned bits) |
 | `+0x304E` | 1 | **x** | Track automation master flag |
 | `+0x3056` | 1 | **x** | Bar-menu p-lock interpolation/shape raw byte | BAR `bar-s-*` |
 | `+0x3057` | 64×16 | **x** | Step-component slots (14 types × **64** steps; ends `+0x3456`) | `step_components.py` |

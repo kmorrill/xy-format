@@ -12,6 +12,22 @@ Format per entry: **Settled** (corpus/device-validated), **Believed**
 
 ---
 
+## 2026-08-29 — P-lock activation slab decoded as per-lane masks
+
+### Settled
+
+- Each step's eight bytes at track `+0x2C4E + 8·(step−1)` form a
+  little-endian lane mask, not one global active flag. Value-table columns
+  1–41 map to bits 0–40; the volume lane in column 0 maps to bit 41.
+- The mask distinguishes an armed raw-zero p-lock from an empty zero cell.
+  Rotation must copy an armed zero to its destination while leaving unrelated
+  zero cells untouched.
+
+Evidence: grid and MIDI capture masks in `unnamed 35`, `unnamed 115`, and
+`unnamed 121`–`126` align with their populated value-table columns.
+
+---
+
 ## 2026-07-09 — Real-device corpus corrects the baseline-only model
 
 ### Settled

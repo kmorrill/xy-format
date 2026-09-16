@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from xy.image_writer import ImageProject
+from xy.image_writer import OFF_NOTE_COUNT, ImageProject, build_arrangement
 from xy.rle import decode_project, encode_project
 
 BASE = "src/one-off-changes-from-default/unnamed 1.xy"
@@ -275,6 +275,147 @@ def test_convenience_methods_replicate_device_captures(target, edit):
     assert p.to_bytes() == real(target)
 
 
+def test_rotate_pattern_moves_notes_plocks_components_and_flags_together():
+    p = ImageProject.from_file(BASE)
+    p.set_pattern_steps(1, 4)
+    p.add_note(1, step=1, note=60, velocity=90, gate=120)
+    p.add_note(1, step=4, note=64, velocity=91, gate=240)
+    p.set_plock(1, 1, "param1", 0x1111)
+    p.set_plock(1, 4, "param1", 0x4444)
+    p.set_step_component(1, 1, "pulse", 7)
+    p.set_step_component(1, 4, "hold", 8)
+
+    base = p.pattern_start(1)
+    inactive_start = base + p.TRK_STEPCOMP + 4 * 16
+    inactive_before = bytes(p.image[inactive_start : inactive_start + 16])
+    p.rotate_pattern(1, 1)
+
+    note_start = base + OFF_NOTE_COUNT + 1
+    notes = [
+        bytes(p.image[note_start + i * 12 : note_start + (i + 1) * 12])
+        for i in range(2)
+    ]
+    assert [(int.from_bytes(note[:4], "little"), note[8]) for note in notes] == [
+        (0, 64),
+        (480, 60),
+    ]
+    assert int.from_bytes(
+        p.image[base + p.TRK_PLOCK + 2 : base + p.TRK_PLOCK + 4], "little"
+    ) == 0x4444
+    assert int.from_bytes(
+        p.image[base + p.TRK_PLOCK + 86 : base + p.TRK_PLOCK + 88], "little"
+    ) == 0x1111
+    assert p.image[base + p.PLOCK_STEP_FLAG] == 1
+    assert p.image[base + p.PLOCK_STEP_FLAG + 8] == 1
+    assert p.image[base + p.TRK_STEPCOMP : base + p.TRK_STEPCOMP + 2] == b"\x02\x00"
+    assert p.image[base + p.TRK_STEPCOMP + 3] == 8
+    assert p.image[
+        base + p.TRK_STEPCOMP + 16 : base + p.TRK_STEPCOMP + 18
+    ] == b"\x01\x00"
+    assert p.image[base + p.TRK_STEPCOMP + 18] == 7
+    assert bytes(p.image[inactive_start : inactive_start + 16]) == inactive_before
+
+
+def test_plock_carry_curve_matches_firmware_sequence_shift() -> None:
+    """Firmware 1.1.25 keeps sparse p-lock carry cells during rotation."""
+    arranged = build_arrangement(
+        BASE,
+        {1: [[], {"steps": 8, "notes": [{"step": 7, "note": 69}]}]},
+    )
+    p = ImageProject.from_bytes(arranged)
+    p.set_plock(1, 7, "param1", 0x7000, pattern=2)
+
+    base = p.pattern_start(1, 2)
+
+    def param1(step: int) -> int:
+        cell = base + p.TRK_PLOCK + (step - 1) * 84 + 2
+        return int.from_bytes(p.image[cell : cell + 2], "little")
+
+    assert param1(6) == 0x6FFF
+    assert param1(7) == 0x7000
+
+    p.rotate_pattern(1, -1, pattern=2)
+
+    assert param1(5) == 0x6FFF
+    assert param1(6) == 0x7000
+    assert param1(7) == 0x7000
+    assert p.image[base + p.PLOCK_STEP_FLAG + 5 * 8] == 1
+    assert p.image[base + p.PLOCK_STEP_FLAG + 6 * 8] == 0
+    current = base + p.PLOCK_CURRENT + 2
+    assert p.image[current : current + 2] == b"\x00\x00"
+
+
+def test_step_one_plock_uses_current_boundary_without_wrap_carry() -> None:
+    """A Step 1 lock starts at the UI boundary, not the pattern's last row."""
+    arranged = build_arrangement(
+        BASE,
+        {3: [{"steps": 8, "notes": [{"step": 1, "note": 48}]}] * 2},
+    )
+    p = ImageProject.from_bytes(arranged)
+    for pattern in (1, 2):
+        p.set_plock(3, 1, "param1", 0x1000, pattern=pattern)
+
+    source = p.pattern_start(3, 1)
+    source_current = source + p.PLOCK_CURRENT + 2
+    source_last = source + p.TRK_PLOCK + 7 * 84 + 2
+    assert p.image[source_current : source_current + 2] == b"\x00\x10"
+    assert p.image[source_last : source_last + 2] == b"\x00\x00"
+
+    p.rotate_pattern(3, 1, pattern=2)
+    shifted = p.pattern_start(3, 2)
+    shifted_current = shifted + p.PLOCK_CURRENT + 2
+
+    def param1(step: int) -> int:
+        cell = shifted + p.TRK_PLOCK + (step - 1) * 84 + 2
+        return int.from_bytes(p.image[cell : cell + 2], "little")
+
+    assert param1(1) == 0x1000
+    assert param1(2) == 0x1000
+    assert param1(8) == 0
+    assert p.image[shifted_current : shifted_current + 2] == b"\x00\x00"
+
+
+def test_rotate_pattern_preserves_armed_zero_over_retained_cell() -> None:
+    p = ImageProject.from_file(BASE)
+    p.set_pattern_steps(1, 4)
+    p.set_plock(1, 1, "param2", 0)
+
+    base = p.pattern_start(1)
+    destination_row = base + p.TRK_PLOCK + 84
+    param1 = destination_row + p.PLOCK_PARAMS["param1"]
+    param2 = destination_row + p.PLOCK_PARAMS["param2"]
+    p.image[param1 : param1 + 2] = (0x1110).to_bytes(2, "little")
+    p.image[param2 : param2 + 2] = (0x2221).to_bytes(2, "little")
+
+    p.rotate_pattern(1, 1)
+
+    assert p.image[param1 : param1 + 2] == b"\x10\x11"
+    assert p.image[param2 : param2 + 2] == b"\x00\x00"
+    assert p.image[base + p.PLOCK_STEP_MASK + 8] == 0x02
+
+
+def test_rotate_pattern_supports_clones_and_negative_steps():
+    arranged = build_arrangement(
+        BASE,
+        {1: [[{"step": 1, "note": 60}], [{"step": 2, "note": 67}]]},
+    )
+    p = ImageProject.from_bytes(arranged)
+    p.set_plock(1, 2, "param2", 0x2222, pattern=2)
+    p.set_step_component(1, 2, "random", 9, pattern=2)
+    p.rotate_pattern(1, -1, pattern=2)
+
+    base = p.pattern_start(1, 2)
+    note = bytes(p.image[base + OFF_NOTE_COUNT + 1 : base + OFF_NOTE_COUNT + 13])
+    assert int.from_bytes(note[:4], "little") == 0
+    assert int.from_bytes(
+        p.image[base + p.TRK_PLOCK : base + p.TRK_PLOCK + 2], "little"
+    ) == 0
+    assert int.from_bytes(
+        p.image[base + p.TRK_PLOCK + 4 : base + p.TRK_PLOCK + 6], "little"
+    ) == 0x2222
+    assert p.image[base + p.TRK_STEPCOMP : base + p.TRK_STEPCOMP + 2] == b"\x40\x00"
+
+
 def test_m2_shift_current_lanes_match_cc_map_capture():
     cap = _decoded(real("unnamed 122.xy"))
     p = ImageProject.from_file(BASE)
@@ -357,7 +498,7 @@ def test_set_plock_writes_u16_cell():
 
 def test_automate_param_reproduces_device_capture_structure():
     """automate_param writes the device automation structure (value lane +
-    per-step flags + master) matching unnamed 35's param1 automation."""
+    per-step masks + master) matching unnamed 35's param1 automation."""
     from xy.rle import decode_project
     T3 = 0xD79 + 2 * 17876
     _, cap = decode_project(real("unnamed 35.xy"))
@@ -366,7 +507,7 @@ def test_automate_param_reproduces_device_capture_structure():
     p = ImageProject.from_file(BASE)
     p.automate_param(3, "param1", vals)
     _, ours = decode_project(p.to_bytes())
-    # value lane, per-step flags, master flag must match the capture
+    # Value lane, per-step masks, and master flag must match the capture.
     for k in range(16):
         cell = T3 + 0x2A0 + k * 84 + 2
         assert ours[cell:cell + 2] == cap[cell:cell + 2]
@@ -374,12 +515,14 @@ def test_automate_param_reproduces_device_capture_structure():
     assert ours[T3 + 0x304E] == cap[T3 + 0x304E] == 1
 
 
-def test_set_plock_arms_flags():
+def test_set_plock_arms_lane_mask_and_master():
     from xy.rle import decode_project
     p = ImageProject.from_file(BASE)
     p.set_plock(3, 5, "cutoff", 20000)
     _, img = decode_project(p.to_bytes())
     T3 = 0xD79 + 2 * 17876
     assert img[T3 + 0x2A0 + 4 * 84 + 34:T3 + 0x2A0 + 4 * 84 + 36] == (20000).to_bytes(2, "little")
-    assert img[T3 + 0x2C4E + 4 * 8] == 1   # step 5 flag
+    assert img[T3 + 0x2C4E + 4 * 8 : T3 + 0x2C4E + 4 * 8 + 8] == (
+        1 << 16
+    ).to_bytes(8, "little")  # step 5 cutoff lane mask
     assert img[T3 + 0x304E] == 1            # master

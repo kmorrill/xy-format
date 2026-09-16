@@ -73,6 +73,7 @@ p.set_track_block(track, offset, data)   # envelopes/filter/mod-routing blocks
 # per-step modifiers
 p.set_step_component(track, step, "pulse", value)   # 14 component names
 p.set_plock(track, step, "cutoff", value)           # ~30 param names
+p.rotate_pattern(track, 1, pattern=1)    # notes + p-locks + components together
 
 # drum voices (24)
 p.set_drum_voice(track, voice, path="/fat32/presets/drum/kit.preset/kick.wav",
@@ -103,7 +104,10 @@ Component names: `STEP_COMPONENTS`; p-lock param names: `PLOCK_PARAMS`.
 The M2 shift, send, LFO-current, and mix helpers write static/current u32
 lanes. They do not create automation. To create step automation, use
 `set_plock`/`automate_param`, which also writes the firmware's per-step and
-master automation flags.
+master automation flags and seeds the sparse predecessor carry cell used by
+firmware sequence shifts. Step 1 uses the lane current-value boundary rather
+than a wraparound predecessor. `rotate_pattern` preserves that carry/cache
+curve while moving the lock activation and step-component rows with the notes.
 
 ### `build_arrangement` (multi-pattern / scenes / songs)
 
