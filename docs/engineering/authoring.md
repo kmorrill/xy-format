@@ -174,3 +174,8 @@ The old scaffold, descriptor, preamble, event-type, profile, and velocity-nudge
 writer stack has been deleted. If a feature cannot be expressed through
 `ImageProject`, add a decoded-image method backed by byte-exact fixture
 replication instead of restoring raw-byte patching.
+
+Pattern rotation only moves note ticks within the active pattern length. Notes
+at or beyond the end, negative pickup ticks, and inactive p-lock/component rows
+are preserved. This is the authoring API preservation policy, not a claim of
+new hardware validation for native rotation at those boundaries.

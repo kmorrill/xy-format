@@ -34,9 +34,10 @@ last available pattern rather than create an impossible state.
 scenes=[{track: pattern_index, ...}, ...]
 ```
 
-Pass `force_scene_presence=True` when an all-Pattern-1/unmuted row must be
-present: its selection/mute bytes otherwise look identical to an empty row,
-so the writer must set the row's present flag explicitly.
+Supplied scenes are marked present by default (`force_scene_presence=True`),
+including all-Pattern-1/unmuted rows. Their selection/mute bytes otherwise look
+identical to an empty row. `False` retains the legacy content-based presence
+behavior; do not use it for a song chain that references an all-zero row.
 
 ## Mutes
 

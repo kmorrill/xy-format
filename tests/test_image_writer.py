@@ -526,3 +526,36 @@ def test_set_plock_arms_lane_mask_and_master():
         1 << 16
     ).to_bytes(8, "little")  # step 5 cutoff lane mask
     assert img[T3 + 0x304E] == 1            # master
+
+
+@pytest.mark.parametrize('shift,expected_tick', [(1, 480), (-1, 1440)])
+def test_rotation_preserves_inactive_notes_and_signed_pickups(shift, expected_tick):
+    p = ImageProject.from_file(BASE)
+    for tick, note in [(-129, 48), (0, 60), (1920, 67), (5280, 72)]:
+        p.add_note(1, tick=tick, note=note, velocity=91, gate=123)
+    p.set_plock(1, 12, 'param1', 0x1234)
+    p.set_step_component(1, 12, 'hold', 2)
+    p.set_pattern_steps(1, 4)
+    base = p.track_start(1)
+    note_start = base + OFF_NOTE_COUNT + 1
+
+    def records(project):
+        return [bytes(project.image[note_start + i * 12:note_start + (i + 1) * 12])
+                for i in range(4)]
+
+    before = {record[8]: record for record in records(p)}
+    inactive = [(base + p.TRK_PLOCK + 4 * 84, base + p.TRK_PLOCK + 64 * 84),
+                (base + p.PLOCK_STEP_MASK + 4 * 8, base + p.PLOCK_STEP_MASK + 64 * 8),
+                (base + p.TRK_STEPCOMP + 4 * 16, base + p.TRK_STEPCOMP + 64 * 16)]
+    inactive_before = [bytes(p.image[a:b]) for a, b in inactive]
+    p.rotate_pattern(1, shift)
+    reloaded = ImageProject.from_bytes(p.to_bytes())
+    after = {record[8]: record for record in records(reloaded)}
+    for note in (48, 67, 72):
+        assert after[note] == before[note]
+    assert int.from_bytes(after[60][:4], 'little', signed=True) == expected_tick
+    assert after[60][4:] == before[60][4:]
+    assert [int.from_bytes(r[:4], 'little', signed=True) for r in records(reloaded)] == [
+        -129, expected_tick, 1920, 5280,
+    ]
+    assert [bytes(reloaded.image[a:b]) for a, b in inactive] == inactive_before

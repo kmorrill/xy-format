@@ -1278,8 +1278,9 @@ class ImageProject:
         """Rotate triggers, p-locks, and components as one coherent pattern.
 
         Positive values rotate right/later; negative values rotate left/earlier.
-        Only active steps participate, so inactive rows beyond a shortened
-        pattern keep their preserved device state.
+        Only active steps participate, so inactive rows and notes beyond a
+        shortened pattern keep their preserved device state. Negative pickup
+        ticks are also preserved; this operation does not reinterpret them.
         """
         if not isinstance(steps, int) or isinstance(steps, bool):
             raise TypeError("rotation steps must be an integer")
@@ -1299,10 +1300,11 @@ class ImageProject:
             offset = note_start + index * NOTE_SIZE
             record = bytearray(self.image[offset : offset + NOTE_SIZE])
             tick = int.from_bytes(record[0:4], "little", signed=True)
-            rotated_tick = (tick + steps * STEP_TICKS) % pattern_ticks
-            record[0:4] = rotated_tick.to_bytes(4, "little")
+            if 0 <= tick < pattern_ticks:
+                rotated_tick = (tick + shift * STEP_TICKS) % pattern_ticks
+                record[0:4] = rotated_tick.to_bytes(4, "little", signed=True)
             records.append(bytes(record))
-        records.sort(key=lambda record: int.from_bytes(record[0:4], "little"))
+        records.sort(key=lambda record: int.from_bytes(record[0:4], "little", signed=True))
         self.image[note_start : note_start + count * NOTE_SIZE] = b"".join(records)
 
         def rotate_rows(relative: int, row_size: int) -> None:
@@ -1692,7 +1694,7 @@ def build_arrangement(
     scene_mutes: list[list[int]] | None = None,
     song_chain: list[int] | None = None,
     song_loop: bool = True,
-    force_scene_presence: bool = False,
+    force_scene_presence: bool = True,
 ) -> bytes:
     """Assemble a project image from scratch.
 
@@ -1705,8 +1707,8 @@ def build_arrangement(
     scene_mutes: optional per-scene list of 1-based muted tracks (device
         mute value is 2; nonzero = muted, confirmed device-side).
     song_chain: optional list of 0-based scene ids for Song 1.
-    force_scene_presence: mark every supplied scene present, including an
-        all-P1/unmuted row whose bytes are otherwise identical to a blank row.
+    force_scene_presence: defaults to True; mark every supplied scene present,
+        including an all-P1/unmuted row whose bytes otherwise match a blank row.
     """
     header, base = decode_project(open(base_path, "rb").read())
     starts = leader_starts_from_image(base, track_base_from_header(header))
