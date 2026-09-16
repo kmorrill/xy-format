@@ -13,12 +13,14 @@ pattern selections[16]  mute values[16]  present flag[1]
 
 `xy/image_writer.py` names the constants used by the current writer:
 
-- `SCENE_SLOT0`: live selection row.
+- `SCENE_SLOT0`: scene 1 and the current/live selection row.
 - `SCENE_SLOT_SIZE = 33`.
 - `GLOBAL_ACTIVE_SCENE`: active scene selector.
 - `SCENE_MUTE_VALUE = 2`: device-verified muted value.
 
-Slot 0 is the live selection row. Authored scenes start at slot 1.
+Device-authored multi-scene projects store Scene N in slot N−1. Slot 0 is
+therefore both Scene 1 and the current/live selection row. Generated projects
+must not reserve slot 0 and start Scene 1 at slot 1.
 
 ## Pattern Selection
 
@@ -31,6 +33,10 @@ last available pattern rather than create an impossible state.
 ```python
 scenes=[{track: pattern_index, ...}, ...]
 ```
+
+Pass `force_scene_presence=True` when an all-Pattern-1/unmuted row must be
+present: its selection/mute bytes otherwise look identical to an empty row,
+so the writer must set the row's present flag explicitly.
 
 ## Mutes
 
