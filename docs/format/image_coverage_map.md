@@ -1,5 +1,10 @@
 # Decoded Image Coverage Map
 
+> Firmware update (2026-10-23): [serialization](serialization.md) and
+> [preset JSON](preset_json.md) supersede earlier structural inferences below,
+> particularly sample record origin/field ownership, controller vectors and
+> header compression. Existing capture observations remain useful evidence.
+
 > **Purpose:** At-a-glance **mapped vs unmapped** regions of the OP-XY decoded
 > RAM image (~290 KB). Use this for oversight, probe planning, and speculation.
 >

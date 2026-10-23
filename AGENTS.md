@@ -16,6 +16,9 @@
 - Stable reference limits: `docs/reference/opxy_limits.md`
 - MIDI CC reference: `docs/reference/opxy_midi_cc_map.md`
 - Format reference (canonical): `docs/format/`
+- Firmware-derived grammar: `docs/format/serialization.md`
+- Preset JSON and binary sound state: `docs/format/preset_json.md`
+- Version migration chain: `docs/format/backward_compatibility.md`
 - Spatial coverage ledger: `docs/format/spatial_coverage_ledger.md`
   (contiguous decoded-vs-opaque map of global, track, and sample-slot regions)
 - Engineering implementation notes: `docs/engineering/`
@@ -41,11 +44,11 @@
 - Add or update the corresponding entry in `docs/debug/crashes.md` for every crash and every verified fix.
 - Do not grow this file with chronology; keep this file as index + operating rules.
 
-## The Model (SOLVED 2026-06-09)
-- The `.xy` file is the firmware's ~290 KB project struct, **byte-level
-  RLE-compressed** (two consecutive equal bytes → next byte = extension
-  count). Decoded, it is plain little-endian C structs with
-  count-prefixed vectors. See `docs/format/record_structure.md` §0.
+## The Model (firmware trace updated 2026-10-23)
+- The `.xy` file is a serialized projection of runtime state, **byte-level
+  RLE-compressed including the eight decoded header bytes** (two equal bytes
+  → extension count). It contains little-endian scalars and count-prefixed
+  vectors, not a byte-for-byte RAM dump. See `docs/format/serialization.md`.
 - Codec `xy/rle.py` round-trips 245/246 corpus files byte-exact.
 - Decoded field map: `docs/format/decoded_image_map.md` (global header,
   16 track structs, scene structs, song-table footer, drum-voice slots).
@@ -60,8 +63,8 @@
   (`xy/rle.py` + `xy/image_writer.py`). Decode baseline → edit fields/
   vectors → `encode_project`. No scaffolds, descriptors, event types,
   preamble propagation, or velocity nudge.
-- A valid file is a **reachable machine state** (the firmware asserts,
-  not validates): build coherent state; never invent byte layouts.
+- A valid file is a **reachable machine state**: firmware both asserts and
+  normalizes selected fields. Build coherent state; never invent byte layouts.
 - Validation standard: replicate a device capture byte-exact, then
   device-test one authored file.
 

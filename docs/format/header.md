@@ -1,5 +1,12 @@
 # Header / Global Region
 
+The complete file is RLE, including the eight decoded header bytes. After
+`decode_project`, magic is bytes0–3, format major/minor bytes4/5, and opaque
+bytes6/7 are not a firmware build ID. See [compatibility](backward_compatibility.md).
+The offsets below are in the payload after that decoded header. Listed mixer
+level-byte positions are the high byte of larger parameter words; see the
+[firmware transfer map](serialization.md) for complete word ownership.
+
 This page documents decoded-image global offsets. Older raw-header scans used
 different offsets because they read compressed bytes; those notes are historical
 only and should not guide authoring.

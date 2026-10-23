@@ -1,0 +1,20 @@
+{
+  "initializer": "0x8d4fe46c",
+  "runtime_table": "0x846df650",
+  "stride": 48,
+  "name_offset": 16,
+  "registered_names": {
+    "2": "sampler",
+    "3": "drum",
+    "6": "organ",
+    "7": "epiano",
+    "18": "prism",
+    "19": "hardsync",
+    "20": "dissolve",
+    "22": "axis",
+    "29": "midi",
+    "30": "multisampler",
+    "31": "wavetable",
+    "32": "simple"
+  }
+}

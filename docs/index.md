@@ -20,6 +20,7 @@ User-facing tools live at `tools/`. Research, probing, and one-off scripts
 have moved to `tools/analysis/` — see `tools/analysis/README.md`.
 
 User-facing:
+- Complete raw preset-state inspection: `tools/inspect_preset_state.py`
 - Inspector: `docs/tools/inspect_xy.md` (`tools/inspect_xy.py`)
 - JSON spec compiler: `docs/tools/spec_to_xy_image.md` (`tools/spec_to_xy_image.py`)
 - Corpus index/query: `docs/tools/corpus_lab.md` (`tools/corpus_lab.py`)
@@ -39,9 +40,13 @@ Research (under `tools/analysis/`):
 - OP-XY MIDI CC map: `docs/reference/opxy_midi_cc_map.md`
 
 ## Format (Canonical)
-- **Record structure (start here)**: `docs/format/record_structure.md`
-  (serialization model and RLE rules)
-- **Decoded image map (RAM struct fields)**: `docs/format/decoded_image_map.md`
+- **Firmware serialization and full byte partition**: `docs/format/serialization.md`
+- **Backward compatibility and migrations**: `docs/format/backward_compatibility.md`
+- **Preset JSON import/export and repeated binary sound state**: `docs/format/preset_json.md`
+- Partial editing API limitations: `docs/format/patch_json_adapter.md`
+- Historical capture-based record model: `docs/format/record_structure.md`
+  (superseded where noted by the firmware serialization reference)
+- **Decoded image map (capture-derived fields)**: `docs/format/decoded_image_map.md`
 - **Spatial coverage ledger (decoded vs opaque ranges)**: `docs/format/spatial_coverage_ledger.md`
 - **Image coverage map (mapped vs unmapped at a glance)**:
   `docs/format/image_coverage_map.md`

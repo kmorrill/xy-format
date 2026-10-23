@@ -1,0 +1,32 @@
+{
+  "checked": "2026-10-23",
+  "source_chat": "Review latest OP-XY information",
+  "loader_path": "/Users/kevinmorrill/Documents/OP-XY Backups/2026-10-23/device-files/upgrade/firmware/blackfin/bin/os.ldr",
+  "bytes": 2274396,
+  "sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "os_version": "1.1.21+0@ab3aa78e2a2517fa787139bb5257b5f0568cd6ee",
+  "backup_verification_record": {
+    "handle": 1866,
+    "name": "os.ldr",
+    "size": 2274396,
+    "format": 12288,
+    "path": "/upgrade/firmware/blackfin/bin/os.ldr",
+    "storage": 65537,
+    "sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+    "independent_device_reads": 2,
+    "local_readback_verified": true
+  },
+  "serializer_leads": [
+    {
+      "string_address": "0x840a1fd4",
+      "text": "../src/sequencer/serialize/serialize.cpp",
+      "candidate_reference": "0x8d5847ea"
+    },
+    {
+      "string_address": "0x840a45bc",
+      "text": "../src/sequencer/serialize/serialize_latest.cpp:90 num_patterns > 0",
+      "candidate_reference": "0x8d595360"
+    }
+  ],
+  "status": "loader bytes and hash verified locally; serializer leads identified; full firmware I/O trace not completed"
+}

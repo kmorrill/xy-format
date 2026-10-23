@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-23",
+  "upstream_base": "7a74acc",
+  "firmware_sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "method": "static firmware analysis and offline corpus/regression tests; no new hardware operations",
+  "baseline_suite": {
+    "passed": 1545,
+    "skipped": 25
+  },
+  "final_suite": {
+    "command": "python3 -m pytest -q",
+    "passed": 2461,
+    "skipped": 25
+  },
+  "corpus": {
+    "glob": "src/**/*.xy",
+    "files": 893,
+    "versions": {
+      "9.19": 893
+    },
+    "count_driven_exact_eof_and_reassembly": 893
+  },
+  "rle_state_machine_probe": {
+    "chunk_checks": 1120,
+    "corpus_files": 893
+  },
+  "independent_factory_review": {
+    "files": 24,
+    "patterns": 384,
+    "nonempty_sample_records": 649
+  },
+  "file_sha256": {
+    "xy/preset_state.py": "5db155d22749cd5b1c416b5741ad1c79497622c8d5f51132a324126b1fe42cdc",
+    "xy/serialization.py": "bec84081c32e2ec58d50062c695a798a824eda46870090702e1a18a52e8c584e",
+    "xy/rle.py": "180a08efcbf8383fd4db27a6c3998ccb5dbe8a3545a0e90180a0b4c69eb26a32",
+    "xy/patch_json.py": "76314c96000480dc050ce9f1751ea53ab3271c25dc06716013523bbc71965d44",
+    "tests/test_preset_state.py": "22a4cb735aaf466a84cbbd9ade6a022364291f755beeb69f334e1d68c7214e81"
+  },
+  "limits": [
+    "No firmware execution or new device acceptance",
+    "Raw inspector supports only format9.19",
+    "Legacy authoring APIs not replaced by complete preset importer",
+    "External ROM numeric edges and unnamed binary semantics remain bounded in reports"
+  ]
+}
