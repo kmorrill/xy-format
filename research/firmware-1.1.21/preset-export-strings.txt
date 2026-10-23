@@ -1,0 +1,97 @@
+840362b8 +0000: octave
+840362c0 +0008: type
+840362c8 +0010: drum
+840362d0 +0018: sampler
+840362d8 +0020: multisampler
+840362ec +0034: external
+840362f8 +0040: midi
+84036300 +0048: squeal
+84036308 +0050: svf
+8403630c +0054: body
+84036314 +005c: ladder
+8403631c +0064: zfilter
+84036324 +006c: z lowpass
+84036330 +0078: regions
+84036338 +0080: framecount
+84036344 +008c: hikey
+8403634c +0094: tune
+84036354 +009c: sample.start
+84036364 +00ac: sample.end
+84036370 +00b8: loop.crossfade
+84036380 +00c8: loop.onrelease
+84036390 +00d8: loop.enabled
+840363a0 +00e8: gain
+840363a8 +00f0: reverse
+840363b0 +00f8: loop.start
+840363bc +0104: loop.end
+840363c8 +0110: sample
+840363d0 +0118: playmode
+840363dc +0124: transpose
+840363e8 +0130: pan
+840363ec +0134: fade.in
+840363f4 +013c: fade.out
+84036400 +0148: engine
+84036408 +0150: tuning
+84036410 +0158: poly
+84036418 +0160: mono
+84036420 +0168: legato
+84036428 +0170: platform
+84036434 +017c: OP-XY
+8403643c +0184: version
+84036444 +018c: params
+8403644c +0194: bendrange
+84036458 +01a0: volume
+84036460 +01a8: width
+84036468 +01b0: tuning.scale
+84036478 +01c0: tuning.root
+84036484 +01cc: highpass
+84036490 +01d8: modulation
+8403649c +01e4: modwheel
+840364a8 +01f0: target
+840364b0 +01f8: amount
+840364b8 +0200: aftertouch
+840364c4 +020c: pitchbend
+840364d0 +0218: velocity
+840364dc +0224: envelope
+840364e8 +0230: amp
+840364ec +0234: attack
+840364f4 +023c: decay
+840364fc +0244: sustain
+84036504 +024c: release
+8403650c +0254: filter
+84036514 +025c: fx
+84036518 +0260: active
+84036520 +0268: lfo
+84036524 +026c: cc
+84036528 +0270: val
+8403652c +0274: content/dlc/
+8403653c +0284: patch.json
+84036558 +02a0: ../src/db2/patch.cpp
+84036570 +02b8: failed to load fx type
+84036588 +02d0: failed to load lfo type
+840365a0 +02e8: ../src/db2/patch.cpp:212 m_track >= 0 && m_track < 14
+840365d8 +0320: pitch.keycenter
+840365e8 +0330: parameter %d is < 0
+840365fc +0344: ../src/db2/patch.cpp:270 track < 8
+84036620 +0368: invalid patch platform
+84036638 +0380: invalid version
+84036648 +0390: invalid version: %d
+8403665c +03a4: portamento.amount
+84036670 +03b8: velocity.sensitivity
+84036688 +03d0: portamento.type
+84036698 +03e0: ../src/db2/patch.cpp:338 bitslr(m_parameters[i]) >= 0
+840366ef +0437: `../src/db2/patch.cpp:421 bitslr(m_parameters[i]) >= 0
+84036728 +0470: ../src/db2/patch.cpp:443 bitslr(data.params[i]) >= 0
+84036760 +04a8: failed to copy sample file!
+8403677c +04c4: ../src/db2/patch.cpp:812 !s_presets.empty()
+840367a8 +04f0: ../ext/rapidjson-master/include/rapidjson/filereadstream.h:45 fp_ != 0
+840367f0 +0538: ../ext/rapidjson-master/include/rapidjson/filereadstream.h:46 bufferSize >= 4
+84036840 +0588: type
+84036848 +0590: ../ext/rapidjson-master/include/rapidjson/reader.h:919 !HasParseError()
+84036890 +05d8: ../ext/rapidjson-master/include/rapidjson/internal/stack.h:130 stackTop_
+840368dc +0624: ../ext/rapidjson-master/include/rapidjson/internal/stack.h:131 static_cast<std::ptrdiff_t>(sizeof(T) * count) <= (stackEnd_ - stackTop_)
+84036968 +06b0: ../ext/rapidjson-master/include/rapidjson/encodings.h:115 codepoint <= 0x10FFFF
+840369b8 +0700: ../ext/rapidjson-master/include/rapidjson/reader.h:1031 !HasParseError()
+84036a04 +074c: ../ext/rapidjson-master/include/rapidjson/reader.h:1035 !HasParseError()
+84036a50 +0798: ../ext/rapidjson-master/include/rapidjson/reader.h:1041 !HasParseError()
+84036a9c +07e4: ../ext/rapidjson-master/incl

@@ -1,0 +1,180 @@
+{
+  "firmware": "1.1.21+0",
+  "format_latest": "9.19",
+  "read_dispatch_table": "0x840a2284",
+  "migration_dispatch_table": "0x840a2234",
+  "versions": [
+    {
+      "version": "8.0",
+      "reader": "0x8d585b48",
+      "next_version": "8.1",
+      "converter": "0x8d58d8e0"
+    },
+    {
+      "version": "8.1",
+      "reader": "0x8d5862c8",
+      "next_version": "9.0",
+      "converter": "0x8d58ed00"
+    },
+    {
+      "version": "9.0",
+      "reader": "0x8d586a40",
+      "reader_branch": "0x8d584c38",
+      "next_version": "9.1",
+      "converter": "0x8d58f19c",
+      "converter_branch": "0x8d584ce8"
+    },
+    {
+      "version": "9.1",
+      "reader": "0x8d5871b8",
+      "reader_branch": "0x8d584c3e",
+      "next_version": "9.2",
+      "converter": "0x8d58f6e4",
+      "converter_branch": "0x8d584d20"
+    },
+    {
+      "version": "9.2",
+      "reader": "0x8d58b838",
+      "reader_branch": "0x8d584c46",
+      "next_version": "9.3",
+      "converter": "0x8d58fd04",
+      "converter_branch": "0x8d584d68"
+    },
+    {
+      "version": "9.3",
+      "reader": "0x8d58bfa0",
+      "reader_branch": "0x8d584c4e",
+      "next_version": "9.4",
+      "converter": "0x8d59020c",
+      "converter_branch": "0x8d584db0"
+    },
+    {
+      "version": "9.4",
+      "reader": "0x8d58c730",
+      "reader_branch": "0x8d584c56",
+      "next_version": "9.5",
+      "converter": "0x8d59064c",
+      "converter_branch": "0x8d584df8"
+    },
+    {
+      "version": "9.5",
+      "reader": "0x8d58cec0",
+      "reader_branch": "0x8d584c5e",
+      "next_version": "9.6",
+      "converter": "0x8d590b04",
+      "converter_branch": "0x8d584e40"
+    },
+    {
+      "version": "9.6",
+      "reader": "0x8d58d790",
+      "reader_branch": "0x8d584c66",
+      "next_version": "9.7",
+      "converter": "0x8d591128",
+      "converter_branch": "0x8d584e88"
+    },
+    {
+      "version": "9.7",
+      "reader": "0x8d587a58",
+      "reader_branch": "0x8d584c6e",
+      "next_version": "9.8",
+      "converter": "0x8d591778",
+      "converter_branch": "0x8d584ed0"
+    },
+    {
+      "version": "9.8",
+      "reader": "0x8d587a58",
+      "reader_branch": "0x8d584c76",
+      "next_version": "9.9",
+      "converter": "0x8d591844",
+      "converter_branch": "0x8d584f18"
+    },
+    {
+      "version": "9.9",
+      "reader": "0x8d587a58",
+      "reader_branch": "0x8d584c7e",
+      "next_version": "9.10",
+      "converter": "0x8d591960",
+      "converter_branch": "0x8d584f60"
+    },
+    {
+      "version": "9.10",
+      "reader": "0x8d587a58",
+      "reader_branch": "0x8d584c86",
+      "next_version": "9.11",
+      "converter": "0x8d591ab8",
+      "converter_branch": "0x8d584fa8"
+    },
+    {
+      "version": "9.11",
+      "reader": "0x8d587a58",
+      "reader_branch": "0x8d584c8e",
+      "next_version": "9.12",
+      "converter": "0x8d591d44",
+      "converter_branch": "0x8d584ff0"
+    },
+    {
+      "version": "9.12",
+      "reader": "0x8d5882d8",
+      "reader_branch": "0x8d584c96",
+      "next_version": "9.13",
+      "converter": "0x8d592354",
+      "converter_branch": "0x8d585038"
+    },
+    {
+      "version": "9.13",
+      "reader": "0x8d588bd0",
+      "reader_branch": "0x8d584c9e",
+      "next_version": "9.14",
+      "converter": "0x8d59293c",
+      "converter_branch": "0x8d585080"
+    },
+    {
+      "version": "9.14",
+      "reader": "0x8d5894d8",
+      "reader_branch": "0x8d584ca6",
+      "next_version": "9.15",
+      "converter": "0x8d5930d4",
+      "converter_branch": "0x8d5850c8"
+    },
+    {
+      "version": "9.15",
+      "reader": "0x8d5894d8",
+      "reader_branch": "0x8d584cae",
+      "next_version": "9.16",
+      "converter": "0x8d5931a0",
+      "converter_branch": "0x8d585110"
+    },
+    {
+      "version": "9.16",
+      "reader": "0x8d589ddc",
+      "reader_branch": "0x8d584cb6",
+      "next_version": "9.17",
+      "converter": "0x8d5938c4",
+      "converter_branch": "0x8d585158"
+    },
+    {
+      "version": "9.17",
+      "reader": "0x8d58a71c",
+      "reader_branch": "0x8d584cbe",
+      "next_version": "9.18",
+      "converter": "0x8d593ebc",
+      "converter_branch": "0x8d5851a0"
+    },
+    {
+      "version": "9.18",
+      "reader": "0x8d58b05c",
+      "reader_branch": "0x8d584cc6",
+      "next_version": "9.19",
+      "converter": "0x8d5945e4",
+      "converter_branch": "0x8d5851e2"
+    },
+    {
+      "version": "9.19",
+      "reader": "0x8d595414",
+      "reader_branch": "0x8d584cce",
+      "next_version": null,
+      "converter": null,
+      "converter_branch": "0x8d584b40"
+    }
+  ]
+}

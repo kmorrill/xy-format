@@ -12,6 +12,42 @@ Format per entry: **Settled** (corpus/device-validated), **Believed**
 
 ---
 
+## 2026-10-23 — Firmware preset JSON and native serialization trace
+
+### Confirmed by static firmware evidence
+
+The 1.1.21 loader's native stream includes the decoded header in one RLE state.
+Its current reader/writer and legacy dispatch/migration chain are documented in
+[serialization](format/serialization.md) and [compatibility](format/backward_compatibility.md).
+Every byte of a current pattern is partitioned, including four count-prefixed
+controller lanes, 58 parameter words, 24 complete sample records and two tails.
+This is a serialized projection of RAM, not a literal struct dump.
+
+[Preset JSON](format/preset_json.md) now has a complete field crosswalk for
+import and export, defaults/coercions, omitted state and filesystem lifecycle.
+The JSON is not embedded in projects: each pattern stores copied binary sound
+state. Sample record origin is `+0x393f`, gain is signed byte `+0x1d`, transpose
+and tune are independent, and tuning is the first dynamic 48-byte suffix.
+Earlier broad “fully solved / every writer qualified” conclusions below do not
+extend to these newly traced fields or to all malformed inputs.
+
+### Verified offline
+
+All 893 current repository projects walk to EOF and reassemble unchanged. The
+new raw preset inspector follows clones and variable controller vectors, keeps
+all raw sound fields, and checks format 9.19. Full suite: 2,461 passed, 25 skipped.
+Existing authoring APIs retain older assumptions; this update does not replace
+them with a full firmware importer. The sample-name prefix bug is corrected.
+
+### Remaining boundaries and decisive tests
+
+External ROM arithmetic edges, unnamed fields, some DB/DSP behavior and runtime
+assertion outcomes remain unresolved. Hardware qualification should compare
+load/save results for reordered regions, tuning boundaries, default-sensitive
+imports and MIDI CC mappings. No new physical-device test occurred here.
+
+---
+
 ## 2026-08-29 — P-lock activation slab decoded as per-lane masks
 
 ### Settled

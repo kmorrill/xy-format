@@ -1,8 +1,8 @@
 """Byte-level RLE codec for the `.xy` container (decoded 2026-06-09).
 
-The `.xy` file after its 8-byte header (magic ``DD CC BB AA`` + firmware
-version) is ONE continuous RLE stream over the firmware's in-RAM project
-image ("the decoded image"):
+The complete file is ONE continuous RLE stream, including the eight decoded
+header bytes (magic, format major/minor, two reserved bytes). The remaining
+decoded bytes are a serialized projection of runtime state, not a RAM dump.
 
     Encoding rule: a run of k >= 2 equal bytes is written as
         [v][v][k-2]            (chunked at k = 257 per emission)
@@ -85,14 +85,17 @@ def encode(data: bytes) -> bytes:
 
 
 def decode_project(data: bytes) -> tuple[bytes, bytes]:
-    """Split a `.xy` file into (header, decoded RAM image)."""
-    if data[:4] != MAGIC:
+    """Split a `.xy` file into (decoded header, serialized image)."""
+    decoded = decode(data)
+    if len(decoded) < HEADER_LEN:
+        raise RleError("truncated .xy wrapper (expected 8 decoded bytes)")
+    if decoded[:4] != MAGIC:
         raise RleError("not a .xy file (bad magic)")
-    return data[:HEADER_LEN], decode(data, HEADER_LEN)
+    return decoded[:HEADER_LEN], decoded[HEADER_LEN:]
 
 
 def encode_project(header: bytes, image: bytes) -> bytes:
     """Inverse of :func:`decode_project`."""
     if len(header) != HEADER_LEN or header[:4] != MAGIC:
         raise RleError("header must be the original 8 bytes incl. magic")
-    return header + encode(image)
+    return encode(header + image)

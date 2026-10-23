@@ -435,7 +435,9 @@ def _sample_path(region: dict[str, Any], options: PatchJsonSoundPatchOptions) ->
     sample = _string_value(region.get("sample"))
     if not sample:
         return None
-    if not options.preset_device_path:
+    # Firmware 8d4dcca0 tests for ANY slash, not just an absolute prefix.
+    # content/... and <samples>/... are references, as are subdirectory paths.
+    if not options.preset_device_path or "/" in sample:
         return sample
     return f"{options.preset_device_path.rstrip('/')}/{sample}"
 

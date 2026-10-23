@@ -11,16 +11,18 @@ Start here:
 
 - [State of understanding](docs/state_of_understanding.md)
 - [Parse and author capability checklist](docs/parse_capability_checklist.md)
+- [Firmware serialization and version compatibility](docs/format/serialization.md)
+- [Preset JSON and repeated project sound state](docs/format/preset_json.md)
 - [Decoded image map](docs/format/decoded_image_map.md)
 - [Authoring guide](docs/engineering/authoring.md)
 - [Docs index](docs/index.md)
 
 ## Current Format Model
 
-The project body is one RLE stream:
+The entire file, including its eight decoded header bytes, is one RLE stream:
 
 ```text
-.xy file = 8-byte wrapper + RLE(project image)
+.xy file = RLE(decoded header[8] + serialized project)
 ```
 
 The baseline decoded image layout is:
@@ -63,6 +65,8 @@ decoded-image codec, inspection, and authoring paths.
 ## Canonical Tools
 
 - `xy/rle.py` — decode/encode the project image.
+- `tools/inspect_preset_state.py` — all stored preset fields across every pattern (format 9.19).
+- `xy/serialization.py` — count-driven, lossless byte partition for format 9.19.
 - `xy/image_writer.py` — image-based editing and arrangement assembly.
 - `tools/spec_to_xy_image.py` — JSON/spec to image-authored `.xy`.
 - `tools/midi_to_xy.py` — MIDI selection front end for JSON specs or direct
@@ -76,8 +80,10 @@ in [the capability checklist](docs/parse_capability_checklist.md).
 
 ## What Still Needs Work
 
-No structural format mystery remains on the critical authoring path. Remaining
-work is field polish, productization, and edge-case validation:
+The firmware trace now covers every current-format transfer and the preset JSON
+import/export lifecycle. Some existing authoring APIs still predate those
+findings; raw inspection coverage does not certify every writer method. Remaining
+work includes implementation reconciliation and device qualification:
 
 - `midi_to_xy` should keep expanding around the decoded-image writer rather
   than reintroducing raw-byte patching paths.
@@ -86,8 +92,8 @@ work is field polish, productization, and edge-case validation:
   player modes.
 - Scene-stored volume bytes are mapped, but playback semantics on firmware
   1.1.4 need a focused retest.
-- Multisampler zones/slicing and user `.preset` file format are not fully
-  decoded.
+- Full preset replacement, multisampler authoring, external ROM arithmetic edges
+  and unnamed binary state remain distinct from the documented JSON field map.
 - Limits certification remains for max scenes, visible song slots, full
   16-pattern topology, and 120-note edge cases.
 

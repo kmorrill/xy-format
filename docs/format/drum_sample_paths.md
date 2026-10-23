@@ -1,5 +1,10 @@
 # Drum sampler — per-voice sample path strings
 
+> Firmware update (2026-10-23): [serialization](serialization.md) and
+> [preset JSON](preset_json.md) supersede earlier structural inferences below,
+> particularly sample record origin/field ownership, controller vectors and
+> header compression. Existing capture observations remain useful evidence.
+
 > Storage: 24 slots × 128 bytes at **track struct `+0x3957`**; path string at
 > **slot `+0x08`** (null-padded). See `decoded_image_map.md` § drum sampler.
 

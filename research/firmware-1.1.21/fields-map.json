@@ -1,0 +1,401 @@
+{
+  "firmware": "1.1.21+0",
+  "source_sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "pattern_wire_coordinate": "virtual leader origin; actual body starts1",
+  "pattern_read": "0x8d594dd4",
+  "pattern_write": "0x8d584448",
+  "pattern_ram_bytes": 21492,
+  "pattern_fixed": [
+    {
+      "wire_start": 1,
+      "wire_end": 2,
+      "ram_start": 0,
+      "bytes": 1
+    },
+    {
+      "wire_start": 2,
+      "wire_end": 6,
+      "ram_start": 4,
+      "bytes": 4
+    },
+    {
+      "wire_start": 6,
+      "wire_end": 7,
+      "ram_start": 8,
+      "bytes": 1
+    },
+    {
+      "wire_start": 7,
+      "wire_end": 8,
+      "ram_start": 9,
+      "bytes": 1
+    },
+    {
+      "wire_start": 8,
+      "wire_end": 9,
+      "ram_start": 10,
+      "bytes": 1
+    },
+    {
+      "wire_start": 9,
+      "wire_end": 13,
+      "ram_start": 12,
+      "bytes": 4
+    },
+    {
+      "wire_start": 13,
+      "wire_end": 17,
+      "ram_start": 16,
+      "bytes": 4
+    },
+    {
+      "wire_start": 17,
+      "wire_end": 18,
+      "ram_start": 20,
+      "bytes": 1
+    },
+    {
+      "wire_start": 18,
+      "wire_end": 19,
+      "ram_start": 21,
+      "bytes": 1
+    },
+    {
+      "wire_start": 19,
+      "wire_end": 20,
+      "ram_start": 22,
+      "bytes": 1
+    },
+    {
+      "wire_start": 20,
+      "wire_end": 24,
+      "ram_start": 24,
+      "bytes": 4
+    },
+    {
+      "wire_start": 24,
+      "wire_end": 28,
+      "ram_start": 28,
+      "bytes": 4
+    },
+    {
+      "wire_start": 28,
+      "wire_end": 32,
+      "ram_start": 32,
+      "bytes": 4
+    },
+    {
+      "wire_start": 32,
+      "wire_end": 33,
+      "ram_start": 36,
+      "bytes": 1
+    },
+    {
+      "wire_start": 33,
+      "wire_end": 37,
+      "ram_start": 40,
+      "bytes": 4
+    },
+    {
+      "wire_start": 37,
+      "wire_end": 38,
+      "ram_start": 44,
+      "bytes": 1
+    },
+    {
+      "wire_start": 38,
+      "wire_end": 590,
+      "ram_start": 48,
+      "bytes": 552
+    },
+    {
+      "wire_start": 590,
+      "wire_end": 11342,
+      "ram_start": 600,
+      "bytes": 10752
+    },
+    {
+      "wire_start": 11342,
+      "wire_end": 12366,
+      "ram_start": 11352,
+      "bytes": 1024
+    },
+    {
+      "wire_start": 12366,
+      "wire_end": 12374,
+      "ram_start": 12376,
+      "bytes": 8
+    },
+    {
+      "wire_start": 12374,
+      "wire_end": 12375,
+      "ram_start": 12384,
+      "bytes": 1
+    },
+    {
+      "wire_start": 12375,
+      "wire_end": 14423,
+      "ram_start": 12386,
+      "bytes": 2048
+    },
+    {
+      "wire_start": 14423,
+      "wire_end": 14655,
+      "ram_start": 14436,
+      "bytes": 232
+    },
+    {
+      "wire_start": 14655,
+      "wire_end": 17727,
+      "ram_start": 14668,
+      "bytes": 3072
+    },
+    {
+      "wire_start": 17727,
+      "wire_end": 17775,
+      "ram_start": 17740,
+      "bytes": 48
+    }
+  ],
+  "global_read": "0x8d595414",
+  "global_write": "0x8d5847d4",
+  "global_fixed": [
+    {
+      "wire_start": 0,
+      "wire_end": 2,
+      "ram_start": 0,
+      "bytes": 2
+    },
+    {
+      "wire_start": 2,
+      "wire_end": 3,
+      "ram_start": 2,
+      "bytes": 1
+    },
+    {
+      "wire_start": 3,
+      "wire_end": 4,
+      "ram_start": 3,
+      "bytes": 1
+    },
+    {
+      "wire_start": 4,
+      "wire_end": 5,
+      "ram_start": 4,
+      "bytes": 1
+    },
+    {
+      "wire_start": 5,
+      "wire_end": 6,
+      "ram_start": 5,
+      "bytes": 1
+    },
+    {
+      "wire_start": 6,
+      "wire_end": 7,
+      "ram_start": 6,
+      "bytes": 1
+    },
+    {
+      "wire_start": 7,
+      "wire_end": 8,
+      "ram_start": 7,
+      "bytes": 1
+    },
+    {
+      "wire_start": 8,
+      "wire_end": 9,
+      "ram_start": 8,
+      "bytes": 1
+    },
+    {
+      "wire_start": 9,
+      "wire_end": 11,
+      "ram_start": 12,
+      "bytes": 2
+    },
+    {
+      "wire_start": 11,
+      "wire_end": 27,
+      "ram_start": 14,
+      "bytes": 16
+    },
+    {
+      "wire_start": 27,
+      "wire_end": 28,
+      "ram_start": 30,
+      "bytes": 1
+    },
+    {
+      "wire_start": 28,
+      "wire_end": 29,
+      "ram_start": 31,
+      "bytes": 1
+    },
+    {
+      "wire_start": 29,
+      "wire_end": 45,
+      "ram_start": 32,
+      "bytes": 16
+    },
+    {
+      "wire_start": 45,
+      "wire_end": 61,
+      "ram_start": 48,
+      "bytes": 16
+    },
+    {
+      "wire_start": 61,
+      "wire_end": 77,
+      "ram_start": 64,
+      "bytes": 16
+    },
+    {
+      "wire_start": 77,
+      "wire_end": 85,
+      "ram_start": 80,
+      "bytes": 8
+    },
+    {
+      "wire_start": 85,
+      "wire_end": 101,
+      "ram_start": 88,
+      "bytes": 16
+    },
+    {
+      "wire_start": 101,
+      "wire_end": 117,
+      "ram_start": 104,
+      "bytes": 16
+    },
+    {
+      "wire_start": 117,
+      "wire_end": 133,
+      "ram_start": 120,
+      "bytes": 16
+    },
+    {
+      "wire_start": 133,
+      "wire_end": 149,
+      "ram_start": 136,
+      "bytes": 16
+    },
+    {
+      "wire_start": 149,
+      "wire_end": 3449,
+      "ram_start": 152,
+      "bytes": 3300
+    }
+  ],
+  "trailer": {
+    "notes": {
+      "count_bytes": 1,
+      "item_bytes": 12,
+      "capacity": 120,
+      "ram_node_bytes": 16,
+      "read_helper": "0x8d594c8e",
+      "write_helper": "0x8d5843a0",
+      "load_copy_bytes": 11
+    },
+    "lanes": [
+      {
+        "capacity": 128,
+        "count_bytes": 1,
+        "item_bytes": 4,
+        "ram_start": 19716,
+        "item_fields": [
+          {
+            "offset": 0,
+            "type": "u16le",
+            "meaning": "tick"
+          },
+          {
+            "offset": 2,
+            "type": "i16le",
+            "meaning": "value"
+          }
+        ],
+        "first_item_is_event": true
+      },
+      {
+        "capacity": 128,
+        "count_bytes": 1,
+        "item_bytes": 4,
+        "ram_start": 20232,
+        "item_fields": [
+          {
+            "offset": 0,
+            "type": "u16le",
+            "meaning": "tick"
+          },
+          {
+            "offset": 2,
+            "type": "i16le",
+            "meaning": "value"
+          }
+        ],
+        "first_item_is_event": true
+      },
+      {
+        "capacity": 128,
+        "count_bytes": 1,
+        "item_bytes": 4,
+        "ram_start": 20748,
+        "item_fields": [
+          {
+            "offset": 0,
+            "type": "u16le",
+            "meaning": "tick"
+          },
+          {
+            "offset": 2,
+            "type": "i16le",
+            "meaning": "value"
+          }
+        ],
+        "first_item_is_event": true
+      },
+      {
+        "capacity": 32,
+        "count_bytes": 1,
+        "item_bytes": 4,
+        "ram_start": 21264,
+        "meaning": "sustain CC64; input threshold64; recorded values0 or255",
+        "item_fields": [
+          {
+            "offset": 0,
+            "type": "u16le",
+            "meaning": "tick"
+          },
+          {
+            "offset": 2,
+            "type": "i16le",
+            "meaning": "value"
+          }
+        ],
+        "first_item_is_event": true
+      }
+    ],
+    "fixed_blocks": [
+      {
+        "ram_start": 21396,
+        "bytes": 48,
+        "meaning": "12-word tuning array"
+      },
+      {
+        "ram_start": 21444,
+        "bytes": 48,
+        "meaning": "unknown"
+      }
+    ]
+  },
+  "disassembler_sha256": "efb2fb69ed4fa43e5855e0e9d94226bbf41593e7e484e74d608c120679ec19f0",
+  "edited_state": {
+    "wire_offset": 17,
+    "ram_offset": 20,
+    "clear_mask": 8,
+    "parameter_setter": "0x8d573538",
+    "bitclear": "0x8d57356a",
+    "tuning_bitclear": "0x8d5722e4"
+  }
+}

@@ -1,0 +1,1102 @@
+{
+  "firmware": "OP-XY 1.1.21+0",
+  "firmware_sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "exporter": "0x8d4dec6c",
+  "wire_coordinate": "virtual pattern origin, except explicitly global/dynamic fields",
+  "fields": [
+    {
+      "path": "type",
+      "ram_offset": 24,
+      "wire_offset": 20,
+      "encoding": "engine_registry_name",
+      "condition": "always",
+      "evidence": "0x8d4decde",
+      "bytes": 4
+    },
+    {
+      "path": "version",
+      "ram_offset": null,
+      "wire_offset": null,
+      "encoding": "constant",
+      "condition": "always",
+      "evidence": "0x8d4ded28",
+      "value": 4
+    },
+    {
+      "path": "platform",
+      "ram_offset": null,
+      "wire_offset": null,
+      "encoding": "constant",
+      "condition": "always",
+      "evidence": "0x8d4ded64",
+      "value": "OP-XY"
+    },
+    {
+      "path": "octave",
+      "ram_offset": null,
+      "wire_offset": null,
+      "encoding": "signed_byte",
+      "condition": "always",
+      "evidence": "0x8d4dedb4 -> 0x8d56fcf0",
+      "global_ram_expression": "0x40 + zero_based_track",
+      "global_wire_expression": "0x3d + zero_based_track"
+    },
+    {
+      "path": "engine.params[0]",
+      "ram_offset": 14436,
+      "wire_offset": 14423,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 0,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[1]",
+      "ram_offset": 14440,
+      "wire_offset": 14427,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 1,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[2]",
+      "ram_offset": 14444,
+      "wire_offset": 14431,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 2,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[3]",
+      "ram_offset": 14448,
+      "wire_offset": 14435,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 3,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[4]",
+      "ram_offset": 14452,
+      "wire_offset": 14439,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 4,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[5]",
+      "ram_offset": 14456,
+      "wire_offset": 14443,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 5,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[6]",
+      "ram_offset": 14460,
+      "wire_offset": 14447,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 6,
+      "bytes": 4
+    },
+    {
+      "path": "engine.params[7]",
+      "ram_offset": 14464,
+      "wire_offset": 14451,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dee2e..0x8d4dee90",
+      "parameter_id": 7,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.amp.attack",
+      "ram_offset": 14468,
+      "wire_offset": 14455,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4defbc..0x8d4df0d0",
+      "parameter_id": 8,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.amp.decay",
+      "ram_offset": 14472,
+      "wire_offset": 14459,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4defbc..0x8d4df0d0",
+      "parameter_id": 9,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.amp.sustain",
+      "ram_offset": 14476,
+      "wire_offset": 14463,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4defbc..0x8d4df0d0",
+      "parameter_id": 10,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.amp.release",
+      "ram_offset": 14480,
+      "wire_offset": 14467,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4defbc..0x8d4df0d0",
+      "parameter_id": 11,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.filter.attack",
+      "ram_offset": 14564,
+      "wire_offset": 14551,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df166..0x8d4df26e",
+      "parameter_id": 32,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.filter.decay",
+      "ram_offset": 14568,
+      "wire_offset": 14555,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df166..0x8d4df26e",
+      "parameter_id": 33,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.filter.sustain",
+      "ram_offset": 14572,
+      "wire_offset": 14559,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df166..0x8d4df26e",
+      "parameter_id": 34,
+      "bytes": 4
+    },
+    {
+      "path": "envelope.filter.release",
+      "ram_offset": 14576,
+      "wire_offset": 14563,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df166..0x8d4df26e",
+      "parameter_id": 35,
+      "bytes": 4
+    },
+    {
+      "path": "engine.playmode",
+      "ram_offset": 14484,
+      "wire_offset": 14471,
+      "encoding": "playmode_quantized_enum",
+      "condition": "engine_id != 29",
+      "evidence": "0x8d4e05b0..0x8d4e0700",
+      "parameter_id": 12,
+      "bytes": 4
+    },
+    {
+      "path": "engine.portamento.amount",
+      "ram_offset": 14488,
+      "wire_offset": 14475,
+      "encoding": "q31_high16",
+      "condition": "engine_id != 29",
+      "evidence": "0x8d4e05b0..0x8d4e0700",
+      "parameter_id": 13,
+      "bytes": 4
+    },
+    {
+      "path": "engine.bendrange",
+      "ram_offset": 14492,
+      "wire_offset": 14479,
+      "encoding": "q31_high16",
+      "condition": "engine_id != 29",
+      "evidence": "0x8d4e05b0..0x8d4e0700",
+      "parameter_id": 14,
+      "bytes": 4
+    },
+    {
+      "path": "engine.volume",
+      "ram_offset": 14496,
+      "wire_offset": 14483,
+      "encoding": "q31_high16",
+      "condition": "engine_id != 29",
+      "evidence": "0x8d4e05b0..0x8d4e0700",
+      "parameter_id": 15,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[0].val",
+      "ram_offset": 14468,
+      "wire_offset": 14455,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 8,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[0].cc",
+      "ram_offset": 14484,
+      "wire_offset": 14471,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 12,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[1].val",
+      "ram_offset": 14472,
+      "wire_offset": 14459,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 9,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[1].cc",
+      "ram_offset": 14488,
+      "wire_offset": 14475,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 13,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[2].val",
+      "ram_offset": 14476,
+      "wire_offset": 14463,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 10,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[2].cc",
+      "ram_offset": 14492,
+      "wire_offset": 14479,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 14,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[3].val",
+      "ram_offset": 14480,
+      "wire_offset": 14467,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 11,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[3].cc",
+      "ram_offset": 14496,
+      "wire_offset": 14483,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 15,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[4].val",
+      "ram_offset": 14500,
+      "wire_offset": 14487,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 16,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[4].cc",
+      "ram_offset": 14516,
+      "wire_offset": 14503,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 20,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[5].val",
+      "ram_offset": 14504,
+      "wire_offset": 14491,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 17,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[5].cc",
+      "ram_offset": 14520,
+      "wire_offset": 14507,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 21,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[6].val",
+      "ram_offset": 14508,
+      "wire_offset": 14495,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 18,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[6].cc",
+      "ram_offset": 14524,
+      "wire_offset": 14511,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 22,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[7].val",
+      "ram_offset": 14512,
+      "wire_offset": 14499,
+      "encoding": "signed_bit_extract_9bits_at_bit24",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df2c6..0x8d4df3bc",
+      "parameter_id": 19,
+      "bytes": 4
+    },
+    {
+      "path": "engine.cc[7].cc",
+      "ram_offset": 14528,
+      "wire_offset": 14515,
+      "encoding": "cc_number_quantized",
+      "condition": "engine_id == 29",
+      "evidence": "0x8d4df3c8..0x8d4df4be",
+      "parameter_id": 23,
+      "bytes": 4
+    },
+    {
+      "path": "fx.type",
+      "ram_offset": 40,
+      "wire_offset": 33,
+      "encoding": "filter_types_registry_name",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "bytes": 4
+    },
+    {
+      "path": "fx.active",
+      "ram_offset": 44,
+      "wire_offset": 37,
+      "encoding": "boolean",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "bytes": 1
+    },
+    {
+      "path": "fx.params[0]",
+      "ram_offset": 14500,
+      "wire_offset": 14487,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 16,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[1]",
+      "ram_offset": 14504,
+      "wire_offset": 14491,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 17,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[2]",
+      "ram_offset": 14508,
+      "wire_offset": 14495,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 18,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[3]",
+      "ram_offset": 14512,
+      "wire_offset": 14499,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 19,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[4]",
+      "ram_offset": 14516,
+      "wire_offset": 14503,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 20,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[5]",
+      "ram_offset": 14520,
+      "wire_offset": 14507,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 21,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[6]",
+      "ram_offset": 14524,
+      "wire_offset": 14511,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 22,
+      "bytes": 4
+    },
+    {
+      "path": "fx.params[7]",
+      "ram_offset": 14528,
+      "wire_offset": 14515,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df4c0..0x8d4df61a",
+      "parameter_id": 23,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.type",
+      "ram_offset": 32,
+      "wire_offset": 28,
+      "encoding": "lfo_types_registry_name",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "bytes": 4
+    },
+    {
+      "path": "lfo.active",
+      "ram_offset": 36,
+      "wire_offset": 32,
+      "encoding": "boolean",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "bytes": 1
+    },
+    {
+      "path": "lfo.params[0]",
+      "ram_offset": 14532,
+      "wire_offset": 14519,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 24,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[1]",
+      "ram_offset": 14536,
+      "wire_offset": 14523,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 25,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[2]",
+      "ram_offset": 14540,
+      "wire_offset": 14527,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 26,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[3]",
+      "ram_offset": 14544,
+      "wire_offset": 14531,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 27,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[4]",
+      "ram_offset": 14548,
+      "wire_offset": 14535,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 28,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[5]",
+      "ram_offset": 14552,
+      "wire_offset": 14539,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 29,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[6]",
+      "ram_offset": 14556,
+      "wire_offset": 14543,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 30,
+      "bytes": 4
+    },
+    {
+      "path": "lfo.params[7]",
+      "ram_offset": 14560,
+      "wire_offset": 14547,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df61c..0x8d4df75e",
+      "parameter_id": 31,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.modwheel.target",
+      "ram_offset": 14604,
+      "wire_offset": 14591,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 42,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.modwheel.amount",
+      "ram_offset": 14608,
+      "wire_offset": 14595,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 43,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.aftertouch.target",
+      "ram_offset": 14612,
+      "wire_offset": 14599,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 44,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.aftertouch.amount",
+      "ram_offset": 14616,
+      "wire_offset": 14603,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 45,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.pitchbend.target",
+      "ram_offset": 14620,
+      "wire_offset": 14607,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 46,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.pitchbend.amount",
+      "ram_offset": 14624,
+      "wire_offset": 14611,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 47,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.velocity.target",
+      "ram_offset": 14656,
+      "wire_offset": 14643,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 55,
+      "bytes": 4
+    },
+    {
+      "path": "engine.modulation.velocity.amount",
+      "ram_offset": 14660,
+      "wire_offset": 14647,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4df82a..0x8d4dfb54",
+      "parameter_id": 56,
+      "bytes": 4
+    },
+    {
+      "path": "engine.velocity.sensitivity",
+      "ram_offset": 14628,
+      "wire_offset": 14615,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 48,
+      "bytes": 4
+    },
+    {
+      "path": "engine.portamento.type",
+      "ram_offset": 14632,
+      "wire_offset": 14619,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 49,
+      "bytes": 4
+    },
+    {
+      "path": "engine.tuning.scale",
+      "ram_offset": 14636,
+      "wire_offset": 14623,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 50,
+      "bytes": 4
+    },
+    {
+      "path": "engine.width",
+      "ram_offset": 14640,
+      "wire_offset": 14627,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 51,
+      "bytes": 4
+    },
+    {
+      "path": "engine.transpose",
+      "ram_offset": 14644,
+      "wire_offset": 14631,
+      "encoding": "transpose_quantized",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 52,
+      "bytes": 4
+    },
+    {
+      "path": "engine.tuning.root",
+      "ram_offset": 14648,
+      "wire_offset": 14635,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 53,
+      "bytes": 4
+    },
+    {
+      "path": "engine.highpass",
+      "ram_offset": 14652,
+      "wire_offset": 14639,
+      "encoding": "q31_high16",
+      "condition": "always",
+      "evidence": "0x8d4dfb58..0x8d4dfd9a",
+      "parameter_id": 54,
+      "bytes": 4
+    },
+    {
+      "path": "engine.tuning[0..11]",
+      "ram_offset": 21396,
+      "wire_offset": null,
+      "encoding": "packed_pitch_to_float",
+      "condition": "any of 12 raw words != 0",
+      "evidence": "0x8d4dff40..0x8d4e0004",
+      "bytes": 48,
+      "wire_expression": "pattern.end - 96 + 4*i"
+    }
+  ],
+  "regions": [
+    {
+      "path": "regions[].sample",
+      "sample_offset": 32,
+      "bytes": 96,
+      "ram_expression": "0x394c + 128*slot + 32",
+      "wire_expression": "0x393f + 128*slot + 32",
+      "encoding": "NUL-terminated string",
+      "condition": "all emitted regions",
+      "evidence": "0x8d4e0042"
+    },
+    {
+      "path": "regions[].framecount",
+      "sample_offset": 0,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 0",
+      "wire_expression": "0x393f + 128*slot + 0",
+      "encoding": "u32",
+      "condition": "all emitted regions",
+      "evidence": "0x8d4e0076"
+    },
+    {
+      "path": "regions[].pitch.keycenter",
+      "sample_offset": 24,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 24",
+      "wire_expression": "0x393f + 128*slot + 24",
+      "encoding": "u8",
+      "condition": "engine_id in [2,30]",
+      "evidence": "0x8d4e03f0"
+    },
+    {
+      "path": "regions[].pitch.keycenter",
+      "sample_offset": null,
+      "bytes": 0,
+      "ram_expression": null,
+      "wire_expression": null,
+      "encoding": "constant",
+      "condition": "engine_id == 3",
+      "evidence": "0x8d4e00ba",
+      "value": 60
+    },
+    {
+      "path": "regions[].transpose",
+      "sample_offset": 24,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 24",
+      "wire_expression": "0x393f + 128*slot + 24",
+      "encoding": "u8 minus 60",
+      "condition": "engine_id == 3",
+      "evidence": "0x8d4e00f6"
+    },
+    {
+      "path": "regions[].tune",
+      "sample_offset": 28,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 28",
+      "wire_expression": "0x393f + 128*slot + 28",
+      "encoding": "i8",
+      "condition": "all emitted regions",
+      "evidence": "0x8d4e0136 / 0x8d4e0430"
+    },
+    {
+      "path": "regions[].hikey",
+      "sample_offset": 26,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 26",
+      "wire_expression": "0x393f + 128*slot + 26",
+      "encoding": "u8",
+      "condition": "all emitted regions",
+      "evidence": "0x8d4e0280"
+    },
+    {
+      "path": "regions[].playmode",
+      "sample_offset": 27,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 27",
+      "wire_expression": "0x393f + 128*slot + 27",
+      "encoding": "low6bit enum: 0 gate,1 oneshot,2 group,3 loop; others oneshot",
+      "condition": "engine_id == 3",
+      "evidence": "0x8d4e0168..0x8d4e0172"
+    },
+    {
+      "path": "regions[].pan",
+      "sample_offset": 30,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 30",
+      "wire_expression": "0x393f + 128*slot + 30",
+      "encoding": "i8",
+      "condition": "engine_id == 3",
+      "evidence": "0x8d4e01b4"
+    },
+    {
+      "path": "regions[].fade.in",
+      "sample_offset": 20,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 20",
+      "wire_expression": "0x393f + 128*slot + 20",
+      "encoding": "word when mode bit7=0 else 0",
+      "condition": "engine_id == 3",
+      "evidence": "0x8d4e01ee..0x8d4e0200"
+    },
+    {
+      "path": "regions[].fade.out",
+      "sample_offset": 20,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 20",
+      "wire_expression": "0x393f + 128*slot + 20",
+      "encoding": "word when mode bit7=1 else 0",
+      "condition": "engine_id == 3",
+      "evidence": "0x8d4e023a..0x8d4e024c"
+    },
+    {
+      "path": "regions[].loop.start",
+      "sample_offset": 12,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 12",
+      "wire_expression": "0x393f + 128*slot + 12",
+      "encoding": "integer",
+      "condition": "engine_id in [2,30]",
+      "evidence": "0x8d4e0468"
+    },
+    {
+      "path": "regions[].loop.end",
+      "sample_offset": 16,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 16",
+      "wire_expression": "0x393f + 128*slot + 16",
+      "encoding": "integer",
+      "condition": "engine_id in [2,30]",
+      "evidence": "0x8d4e04a0"
+    },
+    {
+      "path": "regions[].loop.crossfade",
+      "sample_offset": 20,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 20",
+      "wire_expression": "0x393f + 128*slot + 20",
+      "encoding": "fractional multiply raw*framecount, truncating",
+      "condition": "engine_id in [2,30]",
+      "evidence": "0x8d4e04da..0x8d4e04e6",
+      "related_sample_offset": 0
+    },
+    {
+      "path": "regions[].loop.onrelease",
+      "sample_offset": 27,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 27",
+      "wire_expression": "0x393f + 128*slot + 27",
+      "encoding": "bit7 boolean",
+      "condition": "engine_id in [2,30]",
+      "evidence": "0x8d4e0516..0x8d4e052a"
+    },
+    {
+      "path": "regions[].loop.enabled",
+      "sample_offset": 27,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 27",
+      "wire_expression": "0x393f + 128*slot + 27",
+      "encoding": "constant false",
+      "condition": "engine_id in [2,30] and bit6 set; otherwise omitted",
+      "evidence": "0x8d4e054c..0x8d4e059a"
+    },
+    {
+      "path": "regions[].sample.start",
+      "sample_offset": 4,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 4",
+      "wire_expression": "0x393f + 128*slot + 4",
+      "encoding": "integer",
+      "condition": "raw word != 0",
+      "evidence": "0x8d4e02a4 / 0x8d4e0398"
+    },
+    {
+      "path": "regions[].sample.end",
+      "sample_offset": 8,
+      "bytes": 4,
+      "ram_expression": "0x394c + 128*slot + 8",
+      "wire_expression": "0x393f + 128*slot + 8",
+      "encoding": "integer",
+      "condition": "raw word != 0xffffffff",
+      "evidence": "0x8d4e02ac / 0x8d4e0358"
+    },
+    {
+      "path": "regions[].gain",
+      "sample_offset": 29,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 29",
+      "wire_expression": "0x393f + 128*slot + 29",
+      "encoding": "i8",
+      "condition": "raw byte != 0",
+      "evidence": "0x8d4e02b4 / 0x8d4e0318"
+    },
+    {
+      "path": "regions[].reverse",
+      "sample_offset": 31,
+      "bytes": 1,
+      "ram_expression": "0x394c + 128*slot + 31",
+      "wire_expression": "0x393f + 128*slot + 31",
+      "encoding": "boolean",
+      "condition": "all emitted regions",
+      "evidence": "0x8d4e02ce"
+    }
+  ],
+  "region_iteration": {
+    "slots": 24,
+    "stride": 128,
+    "engine_ids": [
+      2,
+      3,
+      30
+    ],
+    "emit_if": "NUL-terminated sample path nonempty",
+    "order": "slot order, empty slots skipped",
+    "all_other_engines": "regions array emitted empty"
+  },
+  "omitted_parameter_ids": [
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    57
+  ],
+  "omitted_sound_state": [
+    {
+      "ram_start": 22,
+      "wire_start": 19,
+      "bytes": 1
+    },
+    {
+      "ram_start": 28,
+      "wire_start": 24,
+      "bytes": 4
+    },
+    {
+      "ram_start": 48,
+      "wire_start": 38,
+      "bytes": 552
+    },
+    {
+      "ram_start": 17740,
+      "wire_start": 17727,
+      "bytes": 48
+    },
+    {
+      "ram_start": 21444,
+      "wire_expression": "pattern.end - 48",
+      "bytes": 48
+    }
+  ],
+  "other_omissions": [
+    "notes",
+    "p-lock cells and masks",
+    "step components",
+    "all performance vectors",
+    "sample+0x19",
+    "sample trailing path bytes after NUL",
+    "sampler pan +0x1e",
+    "name",
+    "lokey"
+  ],
+  "engine_registry": {
+    "initializer": "0x8d4fe46c",
+    "runtime_table": "0x846df650",
+    "stride": 48,
+    "name_offset": 16,
+    "registered_names": {
+      "2": "sampler",
+      "3": "drum",
+      "6": "organ",
+      "7": "epiano",
+      "18": "prism",
+      "19": "hardsync",
+      "20": "dissolve",
+      "22": "axis",
+      "29": "midi",
+      "30": "multisampler",
+      "31": "wavetable",
+      "32": "simple"
+    }
+  },
+  "lfo_registry": {
+    "initializer": "0x8d5a35dc",
+    "runtime_table": "0x86bd609c",
+    "entries": [
+      {
+        "id": 0,
+        "name": "tremolo"
+      },
+      {
+        "id": 1,
+        "name": "value"
+      },
+      {
+        "id": 2,
+        "name": "random"
+      },
+      {
+        "id": 3,
+        "name": "element"
+      },
+      {
+        "id": 6,
+        "name": "duck"
+      },
+      {
+        "id": 4,
+        "name": "x-x-x-x-"
+      },
+      {
+        "id": 5,
+        "name": "x-x-x-x-"
+      }
+    ]
+  },
+  "filter_registry": {
+    "initializer": "0x8d4fe67c",
+    "confirmed_names": {
+      "9": "z lowpass",
+      "10": "svf",
+      "16": "ladder",
+      "17": "z hipass"
+    },
+    "export_lookup": "filter_types object by id, then type member"
+  },
+  "conversion_helpers": {
+    "q31_high16": "0x8d4ddb86: signed raw >> 16; all58 words asserted nonnegative at export entry",
+    "transpose_quantized": "0x8d4ddb96: (((raw >> 8)*73) >> 23)-36",
+    "cc_number_quantized": "0x8d4ddbb0: (((raw >> 8)*129) >> 23)-1",
+    "signed_bit_extract_9bits_at_bit24": "0x8d4ddc32: shift raw right8, signed EXTRACT(offset16,width9); effective bit24, 9-bit extraction behavior needs Blackfin+ boundary qualification",
+    "playmode_quantized_enum": "0x8d4dec2a: (((raw >> 8)*3) >>23): 0 poly,1 mono,2 legato,other poly",
+    "packed_pitch_to_float": "0x8d5a903c: signed upper16 + unsigned low8*0.01 via ROM float helpers"
+  },
+  "limitations": [
+    "Static trace, no device validation",
+    "JSON registry data itself not available as runtime populated JSON in loader image",
+    "Crossfade multiply uses Blackfin+ R2*R3(T); formula rounding/saturation requires target qualification",
+    "Export does not prove import reconstruction of omitted state"
+  ]
+}

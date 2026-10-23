@@ -1,0 +1,41 @@
+[
+  {
+    "file": "codec-stream.asm",
+    "address": "0x8d57c4fc",
+    "bytes": 2508,
+    "sha256": "9888732c08db31860939fa1a1b3c3ed69d1b2a57ebf2a3b35736e888335f30bd"
+  },
+  {
+    "file": "codec-dispatch.asm",
+    "address": "0x8d584a40",
+    "bytes": 2016,
+    "sha256": "bcb3be079b44f2d4f70b8456afe5682a87fbb9e0155e27018eb6457e1cdebe47"
+  },
+  {
+    "file": "codec-wrapper.asm",
+    "address": "0x8d585220",
+    "bytes": 664,
+    "sha256": "dfc407003422fb9b66cc9fe85d4d606da2903f96429a294d62cfda0213709ada"
+  },
+  {
+    "file": "codec-save.asm",
+    "address": "0x8d5847d4",
+    "bytes": 618,
+    "sha256": "45e22b803e192a29288fde8d4983c977bb7503493e166694990ba6a4dd12a2ac"
+  },
+  {
+    "file": "codec-legacy.asm",
+    "address": "0x8d5854f4",
+    "bytes": 66060,
+    "sha256": "cdeb695e4f702c65e4ad289206cd0122aa9322def21888e90cd4d512184fd72d",
+    "fill_records_applied": [
+      {
+        "offset": 1860860,
+        "code": "0xaddb0104",
+        "target": "0x8d591dbc",
+        "count": 36,
+        "argument": 2550897195
+      }
+    ]
+  }
+]

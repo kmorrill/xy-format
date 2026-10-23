@@ -1,0 +1,162 @@
+{
+  "source_loader_sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "helper_sha256": "500bb5ecfdda25bfa628acceb892d632321bdfccaed44b570c0aa6d7fad2320d",
+  "decoder_sha256": "efb2fb69ed4fa43e5855e0e9d94226bbf41593e7e484e74d608c120679ec19f0",
+  "note": "Windows include supporting data and adjacent instructions. Function labels are research labels, not recovered symbols.",
+  "windows": [
+    {
+      "file": "preset-files-patch-workers.asm",
+      "start": "0x8d4dda00",
+      "size": 13680,
+      "bytes_sha256": "472e5133854ea888acea7a8853c470e8194f768c47090e9102677aa3f5a9917a",
+      "assembly_sha256": "789ad4780733924e0bf38e890b0861d54b033c86791011fcbe76fc5de457bc30"
+    },
+    {
+      "file": "preset-files-json-io.asm",
+      "start": "0x8d4e1240",
+      "size": 13488,
+      "bytes_sha256": "e2538a6c521ae27130d5844cff0a9cc78cd878737254ae748f9afd21422beacc",
+      "assembly_sha256": "309556ef90a11dbd33eecca3952510ae8499490ea04cd7628d8b4a8058eb101c"
+    },
+    {
+      "file": "preset-files-disk-workers.asm",
+      "start": "0x8c0b0b00",
+      "size": 2208,
+      "bytes_sha256": "2a11095f1ebe94bd8275c088aaf1f4503f35501f9e0ebd8e9a33f9eaf75c252c",
+      "assembly_sha256": "0b2e28d74c95768c8c84e643b2ed0d0b607b700e084d798cfbb05b2f0c698665"
+    },
+    {
+      "file": "preset-files-read-json.asm",
+      "start": "0x8c03fb08",
+      "size": 652,
+      "bytes_sha256": "d496c328ecfb5e5e21eb88acf000ddab25bb00b66ad3f9ef7850c4ec12074da2",
+      "assembly_sha256": "2ab04a952651eb1f80dfb839540b9653cc02f51dabd2d50025168d54d0bfc8c4"
+    },
+    {
+      "file": "preset-files-path-join.asm",
+      "start": "0x8d5a48a6",
+      "size": 402,
+      "bytes_sha256": "460f7d707e9b4a2aa68607f29da8d4c6e54f0c544938759499425c58560ee47d",
+      "assembly_sha256": "c681d9f211e31dc837551c7915daaa3c76adbf259735bf9153d3b25d193a6e4f"
+    },
+    {
+      "file": "preset-files-parse-preset-path.asm",
+      "start": "0x8d4e3924",
+      "size": 4448,
+      "bytes_sha256": "c821007a46b3f2298cf74415c525a3e54640235f36187281c5318a03e5a0cbd1",
+      "assembly_sha256": "1ba2e58a84ece836bc4522f19fe57c398e816cb24754f7fb64c5c84b3cbbf0a8"
+    },
+    {
+      "file": "preset-files-runtime-apply.asm",
+      "start": "0x8d4dced8",
+      "size": 2432,
+      "bytes_sha256": "14387ef22d15843b40e622da9e7b860ebce58b7b762b3ce1bbb441ca01299b39",
+      "assembly_sha256": "44d603124179c32e168990c7ff6a9ddb4e194ddec54938a87b401d567d294d81"
+    },
+    {
+      "file": "preset-files-basename-predicate.asm",
+      "start": "0x8d4dcca0",
+      "size": 36,
+      "bytes_sha256": "ccc0b953ccdb3171e9fbb9886045e7ed039962750814b45227c42217e1d74042",
+      "assembly_sha256": "eae3375e39e0ddf26a6370330bf6c028fdc410bf9f5fc44d5fc067973bdd930d"
+    },
+    {
+      "file": "preset-files-string-rfind.asm",
+      "start": "0x8d4d7624",
+      "size": 184,
+      "bytes_sha256": "0c9190d6edfb16241a0f3d9b0c211dcbafe8d81081dc4c677dfe96f4e10fc221",
+      "assembly_sha256": "0a7afc731530001fbdb988ef18ed061d3c07e58de9c33f4249e19bb0db30d9a5"
+    },
+    {
+      "file": "preset-files-apply-sample-path.asm",
+      "start": "0x8d4dd3d0",
+      "size": 672,
+      "bytes_sha256": "ab53fd45bf87bc08c6ee505666038f0dd6580ef038713c928e7c687453147654",
+      "assembly_sha256": "cc5645db91114144dba3cdb689684f8ea8ca9882076c0d49d14bcc7fbae8c655"
+    },
+    {
+      "file": "preset-files-preset-identity.asm",
+      "start": "0x8d573360",
+      "size": 84,
+      "bytes_sha256": "c1adadc60f5884a224ef1a94c48191f82fd81bacc6a11962eda2d8dda3092b95",
+      "assembly_sha256": "77726eb1ede49f253b88144ebf4dc096f40e4b14e8f9a8df7b10dca9768abc95"
+    },
+    {
+      "file": "preset-files-load-request.asm",
+      "start": "0x8d4d7900",
+      "size": 584,
+      "bytes_sha256": "245f5d33aa116d983b46b45a765bd37cc910e20f03c39ce988b03cda3ab39df4",
+      "assembly_sha256": "f6d0462f47dc5e6d52389d7922b361a2c9bc28f90f5cc082b64332c706c74b7c"
+    },
+    {
+      "file": "preset-files-apply-dirty-flag.asm",
+      "start": "0x8d573180",
+      "size": 154,
+      "bytes_sha256": "30b961e95ccfdb0975eed6f4d3a148e1e6168f1cd2f3d58b9afffec32a473e5d",
+      "assembly_sha256": "5b065752e2b7f2eb2cf757e15341c5a218a807cf236ec967d648fcca6adb715a"
+    },
+    {
+      "file": "preset-files-save-bundle.asm",
+      "start": "0x8d4e071c",
+      "size": 2064,
+      "bytes_sha256": "5d925edb87fc9265d79b6c1fc6450ea1c230b86cac6b5937a8d93938853e61f6",
+      "assembly_sha256": "409af71c2838a598bc1c1805fcc282a8630e27a32fe6eb8b1093ab5c6a2d489d"
+    },
+    {
+      "file": "preset-files-cleanup-callback.asm",
+      "start": "0x8d4dca38",
+      "size": 436,
+      "bytes_sha256": "cab7c4990337db33b1d71b43cfd097e9a8e97bd2488ee4d9a31135e4c4322d5c",
+      "assembly_sha256": "8d44b402882424cbf351b73d01ecac7d7ee539c740ee284f2938cb1f9e8599af"
+    },
+    {
+      "file": "preset-files-directory-walk.asm",
+      "start": "0x8c03ffac",
+      "size": 584,
+      "bytes_sha256": "2611551de3078370d52f904682476670766cd884e794f38e064561ba633d5a99",
+      "assembly_sha256": "b9d108313fdb2dfbb202a1358554e56ce064473c82cce5db39846cf545bbc083"
+    },
+    {
+      "file": "preset-files-write-json.asm",
+      "start": "0x8c03f500",
+      "size": 882,
+      "bytes_sha256": "0b4c0cc66ffbab2a25697ab8ae5e7813f02c7edddf56557b74fa03b9361d1b89",
+      "assembly_sha256": "770d28be2e717fe762da883185e818ed11af81ae8ae80f32d4034306d004859a"
+    },
+    {
+      "file": "preset-files-rooted-component.asm",
+      "start": "0x8c03ee82",
+      "size": 418,
+      "bytes_sha256": "51e71c0295b8555ec293e6e7f579c567bca1b4eb84719a421e139302ad55ea85",
+      "assembly_sha256": "a42a066a4bde33cda11b08f42a743ebac0762e2b6431fdf11b9025ca9cdeecb9"
+    },
+    {
+      "file": "preset-files-write-bytes.asm",
+      "start": "0x8c03ecd4",
+      "size": 300,
+      "bytes_sha256": "169121461e02f17fb9490a4d821d2208ba14d009d1fa495c2e3dbc75ba73fc58",
+      "assembly_sha256": "85694c89eca769771529f72c20a8fda8798a7298a99becb6721164d2b05d8316"
+    },
+    {
+      "file": "preset-files-delete-preset.asm",
+      "start": "0x8d4e7c00",
+      "size": 1220,
+      "bytes_sha256": "d88891e849203b9f6bb398170a9d7f9ede5af9d753fc7941d4accff3ad81b2de",
+      "assembly_sha256": "4782e8f8c0d63e24da4dd649d6172e7130a8a417f90aec623904d4f8c86d01f8"
+    },
+    {
+      "file": "preset-files-rename-preset.asm",
+      "start": "0x8d4e9470",
+      "size": 952,
+      "bytes_sha256": "e900b0eccce3688c0cf0a0d0b66d9ddfed5da6d22fba55b39202bb9f77bc3006",
+      "assembly_sha256": "b09f488fee396c2b3672928266bceced2975d6a9a8710086094036939f2ad4f1"
+    },
+    {
+      "file": "preset-files-move-preset.asm",
+      "start": "0x8d4e841c",
+      "size": 4144,
+      "bytes_sha256": "67009502ac8d5eba383abcb2d9f27f82eaca20bcd8a20ab0e08ff01d16e00c50",
+      "assembly_sha256": "4cdea0ea9b76199a35af8f14da74ca219510318d59ab85a3a68c16ad1c058918"
+    }
+  ]
+}

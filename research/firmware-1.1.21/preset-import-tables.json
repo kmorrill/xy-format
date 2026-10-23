@@ -1,0 +1,105 @@
+{
+  "firmware_sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "ranges": {
+    "main": {
+      "address": "0x8d4dce40",
+      "size": 7724
+    },
+    "helpers": {
+      "address": "0x8d4dbb00",
+      "size": 4928
+    },
+    "json-types": {
+      "address": "0x8c050f70",
+      "size": 528
+    },
+    "json-conversion": {
+      "address": "0x8c051c90",
+      "size": 1424
+    },
+    "tuning": {
+      "address": "0x8d5a9ef0",
+      "size": 400
+    },
+    "engine": {
+      "address": "0x8d5a21d8",
+      "size": 368
+    },
+    "lookup": {
+      "address": "0x8c0526cc",
+      "size": 336
+    },
+    "array-lookup": {
+      "address": "0x8c0530e4",
+      "size": 928
+    },
+    "enums": {
+      "address": "0x8d4fe8d0",
+      "size": 592
+    },
+    "lfo-enums": {
+      "address": "0x8d5a3544",
+      "size": 320
+    },
+    "octave": {
+      "address": "0x8d57ad90",
+      "size": 176
+    },
+    "parser": {
+      "address": "0x8c04e500",
+      "size": 10752
+    },
+    "float-constructor": {
+      "address": "0x8c0518f4",
+      "size": 72
+    }
+  },
+  "integer_dispatch": [
+    "0x8c051dc4",
+    "0x8c051dd0",
+    "0x8c051ddc",
+    "0x8c051e18",
+    "0x8c051e98",
+    "0x8c051ece",
+    "0x8c051e98",
+    "0x8c051e98"
+  ],
+  "float_dispatch": [
+    "0x8c052068",
+    "0x8c052070",
+    "0x8c052080",
+    "0x8c052090",
+    "0x8c052098",
+    "0x8c0520ce",
+    "0x8c052098",
+    "0x8c052098"
+  ],
+  "bool_dispatch": [
+    "0x8c05211c",
+    "0x8c052124",
+    "0x8c052124",
+    "0x8c052130",
+    "0x8c05213e",
+    "0x8c052152",
+    "0x8c05215a",
+    "0x8c05215a"
+  ],
+  "track_parameter41_defaults": [
+    "0x60000000",
+    "0x60000000",
+    "0x60000000",
+    "0x60000000",
+    "0x60000000",
+    "0x60000000",
+    "0x60000000",
+    "0x60000000"
+  ],
+  "integer_token_limits": [
+    2147483648,
+    2147483647,
+    4294967295
+  ],
+  "string_bytes": {
+    "0x84036260": "gate\u0000\u0000\u0000\u0000oneshot\u0000group\u0000\u0000\u0000loop\u0000\u0000\u0000\u0000filter_types\u0000\u0000\u0000\u0000default_params\u0000\u0000lfo_types\u0000\u0000\u0000fx_types\u0000\u0000\u0000\u0000octave\u0000\u0000type\u0000\u0000\u0000\u0000drum\u0000\u0000\u0000\u0000sampler\u0000multisampler\u0000\u0000\u0000\u0000/\u0000\u0000\u0000external\u0000\u0000\u0000\u0000midi\u0000\u0000\u0000\u0000squeal\u0000\u0000svf\u0000body\u0000\u0000\u0000\u0000ladder\u0000\u0000zfilter\u0000z lowpass\u0000\u0000\u0000regions\u0000framecount\u0000\u0000hikey\u0000\u0000\u0000tune\u0000\u0000\u0000\u0000sample.start\u0000\u0000\u0000\u0000sample.end\u0000\u0000loop.crossfade\u0000\u0000loop.onrelease\u0000\u0000loop.enabled\u0000\u0000\u0000\u0000gain\u0000\u0000\u0000\u0000reverse\u0000loop.start\u0000\u0000loop.end\u0000\u0000\u0000\u0000sample\u0000\u0000playmode\u0000\u0000\u0000\u0000transpose\u0000\u0000\u0000pan\u0000fade.in\u0000fade.out\u0000\u0000\u0000\u0000engine\u0000\u0000tuning\u0000\u0000poly\u0000\u0000\u0000\u0000mono\u0000\u0000\u0000\u0000legato\u0000\u0000platform\u0000\u0000\u0000\u0000OP-XY\u0000\u0000\u0000version\u0000params\u0000\u0000bendrange\u0000\u0000\u0000volume\u0000\u0000width\u0000\u0000\u0000tuning.scale\u0000\u0000\u0000\u0000tuning.root\u0000highpass\u0000\u0000\u0000\u0000modulation\u0000\u0000modwheel\u0000\u0000\u0000\u0000target\u0000\u0000amount\u0000\u0000aftertouch\u0000\u0000pitchbend\u0000\u0000\u0000velocity\u0000\u0000\u0000\u0000envelope\u0000\u0000\u0000\u0000amp\u0000attack\u0000\u0000decay\u0000\u0000\u0000sustain\u0000release\u0000filter\u0000\u0000fx\u0000\u0000active\u0000\u0000lfo\u0000cc\u0000\u0000val\u0000content/dlc/\u0000\u0000\u0000\u0000patch.json\u0000\u0000x\\xb7M\\x8dz\\xb7M\\x8d\\x80\\xb7M\\x8d\\x88\\xb7M\\x8d../src/db2/patch.cpp\u0000\u0000\u0000\u0000failed to load fx type\u0000\u0000failed to load lfo type\u0000../src/db2/patch.cpp:212 m_track >= 0 && m_track < 14\u0000\u0000\u0000pitch.keycenter\u0000parameter %d is < 0\u0000../src/db2/patch.cpp:270 track < 8\u0000\u0000invalid patch platform\u0000\u0000invalid version\u0000invalid version: %d\u0000portamento.amount\u0000\u0000\u0000velocity.sensitivity\u0000\u0000\u0000\u0000portamento.type\u0000../src/db2/patch.cpp:338 bitslr(m_parameters[i]) >= 0\u0000\u0000\u0000\u0000\u0000\u0000`\u0000\u0000\u0000`\u0000\u0000\u0000`\u0000\u0000\u0000`"
+  }
+}

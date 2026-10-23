@@ -1,0 +1,7499 @@
+{
+  "scope": "/tmp/xy-format-preset-json-20261023",
+  "note": "Metadata only; paths and hashes do not bundle presets or samples. Counts are files, not distinct sounds.",
+  "count": 361,
+  "types": {
+    "drum": 53,
+    "sampler": 256,
+    "axis": 10,
+    "prism": 8,
+    "hardsync": 2,
+    "organ": 9,
+    "dissolve": 6,
+    "epiano": 10,
+    "simple": 6,
+    "wavetable": 1
+  },
+  "sample_path_categories": {
+    "basename": 1295
+  },
+  "files": [
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-num-0.preset/patch.json",
+      "bytes": 1632,
+      "sha256": "f4f78e03efd57e20b5d728aa09e2572825d2b198cd89768aefba388b8aa94b25",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-num-1.preset/patch.json",
+      "bytes": 1632,
+      "sha256": "617cd3d811ddc0d4a0046b14ee245b04476aba8755e2b478a6645fa7167b45ba",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-num-2.preset/patch.json",
+      "bytes": 1632,
+      "sha256": "6ac4d7e17eb1b9d45836c11a6846c2a1a55a721cdcc18336a6027077f1db0f31",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-num-3.preset/patch.json",
+      "bytes": 1632,
+      "sha256": "460b3d0e15c549d0ac35f0128da54c53b18a77c5d70bd945392413b082c29198",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-num-4.preset/patch.json",
+      "bytes": 1632,
+      "sha256": "16eb78f77ae01f5cecaec2b0b05e377e0ea98f4f6c645698b645ea5506e743ed",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-str-gate.preset/patch.json",
+      "bytes": 1637,
+      "sha256": "8e98a88818fbd71a24a990ba9d89082a1f1000624871dbb0e5cc1a42f285dc11",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-str-group.preset/patch.json",
+      "bytes": 1638,
+      "sha256": "e09516c2d1d61618e75249f7485194979d34bdd24233f7bdf89fab13410292a3",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-str-key.preset/patch.json",
+      "bytes": 1636,
+      "sha256": "51f0b24da77df740236dee08eff98dea4eb262a6edf2180ce5844066796da3ba",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-str-loop.preset/patch.json",
+      "bytes": 1637,
+      "sha256": "41c73481f5b6c182677b5ea4b214b306279b2e5ce910d618a01e8ad3828a2cd3",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/dpm-str-oneshot.preset/patch.json",
+      "bytes": 1640,
+      "sha256": "37e3d9048da1754b29c4a2c443891700b9341a861668aa18b05a095739788d90",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-00000.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "fed92094268f803d8e9e2a9447e029cfa052e84703017a9ee46f941387835aca",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-00001.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "e83cc6ae50a45ba03f0040f9ee419008c214ea2fb6885041d123b8febf5c3e64",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-02048.preset/patch.json",
+      "bytes": 1645,
+      "sha256": "62f7609c4ee61c3c4ab3c680b748a65d53a25baeb36a96024ca5f932093136b8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-24702.preset/patch.json",
+      "bytes": 1646,
+      "sha256": "3a0ad9a53a975ac3c42cabc739718e7d145733d7adb595b6df86f4c81ca15749",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-49404.preset/patch.json",
+      "bytes": 1646,
+      "sha256": "511c73477537917a3e5c52ce4f59e278671ea6990f2eea75a71a7b1d3448022b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-74105.preset/patch.json",
+      "bytes": 1646,
+      "sha256": "dcf427a81803e214b94f918179333c5cb58a7801c63519d2d8f080bdedceeb2e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-98806.preset/patch.json",
+      "bytes": 1646,
+      "sha256": "25adb66178c4baef8fd095f6ed7ec231aee15780304c76bd803f8970b6dfc908",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/scf-98807.preset/patch.json",
+      "bytes": 1646,
+      "sha256": "170c592a17461621fe40b3768d6f7c1c254fb91f9dd65b5d63e5d74bcfbea4f6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-gain-001.preset/patch.json",
+      "bytes": 1659,
+      "sha256": "5656f1c914bea4e94024fbe0000420d6a254cab6899991d0536d0ca38caf7762",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-gain-064.preset/patch.json",
+      "bytes": 1660,
+      "sha256": "67ccf9bb05626770006ac33895ae2aaa0480ed02d30f10db26acd26c5330ba3c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-gain-127.preset/patch.json",
+      "bytes": 1661,
+      "sha256": "828f9e66a80c11b913fc55a854c65bbef6835584e72a8c4c732390440857dbe4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-gain64-revtrue-tune4.preset/patch.json",
+      "bytes": 1659,
+      "sha256": "61da7ce90b25ec6edd6f7557dffe9c6c482c25a3752f6a513bee6d61641108f8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-reverse-false.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "fed92094268f803d8e9e2a9447e029cfa052e84703017a9ee46f941387835aca",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-reverse-true.preset/patch.json",
+      "bytes": 1641,
+      "sha256": "048d389ca380c455ed0bb404129d9939c1ba4c57830399fd930ae01501712515",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-tune-neg5.preset/patch.json",
+      "bytes": 1643,
+      "sha256": "f6b1f162fbf32c47a494b063eb8c11d095b86f6f03808a0578d8dbc7c2925eca",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/sfld-tune-pos4.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "b1e615ac349083b5815877141e33723650a95ee7fd45d695b172b528b49f160e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/skey-both-64.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "8647b5ee4c280adea30ed6ac4772e97547bb001350b325443afcbda2120c9c3e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/skey-conflict-h48-p72.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "123c35fc3f2ee88636b3e58a7beedf9490fda74df00ef243580623d9c2be763a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/skey-conflict-h72-p48.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "a3490eb4044b70e668e872f9fddab5db0734c281e27a2bb79855727516e113cc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/skey-hikey-64.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "c171233dfb018f6dcc2860f272b123da8b406b3f3cc44b397cb80ac302b6b95e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/skey-lokey-12.preset/patch.json",
+      "bytes": 1643,
+      "sha256": "00f62d4e414eec78b7bb3a2992d316b28c536a9506d4c4de07135f52e5a9b92c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/skey-pitch-64.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "3bc3258e40590d87c6b885a4036b2fef2df6b47949ce6e541b361fa31c886a1a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/slt-enabled-false.preset/patch.json",
+      "bytes": 1671,
+      "sha256": "a06a1f9ec3f56cb49c2e4a7a67a292508f07aa26ef644c6cff25d9713a9a8df8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/slt-enabled-true-onrelease-false.preset/patch.json",
+      "bytes": 1671,
+      "sha256": "3ff82a889e20ac85467cee26fc9f486f2f31c5d1c2edad9d0dc19499713b26ba",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/slt-enabled-true-onrelease-true.preset/patch.json",
+      "bytes": 1670,
+      "sha256": "02cea661da960be3d90ba5c606243fc2f2bc7281afd43134a32a18f7fd68a3f3",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/slt-missing-enabled.preset/patch.json",
+      "bytes": 1642,
+      "sha256": "fed92094268f803d8e9e2a9447e029cfa052e84703017a9ee46f941387835aca",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/preset-load-experiments/2026-06-patch-json-fields/presets/slt-missing-onrelease.preset/patch.json",
+      "bytes": 1612,
+      "sha256": "244300e4645f26154d2fad381e946777e2c18ef588591e218c0e37394b0eb949",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-106 bass.preset/patch.json",
+      "bytes": 1076,
+      "sha256": "6daa31343502f924f6cff52dfa17dac21585447823048e5db464bb6a8438f6e1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-16 2 2-3.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "122f2983d107cef129b9a85cccf89ab893bd7b4e78bbfe48ff7093a7d23f7dcc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-60s organ.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "f53100c9e19f9826ef7138f5496c958bbb55d76db7bdec7146f4391886252a32",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-70s organ.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "16b7f291858c65dff5fa2ab47dc67fcf8931d68eae48e59a2ca572d9bdbc1737",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-8bit saw.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "94d2d353079bc65fea034243657c9ad3f7414cabf3d1e94de8c5a877333b1602",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-accord.preset/patch.json",
+      "bytes": 856,
+      "sha256": "c0af1ab9cc9bf077b7d6228f7401ca932948c6d2711b11d9bd825ba7d3c2e474",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-acidic.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "f095d8ae70c6be0b6384c3f6aca3bb0a756751ce906c8652fe26c6e701f0a977",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-acoustic bass.preset/patch.json",
+      "bytes": 1043,
+      "sha256": "5a3fe35d5314f1c698fe7f6889a93cc3b7581ea14441940a5a4fd4180ab0a7ff",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-advance.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "5b8a1fc677e0a25e8500208cca9fabfb1dfea3b2d1d97890294e18ccc531ff92",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-aeroplane.preset/patch.json",
+      "bytes": 5760,
+      "sha256": "df1387bd07d633912e751c595d06bea884acc8b2da69a0d9429126be2c3bde8a",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-alone in the woods.preset/patch.json",
+      "bytes": 1057,
+      "sha256": "6239e239cf1f45afb170e723cbcb1fb8237a8eb56adc51935477e78ac5a7bd75",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-alpha.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "ddfab0cab9073c15d5c224334b3cbe9fe641b3ab7c4f5bd7e091a755b7a304a3",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-analog winter.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "75dbd9aad7fceef3de08712a460d85cc364b518ff0ccc3453a6bde74ecd6fa7b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-analog.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "84a571a7ada06efaba25066c1ec418aba821dab69f0b1471d6ab662356dab7dd",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-angelic chime.preset/patch.json",
+      "bytes": 1057,
+      "sha256": "3bef2b5e3dcf6fea9d4e37aac61134e470161afef410d399cd82d81ca3e3268d",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-apes are us.preset/patch.json",
+      "bytes": 5756,
+      "sha256": "b83edc843cc96413db13fe4408b24341b91a97721324f9e5abe3c4ff89f45ae1",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-avec moi.preset/patch.json",
+      "bytes": 1057,
+      "sha256": "05a741150e762af3dd7fc82ad1d0af60aaf2d32fe7eb561604256c2c3a281a11",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-balimba.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "5a1f213d3372ae95984870ba0f64cda6e65e712c60ae6ec19e86507ace3a37e3",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-bass heat.preset/patch.json",
+      "bytes": 1058,
+      "sha256": "7803a6415574b35df805b463ae185241e6b396a0e6240a3be4583510cc68f4ab",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-bassic.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "211b23c7bfb1a3c67acfb816d1ec89cfce00e844bf78ce0abee5817e3b063267",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-bear hug.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "567d93038e51bf3c257d54949aea8c8f3e3d56107ea0d5ffef4a7b1df565b22b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-bellodic.preset/patch.json",
+      "bytes": 851,
+      "sha256": "583ca50e0bc6403b3510c161279d5b528df03d5c3f314e8c71cc997900da2258",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-big entrance.preset/patch.json",
+      "bytes": 1042,
+      "sha256": "7440745087b16dddd43727b6fb5bb7bb9b8982069e88e1ca55f72948ad452a89",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-big stopper.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "3c935fefea5d7ba1f886662ac217825b6293bc19221f9abe760b3cfdc9cf61a4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-binding darkness.preset/patch.json",
+      "bytes": 1063,
+      "sha256": "f71ee7e7209f7a86f1cbd165cf66fb8b1d0a2687150a41ad1325afca66968e3c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-blip tips.preset/patch.json",
+      "bytes": 834,
+      "sha256": "0d63c3d3b262c67505de52ebbcc2130b5aacbd3b98c016a2905fec7ae1b08a4c",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-bloody roar.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "fe3465bd1e2a5eed44d1e527e6e2ad4ad020c19d5f147e363218620472edd6be",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-body movin.preset/patch.json",
+      "bytes": 1054,
+      "sha256": "20989da98d2d0e5d3a7ccc4ef0a32615cd834bd37a35ba3d80b7c1e0bb431b92",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-bouquet.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "f00b314d8bac05dda4476655343b5625bfb384814ea6c614c50a0950c6e068cc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-brassish.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "6cd3f3d84ef9b140d5078f478ba1c572e257072dffc15a894d2e97a2cfe971bc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-bright piano.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "6116517886b8f9e5d498fe1feb6d3fe46961b2e659ea60e35db1150ef8a6b8a1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-brimstar.preset/patch.json",
+      "bytes": 1054,
+      "sha256": "41acdf598513ef245d2f125d83a535fe170447fa2edecf31db0520aabb1c53f5",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-broken lead.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "4b92e51fb6908cd931301b3443e0a29f72e7d93627cd0c22229c5bc704a6da03",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-broken timpani.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "cb2d4da90e9685edb28cbe110cf7b52c431beb73fa76b32c09f672e3a3442e64",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cabin pressure.preset/patch.json",
+      "bytes": 824,
+      "sha256": "c3ccf01fb3f20b7c38da5053172f9cada691f2f64d56ff700587ea623a98d8e0",
+      "type": "hardsync",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-carillon bell.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "1b5f91058e6fdf13dc26bbf57d7cda7193f63d018a1243e80575f63b08fc0243",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-castle vania.preset/patch.json",
+      "bytes": 926,
+      "sha256": "36957fcb616840ce86e948d9d1a6cf042a29fa66f56ad90b67b6c1e9300e9068",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-celesta.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "0b83683a4a376c162aa55126abf51f3e9470911f6a396f0e556445abb5f82ee1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-celestial.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "c90eb526ad94237cd64faef741bd64cd96c654df41c2f65a2c0010a54562decc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cello.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "100c4fd8d2255ab08eb8249c7a67cf65c16ae81745df682c01910a0a8a2bc8e6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cheap dreams.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "5b2dc8754fc1dd933d15aa5a2b1ff55d6f86e208c4218b29ce8cdb39426ecaa1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cheese.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "5c22c6e1b9f1e010a49386dea5283d57840202d46e639c205917470bc9b0b5c5",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cherry.preset/patch.json",
+      "bytes": 5552,
+      "sha256": "2333d6991ca807013591b47dd20f8cbf6c0f82576e37617665fdfa8f9662a37c",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 23,
+      "sample_path_categories": {
+        "basename": 23
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-church bell.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "f22308d95f29f228ee21644541f172a2924726e75ca4e68b7737fa5686b9dd7f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-church.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "24e22a758d5733968b4e9bb855303a5cd2863c127495113c7ea3f7526b0266b1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cinematic.preset/patch.json",
+      "bytes": 1055,
+      "sha256": "22b87ee83627ebb216ae205a1d72e4585c8b9846a82dcf4bf43e1cc182516de6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-circus ring.preset/patch.json",
+      "bytes": 845,
+      "sha256": "fc57569d0e849c501465d9b4a350c75fe417204d0f8f67a96e6b839fba47371e",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-classic-mini.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "23994c114e5c5789562bd3202f94230af1f60e6208fe23b54bda76fc04dee23f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-classix.preset/patch.json",
+      "bytes": 5740,
+      "sha256": "277cc0f0a6c12b96f471c12234a87cc7d056c6a6a13c3a30249b677230899408",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-clavinet.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "05316c7123efda9802e0955bc20818e7fa8ebb993f3a9c64ae2a9e6e98612a33",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-clobbered.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "501b3d573706ce114e7869495bb395c0cc56f41d7999cc3c312e151cb82d324d",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-closed shades.preset/patch.json",
+      "bytes": 1063,
+      "sha256": "042b84366c1cde3b8ead3e5d8cf0fb5a083e07d475b4dd940b9e4a18583e9935",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-coffee strings.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "d6744898544d01d7457480b3f517349512f90cb94448bb7e3b938c3f63e917d1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cold brew.preset/patch.json",
+      "bytes": 831,
+      "sha256": "6405d58105cc14bafafc754f3a0c5b3bf8858fcb64a30c47f921c32419aa1951",
+      "type": "dissolve",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-concert harp.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "bc15695b45f375039006bb8c18f7b929ee2d1677063ff1965c2aa8bbf071fa86",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-concord.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "27ed7f7e16a55cb00f0eaf89dc0cdfe276fa3fb34ac2ed79fdd3e66788d1b0d9",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cone shaker.preset/patch.json",
+      "bytes": 1060,
+      "sha256": "0fb978adf0e0fdff8c5aa4e34b807160cf30b0454fb4c6049bf56e8bc41354c6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-corroded.preset/patch.json",
+      "bytes": 1073,
+      "sha256": "a4eff04d2ec7d2ba5a96f21c71bfbaf6b00b3b9d9feada4fb907a6e26e6ae92c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-creep.preset/patch.json",
+      "bytes": 1053,
+      "sha256": "303ab8a927e33af9eec2e51263602c0a62089b334a61513eada4f0e927452046",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-crickets.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "772ceb250ac34221d603ad3bff456424eeaca7f1e688c9ff3aaef7919b523a48",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-crowded.preset/patch.json",
+      "bytes": 951,
+      "sha256": "e55709fbc1bd504138bb071e6224eea9d8a9b5dffe1c963e08fe43bfee271e27",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-cuckoo fx.preset/patch.json",
+      "bytes": 5822,
+      "sha256": "786d0259c60263f114cb0116fe402c679674243113913a42aeb973e0d62bacea",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cuckoo kicks.preset/patch.json",
+      "bytes": 5692,
+      "sha256": "bad4aaaabba4d67f95a13da0b283f38b46ab66ebda7d68e159a57e106874cbb9",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cuckoo perc.preset/patch.json",
+      "bytes": 5724,
+      "sha256": "29fbd32b58bd704f5828fbf00343f4ad5c8993b692737e2675b3f58cb6e25d0e",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-cuckoo snares.preset/patch.json",
+      "bytes": 5726,
+      "sha256": "433dc83b986118e9649e0930bd088a005bda3490e8b27965c5dc65b9c7592b7c",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dance stab.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "164c63da4f293a1eb58c1260ed115065ffdfdace26089ad6caa820776217d073",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dancing ballet.preset/patch.json",
+      "bytes": 1062,
+      "sha256": "1afe1f8a850ede7b2c2ff28256af3972f10fe235a953a4f38792b9245ace24de",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dark analog.preset/patch.json",
+      "bytes": 1043,
+      "sha256": "56451c1e1025ff9ac307a1f8fcede5dcab7c382ab048ecf9e847b45131c64f31",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dark element.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "e6cc2bb26f86ca7976b6944e7dcc5e7b5ddefb250c6fee58756d812dbe89ccf6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dark rider.preset/patch.json",
+      "bytes": 1055,
+      "sha256": "8cb81dcbb25c3b1bd0c9c926c29c7a1be65457110977d49a91149624007bda48",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-data transfer.preset/patch.json",
+      "bytes": 852,
+      "sha256": "91cf73ee276e353ab71721462f64df083b9a92cc052882b0807fecb8426585e6",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-debra.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "ea20579aa43ef1d97982c01d3760c7a37cda2162f8d23d78e7dcff68c2c665d7",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-deep rock.preset/patch.json",
+      "bytes": 1051,
+      "sha256": "6ce2c617eec7122a772d13f0c20474b2a97e83fa5cdd4dac4e232b4696d9319a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-detuned draw organ.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "ceafa5831d40a3eeba3aa798d6f718ba712645e0182d3935086fd39b560a5734",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-digital breath.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "665c5fa65f6c0be4b406bfbaac1ad1c2e496746d47757b564140e547175db6b5",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-digital signals.preset/patch.json",
+      "bytes": 831,
+      "sha256": "16d01c3b39004d0725607d3edcf0ab651a1964e1e8ad30096e4cfb2b7c4b4684",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-dnb - kt01.preset/patch.json",
+      "bytes": 5780,
+      "sha256": "8e944a074181f7b51b934eadbc195b758249fca2c315fcf39d02e8cae7c33cd7",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dolphin friend.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "c7abd4a9ae40bbf68526b83fece0babd76cef3e1da1604ecc7f5f43924c934ac",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dolphin ride.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "7b8fd65e56f05f824b4423a2dd2af8e87223799c8a4a448a7de5a768033beb6c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-doorknob.preset/patch.json",
+      "bytes": 1043,
+      "sha256": "5c40f3738b5c3f08dbfc9a8856d0efdd11a2a622118ad6262b191dff3e95686f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-draw organ.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "b97873d4708069addbe47eb114027f5046b75c7dbd5f49a9a631cc34dec6f68f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dream.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "9600e0ac30ff90884b13e7188467e46b661f5ba9aa57ddec06faba2b08c51065",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-drifter.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "a7a9f4d3143af4feaacef94b8e684df5e8365c1722ad94cc54f386d5e8914cbc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dry lute.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "25bc566cabf518ceec36bb24dac2f084bed57b6716ba5305f1a45b5049b7f5f3",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dulcimer.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "a183281f03a591a6123543c4897971ce83f3c2672da4b3194bcbb995f95ba0da",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dunce cap.preset/patch.json",
+      "bytes": 834,
+      "sha256": "2fe7f6043189796396afc5acc7834a7f3cf3ba5fe23ea80d34c3501bdf6f3034",
+      "type": "simple",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-dusty bell.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "128cd2761c36a265671ca85943cdc5bb2c5b4c3c864d6ccd0d2f8a0c0a410631",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dusty pluck.preset/patch.json",
+      "bytes": 946,
+      "sha256": "0a02ccd8f30563b231587a52ac8dac86bf8214bc3d4f790dc67b193490c600ff",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-dx analog.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "e855785fb26442df19839dea6bfc330c5ae775184c99be25bd3ef7d824d07b8f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dx hard.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "4bcdc73e9d372487e8d37e4a12d0eefb9d80178ea925804b0e4beec59aeeba64",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-dx legend.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "8c3e985e6095de498c5db1b1465911b61c5317049b9e96c873bc0db49b1d6ca7",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-early morning.preset/patch.json",
+      "bytes": 951,
+      "sha256": "1be7714ef13f1823a1c9585c1158adf7c6d9b3a00f83baf7c740acca01453788",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-el grand.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "f7bd9c93d303f51492557a2446fdea04eaaea7889f0550535a2d56e486f877c4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-el piano 1.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "6a866732222c3eb6b0d82793146dec6bf923fc081d877bc0731efc21123662ea",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-el piano 2.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "829c4a76928110d51445e6f9d74c0d746eeedc00ca5d0f77234aba3dc5ab26ed",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-elective.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "763c4bd43462df952eeb02f714d848ad12edc2dacf7a7c18d8ef45c424d30afb",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-electric strum.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "57481791fd0f9202a9b38d134e4fcdab9473d00cdb238793a0a082c30420a70b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-electric upright.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "2a42ef70391a97411a84ea51cfafc5d3a23cd1b9cbc2c78cbf9d7b00268de6a5",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-electro tonic.preset/patch.json",
+      "bytes": 949,
+      "sha256": "b710c8dc27aa44018ffec9767aa6d99cf04d48ee9ade1efecd4dca44e88824c3",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-epic ensemble.preset/patch.json",
+      "bytes": 1053,
+      "sha256": "9c6af3c4e341d3005b9bafb0570726ef784c75fd9fefbc3ae72406677b1078c9",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-equinox.preset/patch.json",
+      "bytes": 838,
+      "sha256": "40841b43d1f9b36173e9f8930c937ceb8b3bee63dc6bfc4d061b369f1b195313",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-err rhodes.preset/patch.json",
+      "bytes": 947,
+      "sha256": "bd872cb4203514ed5ccd71b1199e82f275093c8b49489835c7e943f6fcac649b",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-ethernet gas.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "c4d6c7329470b8416dd72a1d71488516d98dc48065e214de73c08e6a64f48638",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-exoex.preset/patch.json",
+      "bytes": 5746,
+      "sha256": "8c3a966a49ec1388111c87e97a7a5dec7aed6442302327af2ab20892241ab4e0",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-faded.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "29cc19df87ab7db2c3e5579befc9af3f266140d1035c1cad86c9baa568e7f5ab",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fast rotary.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "b7d0b0980ffefdfaa597c32c9b1803076c51c122afa30bc0f7aacde26012f186",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fat brass.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "93a50cd7427a469690cedff48f5c2256b468505c63da231356ba0cf1c3e4eded",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-faux caring.preset/patch.json",
+      "bytes": 828,
+      "sha256": "cb43ee6965393506243511d731c0a62081b3335e2d263a7f987bd67a03ba135a",
+      "type": "dissolve",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-feeling off.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "fc890893d8ec26d941fe0c92794625a4f1ebae81edf70df0f4bdddd649422707",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fiyaah.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "adb426e1be6674ddef2af0c05df72f1f6175de1129dcf7b8bf50238e8d33b071",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-flight school.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "1b882678dfee1cab09fe8433f60b0c0e7db480f106c3e888efbd6984b97776aa",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fly kites.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "2cfba2f260af4e8fe8d34c5dc573b0049ac00e1dca398d65e826cb59d439e148",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fm brass.preset/patch.json",
+      "bytes": 1042,
+      "sha256": "e32ca9eb0209be735468122fa777756de351848c83aaf090327d4789746cf4fc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fm fool.preset/patch.json",
+      "bytes": 1048,
+      "sha256": "fa47d1709214e7b15dcad8b8759785d5d58ae7d5c846c5d0d1cf6558ae2d1eba",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fm knock.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "44a85b8741f9a1361abf0c745d46002daab5b49771c65cb3a4b0be82f328247b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-french horn.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "c044779dc19c9cf44d19ba2d09210c0e0cb573b49cc058eae240b9f0d49d3305",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-fresh breath.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "2a23b16c7c10b461825921c82849347b9a0e3741dd51dec52e4e3241d7c3dc58",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-funker.preset/patch.json",
+      "bytes": 923,
+      "sha256": "4ac1aac806eb65f4e56344f1392cd9acad576caaa342a65bf7392c4a4d265998",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-galaga.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "168a5bda7c2908e8841855ba4bfdf965addf0bd82db9db071641e88e70fc67d7",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-gangs all here.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "725cb4768bf822d5ea93e6613039e84a386c21f6d92bc18dd1c668b2680fdea4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-gentle horn.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "35aa8d77900fa38c9b4b51fd13eddfbf20d4fd0939cb98fc2e8978a59817bfb4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-glockenspiel.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "13b87dd412af9559c767eb71e60730c3dd9cb74f02498d5258a39fbe168a1e13",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-gnaw bass.preset/patch.json",
+      "bytes": 1057,
+      "sha256": "ef9edf9d595e9493df00ce050ca81d69ea0ab5278e5fefd47e543d74e34ced1e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-go fish.preset/patch.json",
+      "bytes": 1049,
+      "sha256": "57ac2a2a7f1ab5a4c7cde57a80cf27ca40ee692c60ca41f5fa9b5604d624526a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-good wood.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "7e32c31adde89c2999019504a8ad88fa72c7cd731db73c300080827289dbca45",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-gotta go.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "78ea19004761075aec330c32a2683ea3c1cd2eeb37290fa41ce7655c93dd79f2",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-grand piano.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "3d68691a2a12517b2993e81f1c9b10d131852aef9dfb57d0c12efdf654165260",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-grits.preset/patch.json",
+      "bytes": 5726,
+      "sha256": "88eb85f675a44b7ebe44ef07df3d38be33492ce150bab3e4d2afd5fd38d7f511",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-gucci drama.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "a9689a6eae4efe63eb56716e651042b7fca78599dbbbffda3b206445b7ef6205",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-halloween party.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "a6d67a63aaab824496a91f645fae8862cbd7dadfce669553ce3d6e0ea9599cae",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-halls of the damned.preset/patch.json",
+      "bytes": 1080,
+      "sha256": "56116c9f1f1b28bcb3143a6ff0af5f6031441426074fdb073032b9268efbc930",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-happy life.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "8999a0dedf89b21e46eeede1c898334d4d2b15bbe96d3b8d39532f821c2bba04",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-hard el.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "9f3523165cf47474f6d335e0eec8714401de0655cae6d6b0f7c41696fa66f59b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-hard spunch.preset/patch.json",
+      "bytes": 5760,
+      "sha256": "d36d402e586225341c538939f3d308d81f296bc2a92461adc467bedb672b1ddf",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-harp.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "9410f01183c32811210dbc55f130e3cdb9bca555e2c9a6365cc1cb9c5096c5d1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-harpsi.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "bc3d0b2a854668d111945537da1691e6080cfff546a7019f40791aa7dac95339",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-harpsicord.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "2ccaf1cda9b624054adad73d9ab8802e14fcdc1541ad38ce6d590fdb95077f65",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-harsh vibraphone.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "64fca508bb6fcae487cbb34b19f8c7dee8ba44586b816473f59b68a8c4b79d8a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-hello neighbor.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "7436725c559e08640e2daa7638e51974ce4ba7985bc239155df5649e52440f49",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-hive mind.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "c292818e475e7b754d410e28492829219d4934a699fd0abdb30fbd10225c47b9",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-hollow.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "7b36d95e4bb632e69cf1840531ddbca7dcdac318c80e1c7c55d3645ab7be8763",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-honky tonk.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "69aaf27f3732e7ad9f3c59e763902835dae861cf0748d024029b3cd6d32f345c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-horizon.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "da35ed8cc712ec0a4009893d765743b422d3672de78a8fce9fccd0c065e0c2c1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-hot tub.preset/patch.json",
+      "bytes": 1058,
+      "sha256": "8973286496f67afdf0a3164aed91576cabcf2d96fae245f1c8d090d962ad6a3f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-household name.preset/patch.json",
+      "bytes": 1043,
+      "sha256": "d3e4150f8c0b19bcee55eeb3ca5ebb582b966210a3abc645567eeb9f5744b32b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-houston proud.preset/patch.json",
+      "bytes": 926,
+      "sha256": "2e628a47655b2446e0748e39d18ec00e626c7f53d1ba5ea82cf7040386108f9c",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-ice caves.preset/patch.json",
+      "bytes": 1055,
+      "sha256": "d932af1361e359ed544f4bb900f75e8656d03c654b7bf6a3054dd8b9beef2666",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-ikembe.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "144d5c2e40546a68626d2d8be2901dec339ecb0ebc429a234e4371b8fcc86596",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-imagination.preset/patch.json",
+      "bytes": 834,
+      "sha256": "2fe7f6043189796396afc5acc7834a7f3cf3ba5fe23ea80d34c3501bdf6f3034",
+      "type": "simple",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-impulse.preset/patch.json",
+      "bytes": 929,
+      "sha256": "db431d45ff9f33422d0195823537d7cb139ba047e5eb1ff4060562c2bdfa2c32",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-in your bass.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "08a26650eb26e6aceb875844d1f7ecba1f09ac5777ddd3975d731838bf7350e4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-its a boy.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "ba9791d0bcb4ee4c10c4c4b9ba8695f8d5abf1444b54bde3ba55a22bc092d107",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-jittery feeling.preset/patch.json",
+      "bytes": 852,
+      "sha256": "271c4dba3cbd7887d40601a50593a7b5cfb086075eaa6b1cf18f0c92e7f9f41f",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-just a kiss.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "9590098419e520358fc04feace08876a10a09a60115f72b6d58ed346eeeaa4f6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-kalimba.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "01c9cee5b708fc35ea464fc8e8d0cbee79d6fbe212a8b480deafb564fd2cebce",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-kicks 01.preset/patch.json",
+      "bytes": 5886,
+      "sha256": "3882cf7da2c2bd13b742508469a5995b6a313a5d982b7bdb00906192087819ca",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-kicks 02.preset/patch.json",
+      "bytes": 5897,
+      "sha256": "d0f9dfcbd7e27628d1f3b51a110f101ad8faa3aaf290315495af3ca00f5f89a9",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-lasers racing.preset/patch.json",
+      "bytes": 856,
+      "sha256": "3fd19d90a4ab9da529ee9d89cf941738769b3e9cc353a451e6d25f7aca87cf4b",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-last breath.preset/patch.json",
+      "bytes": 1058,
+      "sha256": "bc25f6e7068f143d7562ac35cf7d77ce909a36d55e778455fdd359137140f97f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-layzer show.preset/patch.json",
+      "bytes": 836,
+      "sha256": "7a37b7de6c65711f5022350f5882301a1f9332534dd93a25dceea92c61fc7031",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-lazer lead.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "81e4c687a46435690d48c577a54a67f67250497a8bb474d5657b1f9cc02caedc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-lets go.preset/patch.json",
+      "bytes": 830,
+      "sha256": "2d84cfa12f4d36a71f8e5c9489c4577ebfeb909248b60a2e9bfe4354fc039d57",
+      "type": "simple",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-lite organ.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "4ea666198485175684ffe4e3fbb7385dd963c371295a86ded5da6a4a41f67805",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-lofi slap.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "f1b56ef8c31c45c17651277e55233fe71041002f719741b7fee4170c53d0fe5c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-log drum.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "325981c3e307c9950cf9641ef88d47458a5596cb039c5f9a7756b13109fe23d6",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-long church bell.preset/patch.json",
+      "bytes": 1053,
+      "sha256": "f558c1dd7d5d3a4eeea20ec6400653a29c84a15660461e791b3e911b476a70a8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-long trip.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "20f82dab002f13d12580065bc31a85ef07748aafa7bccfe6273af1c1109e48bf",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-lost journey.preset/patch.json",
+      "bytes": 6203,
+      "sha256": "1b70a148921450d580b26e67f47fbf1b1a3e56d6fbdd8b93e4fc0028e0f9839d",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-lubowa.preset/patch.json",
+      "bytes": 5760,
+      "sha256": "043fbdc5387668d8f748b8168923413fda91614618764ad478e087fbb7298f0a",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-mallet tap.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "f599443817e78092a4bbb361eeef561d6475cf379f846d8ac2dc533f2a2810a1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-marimba tap.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "a903bfdea9f55d50b72ab94932ee19d532aa45ca9beb3962c7dab9a7898c9a5f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-marimba.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "f53c3228cf00904f90c0a6c33b72849bb774bd5ab7f4fa1491236253c5e09bd2",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-martian juice.preset/patch.json",
+      "bytes": 824,
+      "sha256": "e4826c7875ad25d0e25d1f013c68728987b1404bf6c022dba4bbb2cdbf8a7e33",
+      "type": "hardsync",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-mellow.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "067ebec195688cf0d32a36c8b674657b5071e700a90dbc8cd1390b085dc060a1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-melting pot.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "64483a2d602f5ed5c87c0e4fc3f235f19dd3d4339b71ce9b86de282277b5bd8b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-metalicize.preset/patch.json",
+      "bytes": 1044,
+      "sha256": "95cf01b37b6142d12e9d6fef771d7435760828242c24f318f109fac215d8f895",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-microscopic.preset/patch.json",
+      "bytes": 5538,
+      "sha256": "395e2f6e1a4828aca6409d7c0db7e1231d310553317517aebe62d2b2edc71fab",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 23,
+      "sample_path_categories": {
+        "basename": 23
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-mini-string.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "1e327b06fb07e3f5d872796730192a7096e4f5589bcb4f68330feeb510dd48f0",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-minimo.preset/patch.json",
+      "bytes": 5730,
+      "sha256": "d970466d764b011bba2c944b6905b9a318e97e779fa6e64c0b9eeaec8d0511a0",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-mooisey.preset/patch.json",
+      "bytes": 918,
+      "sha256": "d8d117523b41295fa6f2b080ebbe0fe4cd69e0fb7ea26793758a3551f71b2c36",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-move the stars.preset/patch.json",
+      "bytes": 1048,
+      "sha256": "915446d9b5546308907e5be3bfe3e0785c0855b5e96764323e9808771681e2aa",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-muffled bell.preset/patch.json",
+      "bytes": 1048,
+      "sha256": "42df2717a65706190e9d0c1969ffe73980201f5c47a72894a0ebcd2e81f50fc1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-music box.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "933aab39d2d033759d672e26e7489f218ff4f338f50cd63a8d0f783d0da8b790",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-must have.preset/patch.json",
+      "bytes": 1042,
+      "sha256": "6f240da1e5244ee3a4da0fc08ea0916eb24ce0b7516936cc323554b5685e8143",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-natural piano.preset/patch.json",
+      "bytes": 1047,
+      "sha256": "3061b3685dbf3143486128276f40dbb0518b928afefa9f03c448ebd5bc47a475",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-nedavine fx.preset/patch.json",
+      "bytes": 5834,
+      "sha256": "fe52141e320731bb3994ae08b216ed120e08072633ed6f0961c819c309484c26",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-nelly.preset/patch.json",
+      "bytes": 1052,
+      "sha256": "2253b7fdace968a679790bd6789474d7e120e87f5ec547c1f8eb9e1e3a89ea45",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-net shot.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "c2bf22fc3ce631445f36133833bc371beef7342a7207e8d0972e61bfbdceeb7c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-never over.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "0f582160f89e7f92809c27eda12cc9ae9b008592839415d3c9c507bc3591511d",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-new voyage.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "dfdaa9f0da468782735f54d0a1e13a13d345a22322ba272ed895a027d2076f13",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-night eyes.preset/patch.json",
+      "bytes": 854,
+      "sha256": "89e45f4dd2ac83a7a1714f43f17c1890162b0191b287029c3f446b2d0e09a122",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-noisy room.preset/patch.json",
+      "bytes": 832,
+      "sha256": "584cde9d372a02ae0d096e46088fb69630b85e5c7b8baedec885551e4ed686e7",
+      "type": "dissolve",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-noisy stabber.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "aac8203e10bb1b98040c918614ec365e158b8653de99108972a2b41824800afb",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-noisy trance.preset/patch.json",
+      "bytes": 1054,
+      "sha256": "93c5b9f3eaea4e910455b48e99d720569509ebbed682d06d64228cfea04397ed",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-nylon pluck.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "30a2a2420b982a1e9d3894a2ee006884a15a0e7c471f7afdf46e03ba6f2eb74b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-oatmeal.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "c33fff00e0bc0d7597b88780cae45f4007855afd3b7895e6dec4e162b52f9a7e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-ocarina.preset/patch.json",
+      "bytes": 1050,
+      "sha256": "9a8665e75021b448744530056d28e062f173710d294f246bde48c01bfb9f561d",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-old sitar.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "e323ece8e134a9f33d457e9c69c038d119ebf845e74bdeae50c00405e96dc0e1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-operative.preset/patch.json",
+      "bytes": 924,
+      "sha256": "537f0474f425fcc512a5df8a9291b36f48e3abd732229d022a7ddf31efedf817",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-organ bass.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "910382b82ef79c1007351f5bbf9511880a38e305ad3231fabbe1ae7429c967ba",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-organic.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "93e77b86d8ad8957560122941b89ab47f6d9c4a5c043ff0a96398d23b00dd5b8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-orgel.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "a129420468599362310eaf56e4733ddc7e739162211f4954e31d65db618849c8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-perc 01.preset/patch.json",
+      "bytes": 5690,
+      "sha256": "95115ac1511d61e53b229ee7201b776b0f3e646c331cbed6359cc323f34b52e1",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-percolator.preset/patch.json",
+      "bytes": 949,
+      "sha256": "419aac864d7c3257692c5f30e6cb2ad36f1f34ba002e1d3db5d24872d2e62516",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-phantom.preset/patch.json",
+      "bytes": 923,
+      "sha256": "8c2ba1e10a60f45225683bde539926b85fb27e0eb78747a68601bc954bcba03f",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-pixie dance.preset/patch.json",
+      "bytes": 834,
+      "sha256": "45595ab27f4b76c35229427451f5454edbbee63ee34074eacaed21becc31cf74",
+      "type": "simple",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-plastique.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "e1bad85091907f11a0a200a983f7d8d7e85a4dffe4ac566040861630f3f64787",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-please dont go.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "11dec18f83989bdc1f01172d07495b09ad12f6950805ec90acbc0ea9d6af3b79",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-plucky chap.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "d8b00b49b61a7eb3625aa1a2e2b16d564c96a0f88a2d50f5344dd6a61fe9d45e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-plucky funk.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "20c2d873fa6365b3488141281c88fb19c1e522130125185f5c72b53cb93ca17a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-power lead.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "470133bf1c7eef63b838c5e8bc79c606bd5705c35b52001fec4fc7e8781a404c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-present.preset/patch.json",
+      "bytes": 944,
+      "sha256": "64549f6b696f255c224425790b4f2bc2607180599a38210e751511ffefa73979",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-pure drip.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "f0d537075bf806fc7b49e571b73e564249f90b1da72c0d7b8fdce41ac5ba160e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-purple chime.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "c7d1f6ecdbce32da51ca9d6477a73915b680cd1d4985614450c2198d6615daf0",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-qitar pluck.preset/patch.json",
+      "bytes": 1053,
+      "sha256": "2b4fa2f47dda34865a321dc7652699e5d02f14c1fed0280853f53918259101b7",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rando organ.preset/patch.json",
+      "bytes": 840,
+      "sha256": "878f29052b0c09fdea6effdce0e3e2f792038b707b0c5d5849069094aad1834b",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-rdmt fx.preset/patch.json",
+      "bytes": 5644,
+      "sha256": "a1d9e878194a71d3126887eaac03cc107f550eb60e4cf167d44082394e2d5c0e",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 23,
+      "sample_path_categories": {
+        "basename": 23
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rdmt kicks.preset/patch.json",
+      "bytes": 5727,
+      "sha256": "5d7822ff29d6029d0f3f08aecba55908ca88463c83773ceb038768795a9bc88d",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rdmt perc.preset/patch.json",
+      "bytes": 5732,
+      "sha256": "58347bcf3535fd153a2089157c64c5947188a7f5e94d3d97ada61a7cc43d6156",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rdmt snares.preset/patch.json",
+      "bytes": 5747,
+      "sha256": "79c4ca1a002e1564921ad8e3b5e1a350c477050b55bed69e5c842442433f39db",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-reese raver.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "03635ad9f8ae15b6ecce8f0de3807b6aa7e9d8e966e3266780d961c79ab11aa4",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rez square.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "bda3e4e7ee49eb613eef9bc74248fd85beb793a3e855790449f1893fc83e3e29",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-ribeye.preset/patch.json",
+      "bytes": 836,
+      "sha256": "1c9dbec2ed150a1164f370938ef1fcacb12152cdcaac1354676ddccdba81b309",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-ritmo box.preset/patch.json",
+      "bytes": 5742,
+      "sha256": "c01a4499d62ecf876124c8c98c2d14d4ec46c6deced10dea181133a87e936df7",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rock organ.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "415f240b49b5c2b24cddda57e04f5afb568d20738c50e5bea99ef84b8342acbc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-rotary organ.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "2faaa693687348d4114871535e0b55dddb10772b9fe893f55d53cf20883078cc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-royalty.preset/patch.json",
+      "bytes": 956,
+      "sha256": "884cf1160614cbdd48e9a653a8685c0ef4a353e0fbbd343d931bf456617b0a42",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-saw synth.preset/patch.json",
+      "bytes": 1049,
+      "sha256": "6df7bcdf74ff4ad16bb316d81dab6ad904582a5216d92487ecc83669d3a6f078",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-saw tooth piano.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "3bde7584eb5226d54e38298f3c7c60021bd7fb2403f1260bb40693667a13c52b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-seba fx.preset/patch.json",
+      "bytes": 5842,
+      "sha256": "6f16427f80b85845e659dd4e0834089e027f4cc8d8d5d6c94bb1ffe23e78621a",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-seba kicks.preset/patch.json",
+      "bytes": 5731,
+      "sha256": "aa9f3a08da2da8981afab962465e10a8687959ae5bc2c5668edfa9926533ed7d",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-seba perc.preset/patch.json",
+      "bytes": 5720,
+      "sha256": "7723a667e3aa942c94266ef3d221423909699d0f27c1c22aad508dc33aa4a6d5",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-seba snares.preset/patch.json",
+      "bytes": 5740,
+      "sha256": "7b804721770cf8e5641ab2c5f0f67c8762b5913274401b782429c076113c7340",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-shaking metal.preset/patch.json",
+      "bytes": 837,
+      "sha256": "6285978ce8e1f75abcd993f4fbaf251dcdf8340517719dc9e9525818121f4e2f",
+      "type": "simple",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-shakuhachi.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "00316bd57a0856659855e7cf7db62844a1a5d0743f3581fd08887e27833fc041",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-sin bell.preset/patch.json",
+      "bytes": 1054,
+      "sha256": "7490400f4383e396fdb8be48087415dd42fe4ef4f4be9cfb103247539f66349e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-sine marimba.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "974d376b505edcfa0e6551957ebefff5d9907359961becd34027af3a4ec47c6e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-sine of the times.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "3386c35462d9b712ae7b593b778d94c03e64858c629f06fc4d4a029b3b9278b2",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-singing bell.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "0680feec6bb1ea59e0db09e523164b1310e9c8fdd9cfb85ddf90665d6b40e537",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-six houndred.preset/patch.json",
+      "bytes": 834,
+      "sha256": "031be3a6bce47685dc9b643435341648b67478645f240af64947abc9de9e1845",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-slow rotary.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "bdd6b6db325a7494daea25b5a5a898f7a27778253729dcf00792afaec428fead",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-smooth mistake.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "7b9ea2329f18266a1efdc49713c350bf95dd3541334d9e1755838d4b919bd904",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-smooth sign wave.preset/patch.json",
+      "bytes": 1051,
+      "sha256": "a65b20271b69e9f43390143ca180de3c465845cddc9df2b3d5ebfcef3dd5d9ff",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-snap to.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "41133801a5044836f457135327e655237623ba4b6248e7170bd92d8df83bf1ab",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-snares 01.preset/patch.json",
+      "bytes": 5663,
+      "sha256": "51b9fb05d1d41cd9ddf00abb2ff68b266eee7cfd8be96b39d91e532b4564b1e0",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-soft caves.preset/patch.json",
+      "bytes": 853,
+      "sha256": "658771debb38fe335c29565a1fecbe0a01d586f13827b0e9a4a78af57471b13e",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-soft synth.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "cf5146ea147156af7913c09656b30a3ccf9b7c82b5ba2627f8d8378694b39f1c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-solo violin.preset/patch.json",
+      "bytes": 1042,
+      "sha256": "c8e58d54f8a6cad503f6dde3d6c45323f9794b10c86e06cea42ae416432db7a3",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-sonic boom.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "804a81bfb04b8f595df186e8316d4ddb531cd46615e5e04f713886ccafbe669e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-space bass.preset/patch.json",
+      "bytes": 1063,
+      "sha256": "fc52eae5a2ad6cc4d19c54bec2f6a732f7eef79ef488cfc8cf01b5b68912d810",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-space tribal.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "688d6a45dbcef7b59252b5bd6352985ce4d08b63cfc9b4acde2f79cfae7dc37d",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-speak and.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "f2f1cf59fbc1181d012d435fa3825fc048d5329af851dd4d9dff0c4c19c262ef",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-speaker buster.preset/patch.json",
+      "bytes": 1054,
+      "sha256": "8715b7291f4bd9a4799ad6f7db3bf90a479ced6afdc3e6fa42ce1701c086f211",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-spitz bottle.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "3b3021eda17cdb49d013c731f3632118fb3f4e6f58182cf56b22c68e3c0cc98e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-square pockets.preset/patch.json",
+      "bytes": 1058,
+      "sha256": "2331c0e597c186a57e202de1b612a29ba2213feace9feeb214d3448620caf5c7",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-square pusher.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "4cda730b5999b090f6284f3c5864d454b1ea5e3c8982145687a25318d20a5f0f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-stale crackers.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "c962c9c90332389d9cdf39f26566ed1c55fccd9013f30c5d3e37e93792f81bed",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-steel drum.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "807e37745357eb84be3cbcac05070e71cd413b8b697e7d2011ce98af48b12414",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-steely.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "f22774d7050e960785f302beaea82dafc8756e81454995484c0afedf5899b155",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-stomp.preset/patch.json",
+      "bytes": 5706,
+      "sha256": "172bad57b492fcea79d2bcdf57766424b2f499858595487c3dc39ee2fb1c29ae",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-string lead.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "9dc6e50aa216873fdb964b87cae98d34964658d1c273d457ae1cce30cef07ba8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-string.preset/patch.json",
+      "bytes": 1042,
+      "sha256": "92d5852ce57d905542efed19248affec4a96968c11f0b4638b36a15b002456c1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-summer breeze.preset/patch.json",
+      "bytes": 826,
+      "sha256": "537144fcd9b02ae67e73e348fc64f34f79b115a754d7552e1bd50d75b5cc90dd",
+      "type": "simple",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-swarm of bees.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "ab2840bcced03006d34dde17f8eea32bb7cdb460ddacb4bd559860776c08cf7f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-sweet revenge.preset/patch.json",
+      "bytes": 1051,
+      "sha256": "41ff97b71edc2581cfcfb58d63a2fc2928cc27d83b60c2a750fa08cf07aecd55",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-synth clav.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "e3fcc94fad75b74854c40a09bc1ad49e797d2ba9de0e84dd41df032e7df399dc",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-synth pop.preset/patch.json",
+      "bytes": 1043,
+      "sha256": "a2fc779a693d07f09566ccb7cf8751aae1e2c89ef61eac2658b7ab109383acf3",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-synth stab.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "77128d6b62b98aecbbeceff2ee8277db5d305f5fa16c61169600a85b06788c1e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-talk box.preset/patch.json",
+      "bytes": 836,
+      "sha256": "9a512fa02cbab9dff28d6db38cfc758ccd1805b9999c4b53df4d6e0de49fa8ca",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-tall drink.preset/patch.json",
+      "bytes": 942,
+      "sha256": "669a871c3c13479cca4a4bbb45f8a1c53666c4092cc3d9e62b1432d836c4bdcd",
+      "type": "wavetable",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-tape flute.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "a1c8d8006ce40d6a88f0259020ec68f30a06cf4a5bababb0ce9803a9336340ee",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-taurus.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "2de6eb21e5732e4da82f74b40ac2d6904c6c7313874a707a81576f119c3bfd5e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-te fx.preset/patch.json",
+      "bytes": 5826,
+      "sha256": "713102175a3153468f0bc6bed2d9a8b8f9c5c12a3407fd0b4476da61ff16a651",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-te perc.preset/patch.json",
+      "bytes": 5718,
+      "sha256": "8d91fac2d930fc7ea08789e36c95c7036cf6a9848204e4ab6d8122afe360af88",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-te snares.preset/patch.json",
+      "bytes": 5729,
+      "sha256": "6ca38b3e55ef3078b1b5b85433a76d981170b708afdf6e8c6f6b6a677431d92a",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-te-kicks.preset/patch.json",
+      "bytes": 5726,
+      "sha256": "35beae23862c495cb53826d3db5331178dc1774e5f0defdb03fd08afab91f43a",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-technoid.preset/patch.json",
+      "bytes": 5754,
+      "sha256": "4a78c6b16d3d654f61ec20f7ee432a3898677e6139607e3d3844e3c221777099",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-the deep.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "350e87f6ce6bdeb00da2da01852891c15e45c6ace6eac2a92d143aaac75e7fc0",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-the mole.preset/patch.json",
+      "bytes": 1041,
+      "sha256": "4d6e82b0e715095e0d61e2c8b7a63678d361488f2f2fbdabcbf3690c1ea4e14b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-theremin time.preset/patch.json",
+      "bytes": 1051,
+      "sha256": "d73a4b684a2adcab3387c9fcbd427da06d9ec7944ca87b824c40dc0dcb041b5f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-thoughtful lead.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "993d3c3290aa535dd4f8c2e11d16edd135f2d3ae602bf101c922ae3524e050fb",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-thumper.preset/patch.json",
+      "bytes": 1039,
+      "sha256": "9e0133985fb7ced3f8c35ce7f8b837596665f29e02d87c5ae76fd520888cf4cb",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tie fighter.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "dcb4513b954aa829e198632a093959e4e1a188c024a7ee435a5bda3d2dc0abc7",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tines.preset/patch.json",
+      "bytes": 951,
+      "sha256": "18ce5ffffca0e329ace64d9a54ebd08fb5c535284a19e4db679350ab3a0a187e",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-toxic avenger.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "b3e26bfe6dd9853ac7d999ed7caf468d7f83eb62c072de3053ab7cc38c5cbd4e",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-trance party.preset/patch.json",
+      "bytes": 838,
+      "sha256": "16f1adb21749557ff3d8316f50149d52616b5115baaf1d5b2b580ef9520a2ef1",
+      "type": "dissolve",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-triangle of doom.preset/patch.json",
+      "bytes": 1053,
+      "sha256": "b63a982b8ebeeb4886fbfeef081d93339dff728836180aa6e3872864e23eb405",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tripped alarm.preset/patch.json",
+      "bytes": 834,
+      "sha256": "ec0aa4aba858ee845b67bafb711dce8f04815ecb09fd4a0827848d0c51c7a8d1",
+      "type": "dissolve",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-trombone.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "ffeb94a48adaa7318b2cf706306f2ec55f3becf29ce0709a5597574383538a70",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-trumpet.preset/patch.json",
+      "bytes": 1035,
+      "sha256": "d462dd122c28a51cde09e9c9ee83f8070d54f8c6828f74df516c301318afa864",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-trumpets.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "2dce1378d1e180f236f933dcf71d9fea5837ca68f789f560cd0322690dd28b05",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-trunk thumpin.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "3719c70fdbcd4d8ceffe3bce931e48826e0ac79e5a4b754c5a19df6a501bd11f",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tuba.preset/patch.json",
+      "bytes": 1043,
+      "sha256": "b79d1ce5ad6b83ec91a1fe809bda55c4bfd854c57fa65183069a203a34e95d74",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tubular bell.preset/patch.json",
+      "bytes": 1036,
+      "sha256": "59e6c3aed37574cca2d1e799fbf7faa04cfa52d90c6cef1e85ff1c4a3ee4d74c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tucker.preset/patch.json",
+      "bytes": 1037,
+      "sha256": "0498c41f06e734ce9ce6bace30843a2d5bc6ff8a763101724eb05d57b1813e5a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tummy ache.preset/patch.json",
+      "bytes": 1050,
+      "sha256": "a4486183d6734bd0ba6f1b852dcabcd29c364efca0035ef1c887a6deeeca2072",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-tune in.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "dfa4bfeeb3b99079d047d5f59a4f081e0c50152cfa77fa0969c0e7e4fb6eba17",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-unhinged.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "5d58e325ca0a29adf360262308b87dcf31314c4da7f7350ee6af94ba4eb9ddbe",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-upright bass.preset/patch.json",
+      "bytes": 1056,
+      "sha256": "8ff10b10bc3c7ad1b66716f4c31a393228321236ab7c25ee8d66ff8e8b82c00a",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-vibes.preset/patch.json",
+      "bytes": 1032,
+      "sha256": "1be58519335ff1c46c099d1c56c7ef15b6415580804090a890b7b66c9d774367",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-vibraphone.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "2264addcd2a9b92a97b0986c4482351ae8c356d94ef85627fc1b4ef8d3d4d43c",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-vinyl.preset/patch.json",
+      "bytes": 5738,
+      "sha256": "a0a6f8aa2e6c955450738590e7854abef3ed57999565a50fb0e613f2c275f178",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-violet.preset/patch.json",
+      "bytes": 956,
+      "sha256": "4ade8df3efc8d0803e6fb015801081ccd2786bae65e15a9542880fbebc5383be",
+      "type": "epiano",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-wait right there.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "46f3512c0b6b1633e6fa20c58fe26f1c382fa51f5ed284f6f83bff2bc77315ed",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-wash board abs.preset/patch.json",
+      "bytes": 1034,
+      "sha256": "bd2aa25af1b93104bb560f4c0b0d067858c9e7f71b73a3a010078bfa179c6267",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-waterbell.preset/patch.json",
+      "bytes": 1057,
+      "sha256": "7badb7a4fd3b71d848ce8b33a404c31ce842573c124a1169fd090ad5a99f6154",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-watercrest.preset/patch.json",
+      "bytes": 836,
+      "sha256": "e4ff4353c298a9474e15e0eeb805e7a5b4b13b647bc280c0284557a65353c11a",
+      "type": "prism",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-wedding lead.preset/patch.json",
+      "bytes": 1040,
+      "sha256": "83e1fd72ef35a621e1eb27fcb6033e6f53a27bab98a75593759bf2cc4e0a7a57",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-wheelie.preset/patch.json",
+      "bytes": 828,
+      "sha256": "b43dc3d1bc77f7a15d6bf80e7be2792fa2379839fc49c2ae6ec7758dc24b6825",
+      "type": "dissolve",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-whirlist.preset/patch.json",
+      "bytes": 927,
+      "sha256": "0e6b08924d5cfb0f7d682464d59ddd8b925547925264bf2641d34aad88749bc5",
+      "type": "organ",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-whistle.preset/patch.json",
+      "bytes": 1042,
+      "sha256": "8a0a0b22f2df58276e4f1ed152e77aef41cc3b1aa1146208420323d631dda5c5",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-wind pipe.preset/patch.json",
+      "bytes": 857,
+      "sha256": "57591ebef82357e694928a5383d70cf1d78fadf9b7bc665a65d8b004ccf8939e",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-windy bell.preset/patch.json",
+      "bytes": 1038,
+      "sha256": "646198f81507c2c296b2be559214a502022b2a75fc4a06b3c2769ebb03a2a016",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-witches brew.preset/patch.json",
+      "bytes": 1059,
+      "sha256": "9842fcc5c3f618382ca53c1b02ff898bf1ce49fcc114389367f5e391887351bd",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-woody.preset/patch.json",
+      "bytes": 857,
+      "sha256": "c97938ff75b9a1464cd74b3e3f99e948b09af6f8b9c8c86d1bb7d46c8d96c08e",
+      "type": "axis",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 0,
+      "sample_path_categories": {}
+    },
+    {
+      "path": "src/presets/presets/nt-workshop.preset/patch.json",
+      "bytes": 5744,
+      "sha256": "9fd3ce40302dc5bf9c4a136b48465fbd4d9d3e9503f21bf9ddfa7d5f778f64de",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-xylophone.preset/patch.json",
+      "bytes": 1028,
+      "sha256": "bf8fda40a53c6b26b39a4b6949699e869d5ca3aea81dd0a53c5f62a12d5de23b",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-yamalog.preset/patch.json",
+      "bytes": 5760,
+      "sha256": "55d6e1e69edd29b4da23028586cc58379158eecec3492128c2c5b7d83317bdf3",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-z-fx.preset/patch.json",
+      "bytes": 5778,
+      "sha256": "1701d0e2a372233bae5f7dbf1bb62c1ceceac8c4234e3d6b53b373f0a87b7d54",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-z-kicks.preset/patch.json",
+      "bytes": 5734,
+      "sha256": "cc7cd084685ea24ef9c3c4deb41cd8d0af177ba28dcb514e78af952b02132fa0",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-z-perc.preset/patch.json",
+      "bytes": 5688,
+      "sha256": "d85a0810ea31fcaa036e5a2c22b90de6eee5e505a6919c11a8235f2df5dfb38c",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/presets/presets/nt-z-snares.preset/patch.json",
+      "bytes": 5714,
+      "sha256": "efbf6dfebfc5f264d9bcdea36083524a927f85f1d21fa221a8e9dc2b8ccff2d1",
+      "type": "drum",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 24,
+      "sample_path_categories": {
+        "basename": 24
+      }
+    },
+    {
+      "path": "src/sampler-project-state/2026-06-15/presets/smp_default_2026-06-15.preset/patch.json",
+      "bytes": 1023,
+      "sha256": "5232182951f08e46a2ab46dccfc0ba14579186aa550dff5c2793d1ecaddce0e1",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    },
+    {
+      "path": "src/sampler-project-state/2026-06-15/presets/t7-map-unique.preset/patch.json",
+      "bytes": 1075,
+      "sha256": "fb05e02b9be2dd0b6ccfbd117f42f6074aea7d8739f9af8e716b33d3f726aaf8",
+      "type": "sampler",
+      "keys": [
+        "engine",
+        "envelope",
+        "fx",
+        "lfo",
+        "octave",
+        "platform",
+        "regions",
+        "type",
+        "version"
+      ],
+      "region_count": 1,
+      "sample_path_categories": {
+        "basename": 1
+      }
+    }
+  ]
+}

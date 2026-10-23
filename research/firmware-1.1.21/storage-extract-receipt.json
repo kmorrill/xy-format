@@ -1,0 +1,186 @@
+{
+  "source_loader_sha256": "acc409d12a73fcf69f17a63084af765c90fee802271c854b4d3eeb6b2c970f86",
+  "decoder_sha256": "efb2fb69ed4fa43e5855e0e9d94226bbf41593e7e484e74d608c120679ec19f0",
+  "windows": [
+    {
+      "name": "storage-load",
+      "start": "0x8d574aac",
+      "size": 492,
+      "bytes_sha256": "362d982067849e674afebff1abbd3d5240032eef4e4ec52eed71e69376f514d1"
+    },
+    {
+      "name": "storage-validation",
+      "start": "0x8d574810",
+      "size": 808,
+      "bytes_sha256": "b81acc19a74213da73d9e50e4bbba41d56c2feaa0ab73a9c5160ece90e589e8c"
+    },
+    {
+      "name": "storage-save-utils",
+      "start": "0x8d5612d0",
+      "size": 1640,
+      "bytes_sha256": "a8ddf5d4f8ca9751df73d2195d9a9092f7825006f59a98e1c7865a6c957db312"
+    },
+    {
+      "name": "storage-snapshot",
+      "start": "0x8d5717fc",
+      "size": 520,
+      "bytes_sha256": "74d18986023a5448f1894c15370b357cf249deee16cd2dee1a272ce1ba691369"
+    },
+    {
+      "name": "storage-filesystem-wrappers",
+      "start": "0x8c03e040",
+      "size": 768,
+      "bytes_sha256": "6b9ac43c7e830e3693cd2777f4fc20760e91f8859e51c2ed88bf6107ac471372"
+    },
+    {
+      "name": "storage-path-backup",
+      "start": "0x8d55fdb4",
+      "size": 64,
+      "bytes_sha256": "e2ed4a171f5501d22eedaedba5a3046db8625d13a002824e1c55d5ffb6a34d5b"
+    },
+    {
+      "name": "storage-path-project",
+      "start": "0x8d560580",
+      "size": 112,
+      "bytes_sha256": "e0ff7a3e3d7cb640034c5bc9b69be273f05ab7d8355f6c6945aae40710262f11"
+    },
+    {
+      "name": "storage-catalog-predicates",
+      "start": "0x8d4fd02e",
+      "size": 190,
+      "bytes_sha256": "6855a8d00c1ee2497b546046cb0fd7df9acbaa61839daa5bfd623971ce090ffc"
+    },
+    {
+      "name": "storage-engine-predicate",
+      "start": "0x8d5a21a8",
+      "size": 48,
+      "bytes_sha256": "6ce5284ad18b6cfb1dbd78a777a381b1b583da03f5c140bf5eb89ba043bfcf50"
+    },
+    {
+      "name": "storage-backup-retention",
+      "start": "0x8d560bbc",
+      "size": 296,
+      "bytes_sha256": "7ef52a26e8f3bd88c8d680cffe89b852f41362c9bf04d35908bb98269dfd2fcf"
+    },
+    {
+      "name": "storage-workspace-persist",
+      "start": "0x8d584248",
+      "size": 148,
+      "bytes_sha256": "4e4261b3e9c6aae9420be692e08083246023b82ed229f9baaca840f47a5a8a38"
+    },
+    {
+      "name": "storage-workspace-periodic",
+      "start": "0x8d57e306",
+      "size": 146,
+      "bytes_sha256": "3299138569f3716218af75a9fbcd5c85d0943e13d220506b82b45dee17524ce4"
+    },
+    {
+      "name": "storage-workspace-queue",
+      "start": "0x8d4d937c",
+      "size": 276,
+      "bytes_sha256": "1e579ba3874e5b1fec44d94e156ce0b2d994c59b1ea43696d4bae88ff0ea30eb"
+    },
+    {
+      "name": "storage-sample-interface",
+      "start": "0x8d4d35b4",
+      "size": 456,
+      "bytes_sha256": "a4074386d8a87792cad51befa1a3ea8b8056c176e776b8e3c2148f05ce7808ca"
+    },
+    {
+      "name": "storage-sample-reader",
+      "start": "0x8d4f62dc",
+      "size": 136,
+      "bytes_sha256": "3a2719e389bd35a9d85d67b19214d098ac0912bd3eb0cc0e780ab085cae2d59c"
+    },
+    {
+      "name": "storage-sample-reader-select",
+      "start": "0x8d4f66b4",
+      "size": 426,
+      "bytes_sha256": "f8d2aaf9b1339eb36c5579fad2df74c21abf3994a246254be1cf8fbc992eba6d"
+    },
+    {
+      "name": "storage-sample-buffer",
+      "start": "0x8d4fff44",
+      "size": 532,
+      "bytes_sha256": "4cfa4930745cf7c0f209cf671f6d0cf1d9037c014d5f57819bf8f8135dbfc420"
+    },
+    {
+      "name": "storage-dirty-reset",
+      "start": "0x8d56fa48",
+      "size": 24,
+      "bytes_sha256": "65b8906833aef1325951686b09e2fb00aad7350df63098ce98c5b0768e8a7847"
+    },
+    {
+      "name": "storage-project-scan",
+      "start": "0x8d55cf54",
+      "size": 1024,
+      "bytes_sha256": "130b547421ce04c95362a10620ca6bbbc2f14dea168d92fe467f717840992b20"
+    },
+    {
+      "name": "storage-project-number",
+      "start": "0x8d55b32e",
+      "size": 194,
+      "bytes_sha256": "533b31b943d3cbfe5a12c8c85361e10d6208d0836e4b13c3e1a3d845e5d24d1b"
+    },
+    {
+      "name": "storage-project-clone",
+      "start": "0x8d55b070",
+      "size": 244,
+      "bytes_sha256": "514e8f213c8e91994a16fcbe0fa6f6bd9b3e04018057a340a304c4c6d204de96"
+    },
+    {
+      "name": "storage-project-rename",
+      "start": "0x8d55f4b8",
+      "size": 924,
+      "bytes_sha256": "a4e7dd33188ba97f2bc5298c33603634fd61d4adf626aa6e9e4c2b2af3fd96d6"
+    },
+    {
+      "name": "storage-project-delete",
+      "start": "0x8d5605f0",
+      "size": 272,
+      "bytes_sha256": "4c53931407b1215639b8352534601b72769cc803257bb035d82ed97fb19b8831"
+    },
+    {
+      "name": "storage-copy-file",
+      "start": "0x8c03e0e4",
+      "size": 364,
+      "bytes_sha256": "2fc8eee03dc90b4fd5a7d7a9c8e84e2ef11e80a610cd3a3d4e900fe58f33896f"
+    },
+    {
+      "name": "storage-path-split",
+      "start": "0x8d5a4638",
+      "size": 1194,
+      "bytes_sha256": "4beb7e839b31e92a80d3c8354ed8c4b73bb43d9bf115ba7019f232214aaf337d"
+    },
+    {
+      "name": "storage-shortcut-resolve",
+      "start": "0x8d5a42b0",
+      "size": 652,
+      "bytes_sha256": "520a85238cfa3b14c0bbe5bfd5b2b2491809316573767e326b8b510ff3e52d1c"
+    },
+    {
+      "name": "storage-shortcut-compress",
+      "start": "0x8d5a40d0",
+      "size": 480,
+      "bytes_sha256": "8f69b46e950c63c126718fd65a04de36b9b6bd8e415f07a9a34fe1d69d5ef1fb"
+    },
+    {
+      "name": "storage-shortcut-static-init",
+      "start": "0x8d5a3f2a",
+      "size": 110,
+      "bytes_sha256": "23252760b214aa23f739632df08aab6aa84712e891f4b5a1f1c3403e08443136"
+    },
+    {
+      "name": "storage-sample-cache-load",
+      "start": "0x8d50362c",
+      "size": 244,
+      "bytes_sha256": "fa7851a644d6c08be2c06e2ae7930f4d22739a20cc3fdc053cae0727a5598684"
+    },
+    {
+      "name": "storage-sample-cache-release",
+      "start": "0x8d503720",
+      "size": 312,
+      "bytes_sha256": "291a691f8874112f411e978cde42827beda89fbca32241ab17b6db986c369d9c"
+    }
+  ]
+}

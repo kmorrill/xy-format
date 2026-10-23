@@ -1,5 +1,10 @@
 # Decoded Image Map (Canonical)
 
+> Firmware update (2026-10-23): [serialization](serialization.md) and
+> [preset JSON](preset_json.md) supersede earlier structural inferences below,
+> particularly sample record origin/field ownership, controller vectors and
+> header compression. Existing capture observations remain useful evidence.
+
 > The `.xy` file after its 8-byte header is one RLE stream (see
 > `docs/format/record_structure.md` §0 and `xy/rle.py`). This document
 > maps the **decoded RAM image** — the firmware's project struct — built

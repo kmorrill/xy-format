@@ -1,5 +1,10 @@
 # Record Structure (Canonical)
 
+> Firmware update (2026-10-23): [serialization](serialization.md) and
+> [preset JSON](preset_json.md) supersede earlier structural inferences below,
+> particularly sample record origin/field ownership, controller vectors and
+> header compression. Existing capture observations remain useful evidence.
+
 > Established 2026-06-09 from the record-boundary reframe. Narrative and
 > validation detail: `docs/logs/2026-06-09_record_boundary_reframe.md`.
 > This document supersedes the removed pre-RLE descriptor, pretrack, track

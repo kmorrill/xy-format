@@ -1,0 +1,3 @@
+# Preserve hash-pinned objdump output, including its original trailing spaces.
+research/**/*.asm -whitespace linguist-generated=true
+research/**/*inventory.json linguist-generated=true

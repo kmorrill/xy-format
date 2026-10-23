@@ -1,5 +1,10 @@
 # Spatial Coverage Ledger
 
+> Firmware update (2026-10-23): [serialization](serialization.md) and
+> [preset JSON](preset_json.md) supersede earlier structural inferences below,
+> particularly sample record origin/field ownership, controller vectors and
+> header compression. Existing capture observations remain useful evidence.
+
 This ledger maps the decoded OP-XY project image by contiguous byte ranges and
 marks each range as decoded, partially decoded, or currently opaque. It is the
 spatial companion to `docs/format/decoded_image_map.md`: the image map names
