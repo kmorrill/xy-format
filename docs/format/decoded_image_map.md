@@ -34,7 +34,11 @@ establishes this Track 1 base mapping from container header byte 5:
 |---|---:|
 | `0x0E`, `0x0F` | 3,933 |
 | `0x10`, `0x11` | 3,433 |
-| `0x13` | 3,449 |
+| `0x13`, `0x14` | 3,449 |
+
+`0x14` is OS 1.2.0 (`ddccbbaa09140786`). Blank-project captures show the
+same decoded topology as `0x13`; see
+`docs/logs/2026-10-16_os_1_2_0_layout_diff.md`.
 
 Adding a pattern inserts one
 more 17,876-byte struct (clones in raw space were full copies because the
@@ -268,6 +272,9 @@ matching the capture notes. The old raw-space "param_id" bytes and
 
 - **Engine ID at track+0x14** (u85: 0x12 Prism → 0x1F Wavetable;
   matches the known engine-id enum).
+  OS 1.2.0 Drumline is engine `0x04`, observed only in the device-authored
+  Drumline captures (`src/factory-preset-captures/firmware-1.2.0/`). The swap
+  is size-preserving like every earlier engine swap.
 - **Preset path string at track+0x453F** (48-byte field, null-padded; short
   `category/preset-name` form). P1-B fixtures (`e0`…`e5`):
   `drum/boop` (new-project default), `drum/pp`, `drum/nt-aeroplane`,

@@ -25,6 +25,7 @@ TRACK_BASE_BY_FIRMWARE = {
     0x10: 3433,
     0x11: 3433,
     0x13: 3449,
+    0x14: 3449,  # OS 1.2.0: same topology as 0x13 (docs/logs/2026-10-16_os_1_2_0_layout_diff.md)
 }
 TRACK_STRIDE = 17876
 TRACK_COUNT = 16

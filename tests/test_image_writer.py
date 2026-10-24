@@ -74,7 +74,7 @@ def test_decoded_track_scanner_accounts_for_inserted_note_records():
 
 @pytest.mark.parametrize(
     "firmware_byte,track_base",
-    [(0x0E, 3933), (0x0F, 3933), (0x10, 3433), (0x11, 3433), (0x13, 3449)],
+    [(0x0E, 3933), (0x0F, 3933), (0x10, 3433), (0x11, 3433), (0x13, 3449), (0x14, 3449)],
 )
 def test_track_scanner_uses_firmware_dependent_global_header_size(
     firmware_byte: int, track_base: int
@@ -94,6 +94,27 @@ def test_track_scanner_uses_firmware_dependent_global_header_size(
 
     assert project.track_start(1) == track_base
     assert project.track_start(2) == track_base + 17876
+
+
+OS_1_2_0_DRUMLINE = "src/factory-preset-captures/firmware-1.2.0/batches/drumline01.xy"
+
+
+def test_os_1_2_0_header_family_maps_to_0x13_topology():
+    from xy.image_writer import TRACK_BASE_BY_FIRMWARE, track_base_from_header
+
+    raw = open(OS_1_2_0_DRUMLINE, "rb").read()
+    header, image = decode_project(raw)
+    assert header.hex() == "ddccbbaa09140786"
+    # Explicit entry, not the TRACK_BASE0 fallback.
+    assert TRACK_BASE_BY_FIRMWARE[0x14] == 3449
+    assert track_base_from_header(header) == 3449
+
+    project = ImageProject.from_bytes(raw)
+    assert [project.track_start(t) for t in range(1, 17)] == [
+        3449 + i * 17876 for i in range(16)
+    ]
+    assert len(image) == 3449 + 16 * 17876 + 56
+    assert project.to_bytes() == raw
 
 
 def test_replicates_unnamed_81_single_note_step9():

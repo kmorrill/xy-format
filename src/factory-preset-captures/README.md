@@ -11,5 +11,9 @@ The firmware 1.1.21 `batches/` directory contains `fp01.xy` through
 `fp18.xy`, covering the 142 factory presets not already supplied by the clean
 baseline or the earlier Strings capture batch.
 
+The firmware 1.2.0 `batches/` directory contains the two accepted,
+device-authored Drumline projects. Together they provide donor state for the
+nine factory Drumline presets.
+
 The captures contain project settings and references to factory samples on the
 device. They do not bundle the factory sample audio.
