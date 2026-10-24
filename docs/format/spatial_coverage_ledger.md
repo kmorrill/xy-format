@@ -88,6 +88,14 @@ Each baseline track/pattern struct is `0x45D4` bytes before note-vector growth.
 | `+0x456F..+0x456F` | 1 | decoded | Note count byte. |
 | `+0x4570..+0x45D3` | 100 | partial | Note records when present, otherwise opaque fixed-body tail copied by donor presets. Zero-note tracks show mostly-zero but structured variance. |
 
+## Drumline (`0x04`) overlay
+
+On Drumline tracks the sample table holds synth voices instead of samples.
+Each voice's parameters sit in the previous slot's tail (`+0x6E..+0x7F`); its
+model/play mode, key, volume and pan sit in slot `+0x00..+0x06`. The amp-ADSR
+words `+0x3877..+0x3886` hold the M2 funk/attack/random/length controls. See
+`decoded_image_map.md` → Drumline.
+
 ## Sample / Region Slot Zoom
 
 The nominal table is 24 slots x 128 bytes at `track+0x3957`. Voice `v`

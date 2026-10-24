@@ -34,7 +34,11 @@ establishes this Track 1 base mapping from container header byte 5:
 |---|---:|
 | `0x0E`, `0x0F` | 3,933 |
 | `0x10`, `0x11` | 3,433 |
-| `0x13` | 3,449 |
+| `0x13`, `0x14` | 3,449 |
+
+`0x14` is OS 1.2.0 (`ddccbbaa09140786`). Blank-project captures show the
+same decoded topology as `0x13`; see
+`docs/logs/2026-10-16_os_1_2_0_layout_diff.md`.
 
 Adding a pattern inserts one
 more 17,876-byte struct (clones in raw space were full copies because the
@@ -268,6 +272,9 @@ matching the capture notes. The old raw-space "param_id" bytes and
 
 - **Engine ID at track+0x14** (u85: 0x12 Prism → 0x1F Wavetable;
   matches the known engine-id enum).
+  OS 1.2.0 Drumline is engine `0x04`, observed only in the device-authored
+  Drumline captures (`src/factory-preset-captures/firmware-1.2.0/`). The swap
+  is size-preserving like every earlier engine swap.
 - **Preset path string at track+0x453F** (48-byte field, null-padded; short
   `category/preset-name` form). P1-B fixtures (`e0`…`e5`):
   `drum/boop` (new-project default), `drum/pp`, `drum/nt-aeroplane`,
@@ -388,6 +395,46 @@ voice 0 `framecount`/start/end/loop words live in the pre-table header
 `track+0x393F/+0x3943/+0x3947/+0x394B/+0x394F`, while voices 1-23 duplicate
 their `sample.end`/`framecount` values into the previous slot at both `+0x68`
 and `+0x70`. This is distinct from the direct edit-field writer/read API above.
+
+### Drumline (`0x04`, OS 1.2.0) — voice records and M2 page (device-decoded)
+
+Drumline is engine `0x04`. It reuses the drum-sampler table at track+0x3957
+without sample paths. Voice `v` (0-based, key 53 + v) is easiest to read as a
+128-byte record at **track+0x3945 + 0x80·v**, which starts 0x12 bytes before
+its table slot:
+
+| record | table slot | field |
+|---|---|---|
+| `+0x00`, `+0x04`, `+0x08`, `+0x0C` | previous slot `+0x6E..` | the model's 4 parameters, u32 0..`0x8000`; display = ⌊v·100/32768⌋ |
+| `+0x10` | previous slot `+0x7E` | voice random, u16, same scale |
+| `+0x12` | `+0x00` | `(play mode << 4) \| model` |
+| `+0x14` | `+0x02` | trigger key (53..76) |
+| `+0x15` | `+0x03` | sampler play-mode byte; ignored by Drumline, preserve it |
+| `+0x17` | `+0x05` | volume, signed dB; display = 59 + 2·dB |
+| `+0x18` | `+0x06` | pan, signed −100..+100 (same byte as drum-sampler pan) |
+
+Models (low nibble): 0 kick, 1 snare, 2 hi-hat, 3 shaker, 4 clap, 5 congas,
+6 resonator, **7 zap** (hidden; not in TE's list, but shown and played by the
+firmware), 8 fm tom, 9 tambourine, A tune. Each model relabels the same four
+parameter words (see `xy/drumline_inspection.py`).
+
+Play modes (high nibble): 0 →, 1 →| (factory default), 2 →g, 3 loop, 4 →2,
+5 →3. The icons are device-saved. TE's list (key, oneshot, mute group 1/2/3,
+loop) makes 2/4/5 the mute groups (atom's hi-hats 61–63 choke each other) and
+0/1 key/oneshot.
+
+M2 page (funk / attack / random / length) reuses the amp-envelope ADSR words
+at track `+0x3877` / `+0x387B` / `+0x387F` / `+0x3883`, u32 0..`0x7FFFFFFF`.
+Editing them clears the pristine flag (`+0x11`).
+
+Evidence: on-device readings of all 24 `drumline/atom` voices, tool-authored
+single-field probes loaded on OS 1.2.0, and device-saved captures in
+`src/one-off-changes-from-default/firmware-1.2.0/drumline-params/`. The full
+log is `docs/workflows/drumline_param_capture_checklist_1.2.0.md`.
+
+Open: audible effect of voice random (on its own it changed nothing; M2 random
+randomises pitch, length and level on all voices); remaining per-preset words
+around `+0x3899..+0x38E6`.
 
 ### One-shot Sampler (`0x02`) — sample-edit header (P2-B)
 

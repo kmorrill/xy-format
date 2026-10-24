@@ -31,13 +31,19 @@ from __future__ import annotations
 HEADER_LEN = 8
 MAGIC = bytes.fromhex("ddccbbaa")
 MAX_RUN = 257  # 2 literal bytes + extension 255
+MAX_DECODED_PROJECT_BYTES = 2 * 1024 * 1024
 
 
 class RleError(ValueError):
     pass
 
 
-def decode(buf: bytes, start: int = 0, end: int | None = None) -> bytes:
+def decode(
+    buf: bytes,
+    start: int = 0,
+    end: int | None = None,
+    max_output_bytes: int = MAX_DECODED_PROJECT_BYTES,
+) -> bytes:
     """Decode an RLE stream. Pairing is on consecutive input bytes; the
     extension byte clears the pair state."""
     out = bytearray()
@@ -47,12 +53,20 @@ def decode(buf: bytes, start: int = 0, end: int | None = None) -> bytes:
     while i < stop:
         b = buf[i]
         i += 1
+        if len(out) >= max_output_bytes:
+            raise RleError(
+                f"decoded data exceeds the {max_output_bytes}-byte safety limit"
+            )
         out.append(b)
         if b == prev:
             if i >= stop:
                 raise RleError(f"extension byte needed past end at {i}")
             ext = buf[i]
             i += 1
+            if len(out) + ext > max_output_bytes:
+                raise RleError(
+                    f"decoded data exceeds the {max_output_bytes}-byte safety limit"
+                )
             out.extend(bytes([b]) * ext)
             prev = -1
         else:

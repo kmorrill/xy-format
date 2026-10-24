@@ -45,6 +45,11 @@ def test_truncated_extension_raises():
         decode(b"\x00\x00")
 
 
+def test_decode_rejects_output_over_safety_limit():
+    with pytest.raises(RleError, match="safety limit"):
+        decode(b"\x00\x00\xff", max_output_bytes=256)
+
+
 def test_fuzz_roundtrip():
     rng = random.Random(7)
     for _ in range(500):
